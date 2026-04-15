@@ -40,8 +40,8 @@ const App = () => (
             <Route path="/demandas" element={<DemandasPage />} />
             <Route path="/agenda" element={<AgendaPage />} />
             <Route path="/campo" element={<PlaceholderPage title="Campo" stage={5} />} />
-            <Route path="/materiais" element={<PlaceholderPage title="Materiais" stage={5} />} />
-            <Route path="/financeiro" element={<PlaceholderPage title="Financeiro" stage={5} />} />
+            <Route path="/materiais" element={<MateriaisPageRoute />} />
+            <Route path="/financeiro" element={<FinanceiroPageRoute />} />
             <Route path="/bi" element={<PlaceholderPage title="BI / Dashboards" stage={6} />} />
             <Route path="/mapas" element={<PlaceholderPage title="Mapas" stage={6} />} />
             <Route path="/documentos" element={<PlaceholderPage title="Documentos" stage={6} />} />
