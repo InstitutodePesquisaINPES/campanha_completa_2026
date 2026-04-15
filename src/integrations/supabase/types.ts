@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      areas_atuacao: {
+        Row: {
+          bairros_ids: string[] | null
+          created_at: string
+          geometria: Json | null
+          id: string
+          municipio_id: string
+          nome: string
+          observacoes: string | null
+          responsavel_id: string | null
+          tipo: Database["public"]["Enums"]["tipo_area_atuacao"]
+          updated_at: string
+        }
+        Insert: {
+          bairros_ids?: string[] | null
+          created_at?: string
+          geometria?: Json | null
+          id?: string
+          municipio_id: string
+          nome: string
+          observacoes?: string | null
+          responsavel_id?: string | null
+          tipo: Database["public"]["Enums"]["tipo_area_atuacao"]
+          updated_at?: string
+        }
+        Update: {
+          bairros_ids?: string[] | null
+          created_at?: string
+          geometria?: Json | null
+          id?: string
+          municipio_id?: string
+          nome?: string
+          observacoes?: string | null
+          responsavel_id?: string | null
+          tipo?: Database["public"]["Enums"]["tipo_area_atuacao"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "areas_atuacao_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -50,6 +97,219 @@ export type Database = {
         }
         Relationships: []
       }
+      bairros: {
+        Row: {
+          classificacao:
+            | Database["public"]["Enums"]["classificacao_territorial"]
+            | null
+          created_at: string
+          distrito_id: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          municipio_id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          classificacao?:
+            | Database["public"]["Enums"]["classificacao_territorial"]
+            | null
+          created_at?: string
+          distrito_id?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          municipio_id: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          classificacao?:
+            | Database["public"]["Enums"]["classificacao_territorial"]
+            | null
+          created_at?: string
+          distrito_id?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          municipio_id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bairros_distrito_id_fkey"
+            columns: ["distrito_id"]
+            isOneToOne: false
+            referencedRelation: "distritos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bairros_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comunidades: {
+        Row: {
+          bairro_id: string
+          created_at: string
+          id: string
+          latitude: number | null
+          longitude: number | null
+          microarea: string | null
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          bairro_id: string
+          created_at?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          microarea?: string | null
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          bairro_id?: string
+          created_at?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          microarea?: string | null
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comunidades_bairro_id_fkey"
+            columns: ["bairro_id"]
+            isOneToOne: false
+            referencedRelation: "bairros"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      distritos: {
+        Row: {
+          created_at: string
+          geocodigo_ibge: string | null
+          id: string
+          municipio_id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          geocodigo_ibge?: string | null
+          id?: string
+          municipio_id: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          geocodigo_ibge?: string | null
+          id?: string
+          municipio_id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "distritos_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      estados: {
+        Row: {
+          created_at: string
+          geocodigo_ibge: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          nome: string
+          sigla: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          geocodigo_ibge?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          nome: string
+          sigla: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          geocodigo_ibge?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          nome?: string
+          sigla?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      municipios: {
+        Row: {
+          created_at: string
+          eleitorado_total: number | null
+          estado_id: string
+          geocodigo_ibge: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          nome: string
+          populacao: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          eleitorado_total?: number | null
+          estado_id: string
+          geocodigo_ibge?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          nome: string
+          populacao?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          eleitorado_total?: number | null
+          estado_id?: string
+          geocodigo_ibge?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          nome?: string
+          populacao?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "municipios_estado_id_fkey"
+            columns: ["estado_id"]
+            isOneToOne: false
+            referencedRelation: "estados"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -82,6 +342,53 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      secoes_eleitorais: {
+        Row: {
+          created_at: string
+          eleitores_aptos: number | null
+          endereco: string | null
+          id: string
+          latitude: number | null
+          local_votacao: string | null
+          longitude: number | null
+          numero_secao: number
+          updated_at: string
+          zona_id: string
+        }
+        Insert: {
+          created_at?: string
+          eleitores_aptos?: number | null
+          endereco?: string | null
+          id?: string
+          latitude?: number | null
+          local_votacao?: string | null
+          longitude?: number | null
+          numero_secao: number
+          updated_at?: string
+          zona_id: string
+        }
+        Update: {
+          created_at?: string
+          eleitores_aptos?: number | null
+          endereco?: string | null
+          id?: string
+          latitude?: number | null
+          local_votacao?: string | null
+          longitude?: number | null
+          numero_secao?: number
+          updated_at?: string
+          zona_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "secoes_eleitorais_zona_id_fkey"
+            columns: ["zona_id"]
+            isOneToOne: false
+            referencedRelation: "zonas_eleitorais"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       system_settings: {
         Row: {
@@ -134,6 +441,41 @@ export type Database = {
         }
         Relationships: []
       }
+      zonas_eleitorais: {
+        Row: {
+          created_at: string
+          id: string
+          municipio_id: string
+          numero_zona: number
+          tribunal_regional: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          municipio_id: string
+          numero_zona: number
+          tribunal_regional?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          municipio_id?: string
+          numero_zona?: number
+          tribunal_regional?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zonas_eleitorais_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       profiles_public: {
@@ -159,6 +501,7 @@ export type Database = {
       }
     }
     Functions: {
+      has_manage_role: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -174,6 +517,13 @@ export type Database = {
         | "lideranca"
         | "operador"
         | "visualizador"
+      classificacao_territorial:
+        | "reduto"
+        | "expansao"
+        | "disputa"
+        | "risco"
+        | "baixa_presenca"
+      tipo_area_atuacao: "equipe" | "lider" | "coordenador"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -308,6 +658,14 @@ export const Constants = {
         "operador",
         "visualizador",
       ],
+      classificacao_territorial: [
+        "reduto",
+        "expansao",
+        "disputa",
+        "risco",
+        "baixa_presenca",
+      ],
+      tipo_area_atuacao: ["equipe", "lider", "coordenador"],
     },
   },
 } as const
