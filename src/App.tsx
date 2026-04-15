@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import TerritoriosPage from "./pages/territorial/TerritoriosPage";
 import LoginPage from "./pages/auth/LoginPage";
 import SignupPage from "./pages/auth/SignupPage";
 import ProfilePage from "./pages/ProfilePage";
@@ -29,7 +30,7 @@ const App = () => (
             <Route path="/perfil" element={<ProfilePage />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/configuracoes" element={<SettingsPage />} />
-            <Route path="/territorios" element={<PlaceholderPage title="Territórios" stage={2} />} />
+            <Route path="/territorios" element={<TerritoriosPage />} />
             <Route path="/pessoas" element={<PlaceholderPage title="Pessoas (CRM)" stage={3} />} />
             <Route path="/demandas" element={<PlaceholderPage title="Demandas" stage={4} />} />
             <Route path="/agenda" element={<PlaceholderPage title="Agenda" stage={4} />} />
