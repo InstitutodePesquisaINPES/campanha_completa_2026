@@ -17,6 +17,9 @@ import AdminPage from "./pages/admin/AdminPage";
 import SettingsPage from "./pages/SettingsPage";
 import MateriaisPageRoute from "./pages/materiais/MateriaisPageRoute";
 import FinanceiroPageRoute from "./pages/financeiro/FinanceiroPageRoute";
+import BIPage from "./pages/bi/BIPage";
+import MapasPage from "./pages/mapas/MapasPage";
+import ComunicacaoPage from "./pages/comunicacao/ComunicacaoPage";
 import PlaceholderPage from "./pages/PlaceholderPage";
 
 const queryClient = new QueryClient();
