@@ -310,6 +310,398 @@ export type Database = {
           },
         ]
       }
+      pessoas: {
+        Row: {
+          cpf: string | null
+          created_at: string
+          created_by: string | null
+          data_nascimento: string | null
+          escolaridade: string | null
+          full_name: string
+          genero: string | null
+          id: string
+          nivel_relacionamento: Database["public"]["Enums"]["nivel_relacionamento"]
+          observacoes: string | null
+          updated_at: string
+        }
+        Insert: {
+          cpf?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_nascimento?: string | null
+          escolaridade?: string | null
+          full_name: string
+          genero?: string | null
+          id?: string
+          nivel_relacionamento?: Database["public"]["Enums"]["nivel_relacionamento"]
+          observacoes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cpf?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_nascimento?: string | null
+          escolaridade?: string | null
+          full_name?: string
+          genero?: string | null
+          id?: string
+          nivel_relacionamento?: Database["public"]["Enums"]["nivel_relacionamento"]
+          observacoes?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      pessoas_anexos: {
+        Row: {
+          arquivo_url: string
+          created_at: string
+          descricao: string | null
+          id: string
+          pessoa_id: string
+          tipo_documento: string | null
+        }
+        Insert: {
+          arquivo_url: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          pessoa_id: string
+          tipo_documento?: string | null
+        }
+        Update: {
+          arquivo_url?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          pessoa_id?: string
+          tipo_documento?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pessoas_anexos_pessoa_id_fkey"
+            columns: ["pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "pessoas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pessoas_consentimentos: {
+        Row: {
+          base_legal: string | null
+          canal_coleta: string | null
+          consentido: boolean
+          created_at: string
+          data_consentimento: string | null
+          data_revogacao: string | null
+          finalidade: Database["public"]["Enums"]["finalidade_lgpd"]
+          id: string
+          ip_coleta: string | null
+          pessoa_id: string
+        }
+        Insert: {
+          base_legal?: string | null
+          canal_coleta?: string | null
+          consentido?: boolean
+          created_at?: string
+          data_consentimento?: string | null
+          data_revogacao?: string | null
+          finalidade: Database["public"]["Enums"]["finalidade_lgpd"]
+          id?: string
+          ip_coleta?: string | null
+          pessoa_id: string
+        }
+        Update: {
+          base_legal?: string | null
+          canal_coleta?: string | null
+          consentido?: boolean
+          created_at?: string
+          data_consentimento?: string | null
+          data_revogacao?: string | null
+          finalidade?: Database["public"]["Enums"]["finalidade_lgpd"]
+          id?: string
+          ip_coleta?: string | null
+          pessoa_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pessoas_consentimentos_pessoa_id_fkey"
+            columns: ["pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "pessoas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pessoas_contatos: {
+        Row: {
+          created_at: string
+          id: string
+          pessoa_id: string
+          principal: boolean
+          tipo: Database["public"]["Enums"]["tipo_contato"]
+          valor: string
+          verificado: boolean
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          pessoa_id: string
+          principal?: boolean
+          tipo: Database["public"]["Enums"]["tipo_contato"]
+          valor: string
+          verificado?: boolean
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          pessoa_id?: string
+          principal?: boolean
+          tipo?: Database["public"]["Enums"]["tipo_contato"]
+          valor?: string
+          verificado?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pessoas_contatos_pessoa_id_fkey"
+            columns: ["pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "pessoas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pessoas_enderecos: {
+        Row: {
+          bairro_id: string | null
+          cep: string | null
+          complemento: string | null
+          created_at: string
+          id: string
+          latitude: number | null
+          logradouro: string | null
+          longitude: number | null
+          municipio_id: string | null
+          numero: string | null
+          pessoa_id: string
+          tipo: Database["public"]["Enums"]["tipo_endereco"]
+        }
+        Insert: {
+          bairro_id?: string | null
+          cep?: string | null
+          complemento?: string | null
+          created_at?: string
+          id?: string
+          latitude?: number | null
+          logradouro?: string | null
+          longitude?: number | null
+          municipio_id?: string | null
+          numero?: string | null
+          pessoa_id: string
+          tipo?: Database["public"]["Enums"]["tipo_endereco"]
+        }
+        Update: {
+          bairro_id?: string | null
+          cep?: string | null
+          complemento?: string | null
+          created_at?: string
+          id?: string
+          latitude?: number | null
+          logradouro?: string | null
+          longitude?: number | null
+          municipio_id?: string | null
+          numero?: string | null
+          pessoa_id?: string
+          tipo?: Database["public"]["Enums"]["tipo_endereco"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pessoas_enderecos_bairro_id_fkey"
+            columns: ["bairro_id"]
+            isOneToOne: false
+            referencedRelation: "bairros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pessoas_enderecos_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pessoas_enderecos_pessoa_id_fkey"
+            columns: ["pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "pessoas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pessoas_historico_contatos: {
+        Row: {
+          created_at: string
+          data_contato: string
+          id: string
+          pessoa_id: string
+          proximo_contato: string | null
+          responsavel_id: string | null
+          resultado: string | null
+          resumo: string | null
+          tipo: Database["public"]["Enums"]["tipo_interacao"]
+        }
+        Insert: {
+          created_at?: string
+          data_contato?: string
+          id?: string
+          pessoa_id: string
+          proximo_contato?: string | null
+          responsavel_id?: string | null
+          resultado?: string | null
+          resumo?: string | null
+          tipo: Database["public"]["Enums"]["tipo_interacao"]
+        }
+        Update: {
+          created_at?: string
+          data_contato?: string
+          id?: string
+          pessoa_id?: string
+          proximo_contato?: string | null
+          responsavel_id?: string | null
+          resultado?: string | null
+          resumo?: string | null
+          tipo?: Database["public"]["Enums"]["tipo_interacao"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pessoas_historico_contatos_pessoa_id_fkey"
+            columns: ["pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "pessoas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pessoas_papeis: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          data_fim: string | null
+          data_inicio: string | null
+          id: string
+          observacoes: string | null
+          papel: Database["public"]["Enums"]["papel_pessoa"]
+          pessoa_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string | null
+          id?: string
+          observacoes?: string | null
+          papel: Database["public"]["Enums"]["papel_pessoa"]
+          pessoa_id: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string | null
+          id?: string
+          observacoes?: string | null
+          papel?: Database["public"]["Enums"]["papel_pessoa"]
+          pessoa_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pessoas_papeis_pessoa_id_fkey"
+            columns: ["pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "pessoas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pessoas_tags: {
+        Row: {
+          created_at: string
+          id: string
+          pessoa_id: string
+          tag_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          pessoa_id: string
+          tag_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          pessoa_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pessoas_tags_pessoa_id_fkey"
+            columns: ["pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "pessoas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pessoas_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pessoas_vinculos: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          id: string
+          pessoa_id: string
+          pessoa_vinculada_id: string
+          tipo_vinculo: Database["public"]["Enums"]["tipo_vinculo"]
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          pessoa_id: string
+          pessoa_vinculada_id: string
+          tipo_vinculo: Database["public"]["Enums"]["tipo_vinculo"]
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          pessoa_id?: string
+          pessoa_vinculada_id?: string
+          tipo_vinculo?: Database["public"]["Enums"]["tipo_vinculo"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pessoas_vinculos_pessoa_id_fkey"
+            columns: ["pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "pessoas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pessoas_vinculos_pessoa_vinculada_id_fkey"
+            columns: ["pessoa_vinculada_id"]
+            isOneToOne: false
+            referencedRelation: "pessoas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -420,6 +812,30 @@ export type Database = {
         }
         Relationships: []
       }
+      tags: {
+        Row: {
+          categoria: string | null
+          cor: string
+          created_at: string
+          id: string
+          nome: string
+        }
+        Insert: {
+          categoria?: string | null
+          cor?: string
+          created_at?: string
+          id?: string
+          nome: string
+        }
+        Update: {
+          categoria?: string | null
+          cor?: string
+          created_at?: string
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -523,7 +939,52 @@ export type Database = {
         | "disputa"
         | "risco"
         | "baixa_presenca"
+      finalidade_lgpd:
+        | "comunicacao_politica"
+        | "pesquisa"
+        | "campanha"
+        | "mandato"
+      nivel_relacionamento:
+        | "desconhecido"
+        | "frio"
+        | "morno"
+        | "quente"
+        | "aliado"
+        | "lideranca"
+      papel_pessoa:
+        | "eleitor"
+        | "apoiador"
+        | "lideranca"
+        | "coordenador_bairro"
+        | "doador"
+        | "fornecedor"
+        | "imprensa"
+        | "institucional"
+        | "demandante"
+        | "equipe"
       tipo_area_atuacao: "equipe" | "lider" | "coordenador"
+      tipo_contato:
+        | "celular"
+        | "fixo"
+        | "whatsapp"
+        | "email"
+        | "instagram"
+        | "facebook"
+        | "twitter"
+      tipo_endereco: "residencial" | "comercial" | "referencia"
+      tipo_interacao:
+        | "ligacao"
+        | "visita"
+        | "whatsapp"
+        | "email"
+        | "reuniao"
+        | "evento"
+      tipo_vinculo:
+        | "familiar"
+        | "comunitario"
+        | "profissional"
+        | "politico"
+        | "indicacao"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -665,7 +1126,58 @@ export const Constants = {
         "risco",
         "baixa_presenca",
       ],
+      finalidade_lgpd: [
+        "comunicacao_politica",
+        "pesquisa",
+        "campanha",
+        "mandato",
+      ],
+      nivel_relacionamento: [
+        "desconhecido",
+        "frio",
+        "morno",
+        "quente",
+        "aliado",
+        "lideranca",
+      ],
+      papel_pessoa: [
+        "eleitor",
+        "apoiador",
+        "lideranca",
+        "coordenador_bairro",
+        "doador",
+        "fornecedor",
+        "imprensa",
+        "institucional",
+        "demandante",
+        "equipe",
+      ],
       tipo_area_atuacao: ["equipe", "lider", "coordenador"],
+      tipo_contato: [
+        "celular",
+        "fixo",
+        "whatsapp",
+        "email",
+        "instagram",
+        "facebook",
+        "twitter",
+      ],
+      tipo_endereco: ["residencial", "comercial", "referencia"],
+      tipo_interacao: [
+        "ligacao",
+        "visita",
+        "whatsapp",
+        "email",
+        "reuniao",
+        "evento",
+      ],
+      tipo_vinculo: [
+        "familiar",
+        "comunitario",
+        "profissional",
+        "politico",
+        "indicacao",
+      ],
     },
   },
 } as const
