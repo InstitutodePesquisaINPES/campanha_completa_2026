@@ -15,6 +15,8 @@ import SignupPage from "./pages/auth/SignupPage";
 import ProfilePage from "./pages/ProfilePage";
 import AdminPage from "./pages/admin/AdminPage";
 import SettingsPage from "./pages/SettingsPage";
+import MateriaisPageRoute from "./pages/materiais/MateriaisPageRoute";
+import FinanceiroPageRoute from "./pages/financeiro/FinanceiroPageRoute";
 import PlaceholderPage from "./pages/PlaceholderPage";
 
 const queryClient = new QueryClient();
@@ -38,8 +40,8 @@ const App = () => (
             <Route path="/demandas" element={<DemandasPage />} />
             <Route path="/agenda" element={<AgendaPage />} />
             <Route path="/campo" element={<PlaceholderPage title="Campo" stage={5} />} />
-            <Route path="/materiais" element={<PlaceholderPage title="Materiais" stage={5} />} />
-            <Route path="/financeiro" element={<PlaceholderPage title="Financeiro" stage={5} />} />
+            <Route path="/materiais" element={<MateriaisPageRoute />} />
+            <Route path="/financeiro" element={<FinanceiroPageRoute />} />
             <Route path="/bi" element={<PlaceholderPage title="BI / Dashboards" stage={6} />} />
             <Route path="/mapas" element={<PlaceholderPage title="Mapas" stage={6} />} />
             <Route path="/documentos" element={<PlaceholderPage title="Documentos" stage={6} />} />

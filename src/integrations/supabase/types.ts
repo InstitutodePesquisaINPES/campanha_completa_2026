@@ -359,6 +359,33 @@ export type Database = {
           },
         ]
       }
+      centros_custo: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+          orcamento_previsto: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          orcamento_previsto?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          orcamento_previsto?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       comunidades: {
         Row: {
           bairro_id: string
@@ -564,6 +591,78 @@ export type Database = {
           },
         ]
       }
+      despesas: {
+        Row: {
+          aprovador_id: string | null
+          categoria: Database["public"]["Enums"]["categoria_despesa"]
+          centro_custo_id: string | null
+          created_at: string
+          data_despesa: string
+          data_pagamento: string | null
+          descricao: string
+          documento_numero: string | null
+          documento_tipo: string | null
+          documento_url: string | null
+          fornecedor_pessoa_id: string | null
+          id: string
+          responsavel_id: string | null
+          status: Database["public"]["Enums"]["status_despesa"]
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          aprovador_id?: string | null
+          categoria?: Database["public"]["Enums"]["categoria_despesa"]
+          centro_custo_id?: string | null
+          created_at?: string
+          data_despesa?: string
+          data_pagamento?: string | null
+          descricao: string
+          documento_numero?: string | null
+          documento_tipo?: string | null
+          documento_url?: string | null
+          fornecedor_pessoa_id?: string | null
+          id?: string
+          responsavel_id?: string | null
+          status?: Database["public"]["Enums"]["status_despesa"]
+          updated_at?: string
+          valor: number
+        }
+        Update: {
+          aprovador_id?: string | null
+          categoria?: Database["public"]["Enums"]["categoria_despesa"]
+          centro_custo_id?: string | null
+          created_at?: string
+          data_despesa?: string
+          data_pagamento?: string | null
+          descricao?: string
+          documento_numero?: string | null
+          documento_tipo?: string | null
+          documento_url?: string | null
+          fornecedor_pessoa_id?: string | null
+          id?: string
+          responsavel_id?: string | null
+          status?: Database["public"]["Enums"]["status_despesa"]
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "despesas_centro_custo_id_fkey"
+            columns: ["centro_custo_id"]
+            isOneToOne: false
+            referencedRelation: "centros_custo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "despesas_fornecedor_pessoa_id_fkey"
+            columns: ["fornecedor_pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "pessoas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       distritos: {
         Row: {
           created_at: string
@@ -631,6 +730,138 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      estoques: {
+        Row: {
+          centro_distribuicao: string
+          created_at: string
+          id: string
+          material_id: string
+          municipio_id: string | null
+          quantidade_atual: number
+          quantidade_minima: number
+          updated_at: string
+        }
+        Insert: {
+          centro_distribuicao?: string
+          created_at?: string
+          id?: string
+          material_id: string
+          municipio_id?: string | null
+          quantidade_atual?: number
+          quantidade_minima?: number
+          updated_at?: string
+        }
+        Update: {
+          centro_distribuicao?: string
+          created_at?: string
+          id?: string
+          material_id?: string
+          municipio_id?: string | null
+          quantidade_atual?: number
+          quantidade_minima?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estoques_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materiais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estoques_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      materiais: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          custo_unitario: number | null
+          descricao: string | null
+          foto_url: string | null
+          id: string
+          nome: string
+          tipo: Database["public"]["Enums"]["tipo_material"]
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          custo_unitario?: number | null
+          descricao?: string | null
+          foto_url?: string | null
+          id?: string
+          nome: string
+          tipo?: Database["public"]["Enums"]["tipo_material"]
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          custo_unitario?: number | null
+          descricao?: string | null
+          foto_url?: string | null
+          id?: string
+          nome?: string
+          tipo?: Database["public"]["Enums"]["tipo_material"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      movimentacoes_estoque: {
+        Row: {
+          agenda_id: string | null
+          created_at: string
+          estoque_id: string
+          id: string
+          motivo: string | null
+          quantidade: number
+          responsavel_id: string | null
+          tipo: Database["public"]["Enums"]["tipo_movimentacao"]
+        }
+        Insert: {
+          agenda_id?: string | null
+          created_at?: string
+          estoque_id: string
+          id?: string
+          motivo?: string | null
+          quantidade: number
+          responsavel_id?: string | null
+          tipo: Database["public"]["Enums"]["tipo_movimentacao"]
+        }
+        Update: {
+          agenda_id?: string | null
+          created_at?: string
+          estoque_id?: string
+          id?: string
+          motivo?: string | null
+          quantidade?: number
+          responsavel_id?: string | null
+          tipo?: Database["public"]["Enums"]["tipo_movimentacao"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "movimentacoes_estoque_agenda_id_fkey"
+            columns: ["agenda_id"]
+            isOneToOne: false
+            referencedRelation: "agenda"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movimentacoes_estoque_estoque_id_fkey"
+            columns: ["estoque_id"]
+            isOneToOne: false
+            referencedRelation: "estoques"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       municipios: {
         Row: {
@@ -1104,6 +1335,167 @@ export type Database = {
         }
         Relationships: []
       }
+      receitas: {
+        Row: {
+          centro_custo_id: string | null
+          created_at: string
+          data: string
+          descricao: string | null
+          documento_url: string | null
+          id: string
+          origem_pessoa_id: string | null
+          tipo: Database["public"]["Enums"]["tipo_receita"]
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          centro_custo_id?: string | null
+          created_at?: string
+          data?: string
+          descricao?: string | null
+          documento_url?: string | null
+          id?: string
+          origem_pessoa_id?: string | null
+          tipo?: Database["public"]["Enums"]["tipo_receita"]
+          updated_at?: string
+          valor: number
+        }
+        Update: {
+          centro_custo_id?: string | null
+          created_at?: string
+          data?: string
+          descricao?: string | null
+          documento_url?: string | null
+          id?: string
+          origem_pessoa_id?: string | null
+          tipo?: Database["public"]["Enums"]["tipo_receita"]
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receitas_centro_custo_id_fkey"
+            columns: ["centro_custo_id"]
+            isOneToOne: false
+            referencedRelation: "centros_custo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receitas_origem_pessoa_id_fkey"
+            columns: ["origem_pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "pessoas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roteiros_paradas: {
+        Row: {
+          concluido: boolean
+          created_at: string
+          endereco: string | null
+          hora_chegada: string | null
+          hora_saida: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          observacao: string | null
+          ordem: number
+          pessoa_id: string | null
+          roteiro_id: string
+          tipo: Database["public"]["Enums"]["tipo_parada"]
+        }
+        Insert: {
+          concluido?: boolean
+          created_at?: string
+          endereco?: string | null
+          hora_chegada?: string | null
+          hora_saida?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          observacao?: string | null
+          ordem?: number
+          pessoa_id?: string | null
+          roteiro_id: string
+          tipo?: Database["public"]["Enums"]["tipo_parada"]
+        }
+        Update: {
+          concluido?: boolean
+          created_at?: string
+          endereco?: string | null
+          hora_chegada?: string | null
+          hora_saida?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          observacao?: string | null
+          ordem?: number
+          pessoa_id?: string | null
+          roteiro_id?: string
+          tipo?: Database["public"]["Enums"]["tipo_parada"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roteiros_paradas_pessoa_id_fkey"
+            columns: ["pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "pessoas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roteiros_paradas_roteiro_id_fkey"
+            columns: ["roteiro_id"]
+            isOneToOne: false
+            referencedRelation: "roteiros_visita"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roteiros_visita: {
+        Row: {
+          created_at: string
+          data: string
+          id: string
+          municipio_id: string | null
+          nome: string
+          observacoes: string | null
+          responsavel_id: string | null
+          status: Database["public"]["Enums"]["status_roteiro"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data: string
+          id?: string
+          municipio_id?: string | null
+          nome: string
+          observacoes?: string | null
+          responsavel_id?: string | null
+          status?: Database["public"]["Enums"]["status_roteiro"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data?: string
+          id?: string
+          municipio_id?: string | null
+          nome?: string
+          observacoes?: string | null
+          responsavel_id?: string | null
+          status?: Database["public"]["Enums"]["status_roteiro"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roteiros_visita_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       secoes_eleitorais: {
         Row: {
           created_at: string
@@ -1312,6 +1704,15 @@ export type Database = {
         | "moradia"
         | "transporte"
         | "outros"
+      categoria_despesa:
+        | "pessoal"
+        | "material"
+        | "transporte"
+        | "alimentacao"
+        | "comunicacao"
+        | "evento"
+        | "juridico"
+        | "outros"
       classificacao_territorial:
         | "reduto"
         | "expansao"
@@ -1363,6 +1764,8 @@ export type Database = {
         | "em_andamento"
         | "resolvida"
         | "arquivada"
+      status_despesa: "pendente" | "aprovada" | "paga" | "cancelada"
+      status_roteiro: "planejado" | "em_campo" | "concluido" | "cancelado"
       tipo_agenda:
         | "visita"
         | "evento"
@@ -1390,6 +1793,21 @@ export type Database = {
         | "email"
         | "reuniao"
         | "evento"
+      tipo_material:
+        | "grafico"
+        | "brinde"
+        | "camiseta"
+        | "adesivo"
+        | "banner"
+        | "santinho"
+        | "outros"
+      tipo_movimentacao: "entrada" | "saida" | "transferencia" | "perda"
+      tipo_parada: "visita" | "entrega" | "coleta"
+      tipo_receita:
+        | "doacao"
+        | "fundo_partidario"
+        | "recursos_proprios"
+        | "outros"
       tipo_vinculo:
         | "familiar"
         | "comunitario"
@@ -1541,6 +1959,16 @@ export const Constants = {
         "transporte",
         "outros",
       ],
+      categoria_despesa: [
+        "pessoal",
+        "material",
+        "transporte",
+        "alimentacao",
+        "comunicacao",
+        "evento",
+        "juridico",
+        "outros",
+      ],
       classificacao_territorial: [
         "reduto",
         "expansao",
@@ -1599,6 +2027,8 @@ export const Constants = {
         "resolvida",
         "arquivada",
       ],
+      status_despesa: ["pendente", "aprovada", "paga", "cancelada"],
+      status_roteiro: ["planejado", "em_campo", "concluido", "cancelado"],
       tipo_agenda: [
         "visita",
         "evento",
@@ -1628,6 +2058,23 @@ export const Constants = {
         "email",
         "reuniao",
         "evento",
+      ],
+      tipo_material: [
+        "grafico",
+        "brinde",
+        "camiseta",
+        "adesivo",
+        "banner",
+        "santinho",
+        "outros",
+      ],
+      tipo_movimentacao: ["entrada", "saida", "transferencia", "perda"],
+      tipo_parada: ["visita", "entrega", "coleta"],
+      tipo_receita: [
+        "doacao",
+        "fundo_partidario",
+        "recursos_proprios",
+        "outros",
       ],
       tipo_vinculo: [
         "familiar",
