@@ -8,6 +8,8 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import TerritoriosPage from "./pages/territorial/TerritoriosPage";
 import PessoasPage from "./pages/crm/PessoasPage";
+import DemandasPage from "./pages/demandas/DemandasPage";
+import AgendaPage from "./pages/agenda/AgendaPage";
 import LoginPage from "./pages/auth/LoginPage";
 import SignupPage from "./pages/auth/SignupPage";
 import ProfilePage from "./pages/ProfilePage";
