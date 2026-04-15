@@ -8,6 +8,8 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import TerritoriosPage from "./pages/territorial/TerritoriosPage";
 import PessoasPage from "./pages/crm/PessoasPage";
+import DemandasPage from "./pages/demandas/DemandasPage";
+import AgendaPage from "./pages/agenda/AgendaPage";
 import LoginPage from "./pages/auth/LoginPage";
 import SignupPage from "./pages/auth/SignupPage";
 import ProfilePage from "./pages/ProfilePage";
@@ -33,8 +35,8 @@ const App = () => (
             <Route path="/configuracoes" element={<SettingsPage />} />
             <Route path="/territorios" element={<TerritoriosPage />} />
             <Route path="/pessoas" element={<PessoasPage />} />
-            <Route path="/demandas" element={<PlaceholderPage title="Demandas" stage={4} />} />
-            <Route path="/agenda" element={<PlaceholderPage title="Agenda" stage={4} />} />
+            <Route path="/demandas" element={<DemandasPage />} />
+            <Route path="/agenda" element={<AgendaPage />} />
             <Route path="/campo" element={<PlaceholderPage title="Campo" stage={5} />} />
             <Route path="/materiais" element={<PlaceholderPage title="Materiais" stage={5} />} />
             <Route path="/financeiro" element={<PlaceholderPage title="Financeiro" stage={5} />} />

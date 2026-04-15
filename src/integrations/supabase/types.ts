@@ -14,6 +14,211 @@ export type Database = {
   }
   public: {
     Tables: {
+      agenda: {
+        Row: {
+          bairro_id: string | null
+          created_at: string
+          created_by: string | null
+          data_fim: string | null
+          data_inicio: string
+          descricao: string | null
+          endereco: string | null
+          id: string
+          latitude: number | null
+          local: string | null
+          longitude: number | null
+          municipio_id: string | null
+          observacoes: string | null
+          responsavel_id: string | null
+          status: Database["public"]["Enums"]["status_agenda"]
+          tipo: Database["public"]["Enums"]["tipo_agenda"]
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          bairro_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_fim?: string | null
+          data_inicio: string
+          descricao?: string | null
+          endereco?: string | null
+          id?: string
+          latitude?: number | null
+          local?: string | null
+          longitude?: number | null
+          municipio_id?: string | null
+          observacoes?: string | null
+          responsavel_id?: string | null
+          status?: Database["public"]["Enums"]["status_agenda"]
+          tipo: Database["public"]["Enums"]["tipo_agenda"]
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          bairro_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_fim?: string | null
+          data_inicio?: string
+          descricao?: string | null
+          endereco?: string | null
+          id?: string
+          latitude?: number | null
+          local?: string | null
+          longitude?: number | null
+          municipio_id?: string | null
+          observacoes?: string | null
+          responsavel_id?: string | null
+          status?: Database["public"]["Enums"]["status_agenda"]
+          tipo?: Database["public"]["Enums"]["tipo_agenda"]
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agenda_bairro_id_fkey"
+            columns: ["bairro_id"]
+            isOneToOne: false
+            referencedRelation: "bairros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agenda_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agenda_checkins: {
+        Row: {
+          agenda_id: string
+          created_at: string
+          foto_url: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          tipo: Database["public"]["Enums"]["tipo_checkin"]
+          usuario_id: string | null
+        }
+        Insert: {
+          agenda_id: string
+          created_at?: string
+          foto_url?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          tipo: Database["public"]["Enums"]["tipo_checkin"]
+          usuario_id?: string | null
+        }
+        Update: {
+          agenda_id?: string
+          created_at?: string
+          foto_url?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          tipo?: Database["public"]["Enums"]["tipo_checkin"]
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agenda_checkins_agenda_id_fkey"
+            columns: ["agenda_id"]
+            isOneToOne: false
+            referencedRelation: "agenda"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agenda_followups: {
+        Row: {
+          agenda_id: string
+          concluido: boolean
+          created_at: string
+          descricao: string
+          id: string
+          prazo: string | null
+          responsavel_id: string | null
+        }
+        Insert: {
+          agenda_id: string
+          concluido?: boolean
+          created_at?: string
+          descricao: string
+          id?: string
+          prazo?: string | null
+          responsavel_id?: string | null
+        }
+        Update: {
+          agenda_id?: string
+          concluido?: boolean
+          created_at?: string
+          descricao?: string
+          id?: string
+          prazo?: string | null
+          responsavel_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agenda_followups_agenda_id_fkey"
+            columns: ["agenda_id"]
+            isOneToOne: false
+            referencedRelation: "agenda"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agenda_participantes: {
+        Row: {
+          agenda_id: string
+          confirmado: boolean
+          created_at: string
+          data_confirmacao: string | null
+          id: string
+          papel: Database["public"]["Enums"]["papel_participante"]
+          pessoa_id: string
+          presente: boolean
+        }
+        Insert: {
+          agenda_id: string
+          confirmado?: boolean
+          created_at?: string
+          data_confirmacao?: string | null
+          id?: string
+          papel?: Database["public"]["Enums"]["papel_participante"]
+          pessoa_id: string
+          presente?: boolean
+        }
+        Update: {
+          agenda_id?: string
+          confirmado?: boolean
+          created_at?: string
+          data_confirmacao?: string | null
+          id?: string
+          papel?: Database["public"]["Enums"]["papel_participante"]
+          pessoa_id?: string
+          presente?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agenda_participantes_agenda_id_fkey"
+            columns: ["agenda_id"]
+            isOneToOne: false
+            referencedRelation: "agenda"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agenda_participantes_pessoa_id_fkey"
+            columns: ["pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "pessoas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       areas_atuacao: {
         Row: {
           bairros_ids: string[] | null
@@ -191,6 +396,170 @@ export type Database = {
             columns: ["bairro_id"]
             isOneToOne: false
             referencedRelation: "bairros"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      demandas: {
+        Row: {
+          bairro_id: string | null
+          categoria: Database["public"]["Enums"]["categoria_demanda"]
+          created_at: string
+          created_by: string | null
+          data_abertura: string
+          data_prazo: string | null
+          data_resolucao: string | null
+          data_retorno_cidadao: string | null
+          descricao: string | null
+          id: string
+          municipio_id: string | null
+          origem: Database["public"]["Enums"]["origem_demanda"] | null
+          pessoa_id: string | null
+          prioridade: Database["public"]["Enums"]["prioridade_demanda"]
+          protocolo: string
+          resolucao_descricao: string | null
+          responsavel_id: string | null
+          satisfacao_cidadao: number | null
+          status: Database["public"]["Enums"]["status_demanda"]
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          bairro_id?: string | null
+          categoria?: Database["public"]["Enums"]["categoria_demanda"]
+          created_at?: string
+          created_by?: string | null
+          data_abertura?: string
+          data_prazo?: string | null
+          data_resolucao?: string | null
+          data_retorno_cidadao?: string | null
+          descricao?: string | null
+          id?: string
+          municipio_id?: string | null
+          origem?: Database["public"]["Enums"]["origem_demanda"] | null
+          pessoa_id?: string | null
+          prioridade?: Database["public"]["Enums"]["prioridade_demanda"]
+          protocolo: string
+          resolucao_descricao?: string | null
+          responsavel_id?: string | null
+          satisfacao_cidadao?: number | null
+          status?: Database["public"]["Enums"]["status_demanda"]
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          bairro_id?: string | null
+          categoria?: Database["public"]["Enums"]["categoria_demanda"]
+          created_at?: string
+          created_by?: string | null
+          data_abertura?: string
+          data_prazo?: string | null
+          data_resolucao?: string | null
+          data_retorno_cidadao?: string | null
+          descricao?: string | null
+          id?: string
+          municipio_id?: string | null
+          origem?: Database["public"]["Enums"]["origem_demanda"] | null
+          pessoa_id?: string | null
+          prioridade?: Database["public"]["Enums"]["prioridade_demanda"]
+          protocolo?: string
+          resolucao_descricao?: string | null
+          responsavel_id?: string | null
+          satisfacao_cidadao?: number | null
+          status?: Database["public"]["Enums"]["status_demanda"]
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demandas_bairro_id_fkey"
+            columns: ["bairro_id"]
+            isOneToOne: false
+            referencedRelation: "bairros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandas_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandas_pessoa_id_fkey"
+            columns: ["pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "pessoas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      demandas_anexos: {
+        Row: {
+          arquivo_url: string
+          created_at: string
+          demanda_id: string
+          descricao: string | null
+          id: string
+          tipo: string | null
+        }
+        Insert: {
+          arquivo_url: string
+          created_at?: string
+          demanda_id: string
+          descricao?: string | null
+          id?: string
+          tipo?: string | null
+        }
+        Update: {
+          arquivo_url?: string
+          created_at?: string
+          demanda_id?: string
+          descricao?: string | null
+          id?: string
+          tipo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demandas_anexos_demanda_id_fkey"
+            columns: ["demanda_id"]
+            isOneToOne: false
+            referencedRelation: "demandas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      demandas_encaminhamentos: {
+        Row: {
+          created_at: string
+          de_usuario_id: string | null
+          demanda_id: string
+          id: string
+          observacao: string | null
+          para_usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          de_usuario_id?: string | null
+          demanda_id: string
+          id?: string
+          observacao?: string | null
+          para_usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          de_usuario_id?: string | null
+          demanda_id?: string
+          id?: string
+          observacao?: string | null
+          para_usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demandas_encaminhamentos_demanda_id_fkey"
+            columns: ["demanda_id"]
+            isOneToOne: false
+            referencedRelation: "demandas"
             referencedColumns: ["id"]
           },
         ]
@@ -933,6 +1302,16 @@ export type Database = {
         | "lideranca"
         | "operador"
         | "visualizador"
+      categoria_demanda:
+        | "saude"
+        | "educacao"
+        | "infraestrutura"
+        | "seguranca"
+        | "social"
+        | "emprego"
+        | "moradia"
+        | "transporte"
+        | "outros"
       classificacao_territorial:
         | "reduto"
         | "expansao"
@@ -951,6 +1330,14 @@ export type Database = {
         | "quente"
         | "aliado"
         | "lideranca"
+      origem_demanda:
+        | "visita"
+        | "telefone"
+        | "whatsapp"
+        | "gabinete"
+        | "evento"
+        | "rede_social"
+      papel_participante: "organizador" | "palestrante" | "convidado" | "equipe"
       papel_pessoa:
         | "eleitor"
         | "apoiador"
@@ -962,7 +1349,31 @@ export type Database = {
         | "institucional"
         | "demandante"
         | "equipe"
+      prioridade_demanda: "baixa" | "media" | "alta" | "urgente"
+      status_agenda:
+        | "planejado"
+        | "confirmado"
+        | "em_andamento"
+        | "realizado"
+        | "cancelado"
+      status_demanda:
+        | "aberta"
+        | "triagem"
+        | "encaminhada"
+        | "em_andamento"
+        | "resolvida"
+        | "arquivada"
+      tipo_agenda:
+        | "visita"
+        | "evento"
+        | "reuniao"
+        | "comicio"
+        | "carreata"
+        | "porta_a_porta"
+        | "audiencia"
+        | "retorno"
       tipo_area_atuacao: "equipe" | "lider" | "coordenador"
+      tipo_checkin: "checkin" | "checkout"
       tipo_contato:
         | "celular"
         | "fixo"
@@ -1119,6 +1530,17 @@ export const Constants = {
         "operador",
         "visualizador",
       ],
+      categoria_demanda: [
+        "saude",
+        "educacao",
+        "infraestrutura",
+        "seguranca",
+        "social",
+        "emprego",
+        "moradia",
+        "transporte",
+        "outros",
+      ],
       classificacao_territorial: [
         "reduto",
         "expansao",
@@ -1140,6 +1562,15 @@ export const Constants = {
         "aliado",
         "lideranca",
       ],
+      origem_demanda: [
+        "visita",
+        "telefone",
+        "whatsapp",
+        "gabinete",
+        "evento",
+        "rede_social",
+      ],
+      papel_participante: ["organizador", "palestrante", "convidado", "equipe"],
       papel_pessoa: [
         "eleitor",
         "apoiador",
@@ -1152,7 +1583,34 @@ export const Constants = {
         "demandante",
         "equipe",
       ],
+      prioridade_demanda: ["baixa", "media", "alta", "urgente"],
+      status_agenda: [
+        "planejado",
+        "confirmado",
+        "em_andamento",
+        "realizado",
+        "cancelado",
+      ],
+      status_demanda: [
+        "aberta",
+        "triagem",
+        "encaminhada",
+        "em_andamento",
+        "resolvida",
+        "arquivada",
+      ],
+      tipo_agenda: [
+        "visita",
+        "evento",
+        "reuniao",
+        "comicio",
+        "carreata",
+        "porta_a_porta",
+        "audiencia",
+        "retorno",
+      ],
       tipo_area_atuacao: ["equipe", "lider", "coordenador"],
+      tipo_checkin: ["checkin", "checkout"],
       tipo_contato: [
         "celular",
         "fixo",
