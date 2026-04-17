@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import TerritoriosPage from "./pages/territorial/TerritoriosPage";
@@ -26,34 +27,36 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/cadastro" element={<SignupPage />} />
-            <Route path="/" element={<Index />} />
-            <Route path="/perfil" element={<ProfilePage />} />
-            <Route path="/admin" element={<AdminPage />} />
-            <Route path="/configuracoes" element={<SettingsPage />} />
-            <Route path="/territorios" element={<TerritoriosPage />} />
-            <Route path="/pessoas" element={<PessoasPage />} />
-            <Route path="/demandas" element={<DemandasPage />} />
-            <Route path="/agenda" element={<AgendaPage />} />
-            <Route path="/campo" element={<PlaceholderPage title="Campo" stage={5} />} />
-            <Route path="/materiais" element={<MateriaisPageRoute />} />
-            <Route path="/financeiro" element={<FinanceiroPageRoute />} />
-            <Route path="/bi" element={<BIPage />} />
-            <Route path="/mapas" element={<MapasPage />} />
-            <Route path="/documentos" element={<PlaceholderPage title="Documentos" stage={7} />} />
-            <Route path="/comunicacao" element={<ComunicacaoPage />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/cadastro" element={<SignupPage />} />
+              <Route path="/" element={<Index />} />
+              <Route path="/perfil" element={<ProfilePage />} />
+              <Route path="/admin" element={<AdminPage />} />
+              <Route path="/configuracoes" element={<SettingsPage />} />
+              <Route path="/territorios" element={<TerritoriosPage />} />
+              <Route path="/pessoas" element={<PessoasPage />} />
+              <Route path="/demandas" element={<DemandasPage />} />
+              <Route path="/agenda" element={<AgendaPage />} />
+              <Route path="/campo" element={<PlaceholderPage title="Campo" stage={5} />} />
+              <Route path="/materiais" element={<MateriaisPageRoute />} />
+              <Route path="/financeiro" element={<FinanceiroPageRoute />} />
+              <Route path="/bi" element={<BIPage />} />
+              <Route path="/mapas" element={<MapasPage />} />
+              <Route path="/documentos" element={<PlaceholderPage title="Documentos" stage={7} />} />
+              <Route path="/comunicacao" element={<ComunicacaoPage />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
