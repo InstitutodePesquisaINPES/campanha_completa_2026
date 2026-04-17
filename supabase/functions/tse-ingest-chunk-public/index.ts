@@ -1,0 +1,100 @@
+// Edge Function: tse-ingest-chunk-public
+// Versão autenticada via JWT (chamada do app via supabase.functions.invoke).
+// Apenas usuários com role 'admin' podem usar.
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+type Tabela =
+  | "tse_eleitorado"
+  | "tse_locais_votacao"
+  | "tse_candidatos"
+  | "tse_resultados_secao"
+  | "tse_prestacao_contas";
+
+const ALLOWED: Tabela[] = [
+  "tse_eleitorado",
+  "tse_locais_votacao",
+  "tse_candidatos",
+  "tse_resultados_secao",
+  "tse_prestacao_contas",
+];
+
+interface Payload {
+  tabela: Tabela;
+  registros: Record<string, unknown>[];
+  truncate_filter?: { ano: number; uf: string };
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  try {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) return json({ error: "missing auth" }, 401);
+
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    // Verifica usuário e role admin
+    const userClient = createClient(SUPABASE_URL, ANON, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user }, error: authErr } = await userClient.auth.getUser();
+    if (authErr || !user) return json({ error: "unauthorized" }, 401);
+
+    const admin = createClient(SUPABASE_URL, SERVICE);
+    const { data: roles } = await admin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id);
+    const isAdmin = (roles ?? []).some((r: any) => r.role === "admin");
+    if (!isAdmin) return json({ error: "forbidden: admin only" }, 403);
+
+    const body = (await req.json()) as Payload;
+    if (!ALLOWED.includes(body.tabela)) return json({ error: "tabela inválida" }, 400);
+    if (!Array.isArray(body.registros)) return json({ error: "registros deve ser array" }, 400);
+
+    if (body.truncate_filter) {
+      const { ano, uf } = body.truncate_filter;
+      const { error: delErr } = await admin
+        .from(body.tabela)
+        .delete()
+        .eq("ano", ano)
+        .eq("uf", uf);
+      if (delErr) console.error("delete error:", delErr.message);
+    }
+
+    if (body.registros.length === 0) return json({ ok: true, inserted: 0 });
+
+    const SUBLOTE = 500;
+    let inserted = 0;
+    for (let i = 0; i < body.registros.length; i += SUBLOTE) {
+      const slice = body.registros.slice(i, i + SUBLOTE);
+      const { error } = await admin.from(body.tabela).insert(slice);
+      if (error) {
+        console.error("insert error:", error.message);
+        return json({ error: error.message, inserted }, 500);
+      }
+      inserted += slice.length;
+    }
+
+    return json({ ok: true, inserted });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error(msg);
+    return json({ error: msg }, 500);
+  }
+});
+
+function json(data: unknown, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}

@@ -12,6 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Database, Play, RefreshCw, X, Activity, Loader2 } from "lucide-react";
 import { useEnqueueTSE, useTSEJobs, useTSEStats, useRunWorker, useCancelTSEJob, useTSEJobLogs, type TseJobTipo, type TseImportJob } from "@/hooks/useTSEImport";
 import { toast } from "sonner";
+import { TSECsvUpload } from "./TSECsvUpload";
 
 const UFS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 const ANOS = [2024, 2022, 2020, 2018, 2016];
@@ -76,6 +77,9 @@ export function TSEImportTab() {
 
   return (
     <div className="space-y-4">
+      {/* Upload de CSV */}
+      <TSECsvUpload />
+
       {/* Stats */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard label="Eleitorado" value={stats?.eleitorado ?? 0} />
