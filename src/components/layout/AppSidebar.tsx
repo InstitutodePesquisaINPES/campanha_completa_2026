@@ -15,6 +15,8 @@ import {
   Shield,
   LogOut,
   User,
+  Vote,
+  Target,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -39,6 +41,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const mainItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Plano 90 dias", url: "/plano", icon: Vote },
 ];
 
 const modulesItems = [
@@ -52,6 +55,7 @@ const modulesItems = [
 ];
 
 const analyticsItems = [
+  { title: "Mapa Estratégico", url: "/mapa-estrategico", icon: Target },
   { title: "BI / Dashboards", url: "/bi", icon: BarChart3 },
   { title: "Mapas", url: "/mapas", icon: Map },
 ];

@@ -21,6 +21,8 @@ import FinanceiroPageRoute from "./pages/financeiro/FinanceiroPageRoute";
 import BIPage from "./pages/bi/BIPage";
 import MapasPage from "./pages/mapas/MapasPage";
 import ComunicacaoPage from "./pages/comunicacao/ComunicacaoPage";
+import PlanoCampanhaPage from "./pages/plano/PlanoCampanhaPage";
+import MapaEstrategicoPage from "./pages/mapa-estrategico/MapaEstrategicoPage";
 import PlaceholderPage from "./pages/PlaceholderPage";
 
 const queryClient = new QueryClient();
@@ -47,6 +49,8 @@ const App = () => (
               <Route path="/campo" element={<PlaceholderPage title="Campo" stage={5} />} />
               <Route path="/materiais" element={<MateriaisPageRoute />} />
               <Route path="/financeiro" element={<FinanceiroPageRoute />} />
+              <Route path="/plano" element={<PlanoCampanhaPage />} />
+              <Route path="/mapa-estrategico" element={<MapaEstrategicoPage />} />
               <Route path="/bi" element={<BIPage />} />
               <Route path="/mapas" element={<MapasPage />} />
               <Route path="/documentos" element={<PlaceholderPage title="Documentos" stage={7} />} />
