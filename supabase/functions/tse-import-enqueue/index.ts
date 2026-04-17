@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
         rows.push({
           tipo, uf, ano,
           status: "queued",
-          created_by: userRes.user.id,
+          created_by: userId,
           source_url: buildSourceUrl(tipo, uf, ano),
         });
       }
