@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
     let inserted = 0;
     for (let i = 0; i < body.registros.length; i += SUBLOTE) {
       const slice = body.registros.slice(i, i + SUBLOTE);
-      const { error } = await admin.from(body.tabela).insert(slice);
+      const { error } = await admin.from(body.tabela).upsert(slice, { ignoreDuplicates: true });
       if (error) {
         console.error("insert error:", error.message);
         return json({ error: error.message, inserted }, 500);
