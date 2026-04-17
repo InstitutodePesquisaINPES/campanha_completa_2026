@@ -12,6 +12,7 @@ import { TagsTab } from "@/components/admin/TagsTab";
 import { CentrosCustoTab } from "@/components/admin/CentrosCustoTab";
 import { ConfiguracoesTab } from "@/components/admin/ConfiguracoesTab";
 import { ExportTab } from "@/components/admin/ExportTab";
+import { TSEImportTab } from "@/components/admin/TSEImportTab";
 
 export default function AdminPage() {
   const isAdmin = useIsAdmin();
@@ -37,6 +38,7 @@ export default function AdminPage() {
             <TabsTrigger value="tags">Tags</TabsTrigger>
             <TabsTrigger value="centros">Centros de Custo</TabsTrigger>
             <TabsTrigger value="config">Configurações</TabsTrigger>
+            <TabsTrigger value="tse">Dados TSE</TabsTrigger>
             <TabsTrigger value="audit">Auditoria</TabsTrigger>
             <TabsTrigger value="export">Exportação</TabsTrigger>
           </TabsList>
@@ -47,6 +49,7 @@ export default function AdminPage() {
           <TabsContent value="tags"><TagsTab /></TabsContent>
           <TabsContent value="centros"><CentrosCustoTab /></TabsContent>
           <TabsContent value="config"><ConfiguracoesTab /></TabsContent>
+          <TabsContent value="tse"><TSEImportTab /></TabsContent>
           <TabsContent value="audit"><AuditTab /></TabsContent>
           <TabsContent value="export"><ExportTab /></TabsContent>
         </Tabs>
