@@ -2097,6 +2097,16 @@ export type Database = {
         }
         Relationships: []
       }
+      v_admin_stats_30d: {
+        Row: {
+          demandas: number | null
+          despesas_valor: number | null
+          dia: string | null
+          eventos: number | null
+          pessoas: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       gerar_plano_90_dias: {

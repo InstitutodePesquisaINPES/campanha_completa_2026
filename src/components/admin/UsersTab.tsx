@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, UserPlus, Trash2, Users } from "lucide-react";
 import type { AppRole } from "@/hooks/useUserRoles";
+import { ConvidarUsuarioDialog } from "./ConvidarUsuarioDialog";
 
 const ROLES: AppRole[] = ["admin", "coordenador", "lideranca", "operador", "visualizador"];
 
@@ -109,17 +110,20 @@ export function UsersTab() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-row items-center justify-between gap-2 flex-wrap">
         <CardTitle>Usuários do Sistema ({users.length})</CardTitle>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => seedUsers.mutate()}
-          disabled={seedUsers.isPending}
-        >
-          {seedUsers.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Users className="h-4 w-4 mr-1" />}
-          Seed Usuários Teste
-        </Button>
+        <div className="flex items-center gap-2">
+          <ConvidarUsuarioDialog />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => seedUsers.mutate()}
+            disabled={seedUsers.isPending}
+          >
+            {seedUsers.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Users className="h-4 w-4 mr-1" />}
+            Seed Teste
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <Table>

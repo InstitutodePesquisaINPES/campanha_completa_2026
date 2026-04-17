@@ -1,14 +1,16 @@
-import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useIsAdmin } from "@/hooks/useUserRoles";
 import { Navigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Shield } from "lucide-react";
+import { DashboardTab } from "@/components/admin/DashboardTab";
 import { UsersTab } from "@/components/admin/UsersTab";
+import { CampanhasTab } from "@/components/admin/CampanhasTab";
+import { TerritoriosAdminTab } from "@/components/admin/TerritoriosAdminTab";
 import { AuditTab } from "@/components/admin/AuditTab";
-import { StatsTab } from "@/components/admin/StatsTab";
 import { TagsTab } from "@/components/admin/TagsTab";
 import { CentrosCustoTab } from "@/components/admin/CentrosCustoTab";
+import { ConfiguracoesTab } from "@/components/admin/ConfiguracoesTab";
 import { ExportTab } from "@/components/admin/ExportTab";
 
 export default function AdminPage() {
@@ -26,21 +28,27 @@ export default function AdminPage() {
           Painel Administrativo
         </h1>
 
-        <Tabs defaultValue="stats">
+        <Tabs defaultValue="dashboard">
           <TabsList className="flex-wrap h-auto">
-            <TabsTrigger value="stats">Estatísticas</TabsTrigger>
-            <TabsTrigger value="users">Usuários & Papéis</TabsTrigger>
+            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+            <TabsTrigger value="users">Usuários</TabsTrigger>
+            <TabsTrigger value="campanhas">Campanhas</TabsTrigger>
+            <TabsTrigger value="territorios">Territórios</TabsTrigger>
             <TabsTrigger value="tags">Tags</TabsTrigger>
             <TabsTrigger value="centros">Centros de Custo</TabsTrigger>
+            <TabsTrigger value="config">Configurações</TabsTrigger>
+            <TabsTrigger value="audit">Auditoria</TabsTrigger>
             <TabsTrigger value="export">Exportação</TabsTrigger>
-            <TabsTrigger value="audit">Auditoria (LGPD)</TabsTrigger>
           </TabsList>
-          <TabsContent value="stats"><StatsTab /></TabsContent>
+          <TabsContent value="dashboard"><DashboardTab /></TabsContent>
           <TabsContent value="users"><UsersTab /></TabsContent>
+          <TabsContent value="campanhas"><CampanhasTab /></TabsContent>
+          <TabsContent value="territorios"><TerritoriosAdminTab /></TabsContent>
           <TabsContent value="tags"><TagsTab /></TabsContent>
           <TabsContent value="centros"><CentrosCustoTab /></TabsContent>
-          <TabsContent value="export"><ExportTab /></TabsContent>
+          <TabsContent value="config"><ConfiguracoesTab /></TabsContent>
           <TabsContent value="audit"><AuditTab /></TabsContent>
+          <TabsContent value="export"><ExportTab /></TabsContent>
         </Tabs>
       </div>
     </AppLayout>
