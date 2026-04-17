@@ -72,11 +72,23 @@ Deno.serve(async (req) => {
 
     if (body.registros.length === 0) return json({ ok: true, inserted: 0 });
 
+    const ON_CONFLICT: Record<Tabela, string | undefined> = {
+      tse_eleitorado: "ano,uf,cod_municipio_tse,zona,secao",
+      tse_locais_votacao: "ano,uf,zona,codigo_local",
+      tse_resultados_secao: "ano,turno,uf,cod_municipio_tse,zona,secao,cargo,numero_votavel",
+      tse_candidatos: undefined,
+      tse_prestacao_contas: undefined,
+    };
+
     const SUBLOTE = 500;
     let inserted = 0;
+    const onConflict = ON_CONFLICT[body.tabela];
     for (let i = 0; i < body.registros.length; i += SUBLOTE) {
       const slice = body.registros.slice(i, i + SUBLOTE);
-      const { error } = await admin.from(body.tabela).upsert(slice, { ignoreDuplicates: true });
+      const query = onConflict
+        ? admin.from(body.tabela).upsert(slice, { onConflict, ignoreDuplicates: true })
+        : admin.from(body.tabela).insert(slice);
+      const { error } = await query;
       if (error) {
         console.error("insert error:", error.message);
         return json({ error: error.message, inserted }, 500);
