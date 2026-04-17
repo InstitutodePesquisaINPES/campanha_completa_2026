@@ -1,10 +1,13 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 220 20% 97%;
+    /* Executive Light SaaS Theme */
+    --background: 210 25% 98%;
     --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
@@ -13,19 +16,20 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 217 91% 60%;
+    --primary: 221 83% 53%;
     --primary-foreground: 0 0% 100%;
+    --primary-glow: 217 91% 65%;
 
-    --secondary: 215 20% 90%;
+    --secondary: 220 14% 96%;
     --secondary-foreground: 222 47% 11%;
 
-    --muted: 215 20% 93%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
 
-    --accent: 215 20% 93%;
-    --accent-foreground: 222 47% 11%;
+    --accent: 221 83% 96%;
+    --accent-foreground: 221 83% 30%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
     --success: 142 71% 45%;
@@ -37,66 +41,62 @@
     --info: 199 89% 48%;
     --info-foreground: 0 0% 100%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 217 91% 60%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 221 83% 53%;
 
-    --radius: 0.5rem;
+    --radius: 0.625rem;
 
-    --sidebar-background: 222 47% 8%;
-    --sidebar-foreground: 210 40% 90%;
-    --sidebar-primary: 217 91% 60%;
+    /* Light executive sidebar */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 47% 20%;
+    --sidebar-primary: 221 83% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 47% 14%;
-    --sidebar-accent-foreground: 210 40% 90%;
-    --sidebar-border: 222 30% 18%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-accent: 221 83% 96%;
+    --sidebar-accent-foreground: 221 83% 30%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 221 83% 53%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(221 83% 53%), hsl(217 91% 65%));
+    --gradient-subtle: linear-gradient(180deg, hsl(210 25% 98%), hsl(220 14% 96%));
+    --shadow-sm: 0 1px 2px 0 hsl(222 47% 11% / 0.04);
+    --shadow-md: 0 4px 12px -2px hsl(222 47% 11% / 0.06);
+    --shadow-lg: 0 10px 30px -10px hsl(221 83% 53% / 0.15);
   }
 
   .dark {
     --background: 222 47% 6%;
     --foreground: 210 40% 95%;
-
-    --card: 222 47% 8%;
+    --card: 222 47% 9%;
     --card-foreground: 210 40% 95%;
-
-    --popover: 222 47% 8%;
+    --popover: 222 47% 9%;
     --popover-foreground: 210 40% 95%;
-
     --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
-
+    --primary-glow: 217 91% 70%;
     --secondary: 222 30% 16%;
     --secondary-foreground: 210 40% 95%;
-
     --muted: 222 30% 14%;
-    --muted-foreground: 215 20% 55%;
-
-    --accent: 222 30% 16%;
-    --accent-foreground: 210 40% 95%;
-
+    --muted-foreground: 215 20% 65%;
+    --accent: 222 47% 16%;
+    --accent-foreground: 217 91% 75%;
     --destructive: 0 63% 45%;
     --destructive-foreground: 0 0% 100%;
-
     --success: 142 71% 40%;
     --success-foreground: 0 0% 100%;
-
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
-
     --info: 199 89% 48%;
     --info-foreground: 0 0% 100%;
-
     --border: 222 30% 18%;
     --input: 222 30% 18%;
     --ring: 217 91% 60%;
-
     --sidebar-background: 222 47% 5%;
     --sidebar-foreground: 210 40% 90%;
     --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 47% 10%;
-    --sidebar-accent-foreground: 210 40% 90%;
+    --sidebar-accent: 222 47% 12%;
+    --sidebar-accent-foreground: 210 40% 95%;
     --sidebar-border: 222 30% 14%;
     --sidebar-ring: 217 91% 60%;
   }
@@ -107,7 +107,18 @@
     @apply border-border;
   }
 
+  html {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  h1, h2, h3, h4 {
+    @apply tracking-tight;
   }
 }
