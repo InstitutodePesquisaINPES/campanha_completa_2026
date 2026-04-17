@@ -84,6 +84,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "agenda_bairro_id_fkey"
+            columns: ["bairro_id"]
+            isOneToOne: false
+            referencedRelation: "mapa_estrategico_bairros"
+            referencedColumns: ["bairro_id"]
+          },
+          {
+            foreignKeyName: "agenda_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "mapa_estrategico_bairros"
+            referencedColumns: ["municipio_id"]
+          },
+          {
             foreignKeyName: "agenda_municipio_id_fkey"
             columns: ["municipio_id"]
             isOneToOne: false
@@ -261,6 +275,13 @@ export type Database = {
             foreignKeyName: "areas_atuacao_municipio_id_fkey"
             columns: ["municipio_id"]
             isOneToOne: false
+            referencedRelation: "mapa_estrategico_bairros"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "areas_atuacao_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
             referencedRelation: "municipios"
             referencedColumns: ["id"]
           },
@@ -354,6 +375,317 @@ export type Database = {
             foreignKeyName: "bairros_municipio_id_fkey"
             columns: ["municipio_id"]
             isOneToOne: false
+            referencedRelation: "mapa_estrategico_bairros"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "bairros_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campanha_fases: {
+        Row: {
+          campanha_id: string
+          created_at: string
+          data_fim: string
+          data_inicio: string
+          fase: Database["public"]["Enums"]["fase_campanha"]
+          foco: string | null
+          id: string
+          nome: string
+          ordem: number
+        }
+        Insert: {
+          campanha_id: string
+          created_at?: string
+          data_fim: string
+          data_inicio: string
+          fase: Database["public"]["Enums"]["fase_campanha"]
+          foco?: string | null
+          id?: string
+          nome: string
+          ordem?: number
+        }
+        Update: {
+          campanha_id?: string
+          created_at?: string
+          data_fim?: string
+          data_inicio?: string
+          fase?: Database["public"]["Enums"]["fase_campanha"]
+          foco?: string | null
+          id?: string
+          nome?: string
+          ordem?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campanha_fases_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "campanhas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campanha_metas: {
+        Row: {
+          area: Database["public"]["Enums"]["area_campanha"]
+          campanha_id: string
+          created_at: string
+          fase: Database["public"]["Enums"]["fase_campanha"]
+          id: string
+          indicador: string
+          meta: string
+          observacoes: string | null
+          ordem: number
+          updated_at: string
+          valor_meta: number
+          valor_realizado: number
+        }
+        Insert: {
+          area: Database["public"]["Enums"]["area_campanha"]
+          campanha_id: string
+          created_at?: string
+          fase: Database["public"]["Enums"]["fase_campanha"]
+          id?: string
+          indicador: string
+          meta: string
+          observacoes?: string | null
+          ordem?: number
+          updated_at?: string
+          valor_meta?: number
+          valor_realizado?: number
+        }
+        Update: {
+          area?: Database["public"]["Enums"]["area_campanha"]
+          campanha_id?: string
+          created_at?: string
+          fase?: Database["public"]["Enums"]["fase_campanha"]
+          id?: string
+          indicador?: string
+          meta?: string
+          observacoes?: string | null
+          ordem?: number
+          updated_at?: string
+          valor_meta?: number
+          valor_realizado?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campanha_metas_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "campanhas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campanha_semanas: {
+        Row: {
+          campanha_id: string
+          created_at: string
+          data_fim: string
+          data_inicio: string
+          fase: Database["public"]["Enums"]["fase_campanha"]
+          foco_principal: string | null
+          id: string
+          meta_campo: string | null
+          meta_digital: string | null
+          meta_financeiro: string | null
+          numero_semana: number
+          observacoes: string | null
+        }
+        Insert: {
+          campanha_id: string
+          created_at?: string
+          data_fim: string
+          data_inicio: string
+          fase: Database["public"]["Enums"]["fase_campanha"]
+          foco_principal?: string | null
+          id?: string
+          meta_campo?: string | null
+          meta_digital?: string | null
+          meta_financeiro?: string | null
+          numero_semana: number
+          observacoes?: string | null
+        }
+        Update: {
+          campanha_id?: string
+          created_at?: string
+          data_fim?: string
+          data_inicio?: string
+          fase?: Database["public"]["Enums"]["fase_campanha"]
+          foco_principal?: string | null
+          id?: string
+          meta_campo?: string | null
+          meta_digital?: string | null
+          meta_financeiro?: string | null
+          numero_semana?: number
+          observacoes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campanha_semanas_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "campanhas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campanha_tarefas: {
+        Row: {
+          area: Database["public"]["Enums"]["area_campanha"]
+          campanha_id: string
+          created_at: string
+          data_conclusao: string | null
+          data_prevista: string
+          descricao: string | null
+          dia: number
+          fase_id: string | null
+          id: string
+          observacoes: string | null
+          ordem: number
+          prioridade: Database["public"]["Enums"]["prioridade_demanda"]
+          responsavel_id: string | null
+          semana: number
+          status: Database["public"]["Enums"]["status_tarefa"]
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          area: Database["public"]["Enums"]["area_campanha"]
+          campanha_id: string
+          created_at?: string
+          data_conclusao?: string | null
+          data_prevista: string
+          descricao?: string | null
+          dia: number
+          fase_id?: string | null
+          id?: string
+          observacoes?: string | null
+          ordem?: number
+          prioridade?: Database["public"]["Enums"]["prioridade_demanda"]
+          responsavel_id?: string | null
+          semana: number
+          status?: Database["public"]["Enums"]["status_tarefa"]
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          area?: Database["public"]["Enums"]["area_campanha"]
+          campanha_id?: string
+          created_at?: string
+          data_conclusao?: string | null
+          data_prevista?: string
+          descricao?: string | null
+          dia?: number
+          fase_id?: string | null
+          id?: string
+          observacoes?: string | null
+          ordem?: number
+          prioridade?: Database["public"]["Enums"]["prioridade_demanda"]
+          responsavel_id?: string | null
+          semana?: number
+          status?: Database["public"]["Enums"]["status_tarefa"]
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campanha_tarefas_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campanha_tarefas_fase_id_fkey"
+            columns: ["fase_id"]
+            isOneToOne: false
+            referencedRelation: "campanha_fases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campanhas: {
+        Row: {
+          ativa: boolean
+          candidato_pessoa_id: string | null
+          cargo: Database["public"]["Enums"]["cargo_eleitoral"]
+          coligacao: string | null
+          created_at: string
+          data_eleicao: string
+          data_inicio_plano: string
+          id: string
+          meta_votos: number | null
+          municipio_id: string | null
+          nome: string
+          numero_urna: string | null
+          observacoes: string | null
+          orcamento_total: number | null
+          partido_sigla: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativa?: boolean
+          candidato_pessoa_id?: string | null
+          cargo: Database["public"]["Enums"]["cargo_eleitoral"]
+          coligacao?: string | null
+          created_at?: string
+          data_eleicao: string
+          data_inicio_plano?: string
+          id?: string
+          meta_votos?: number | null
+          municipio_id?: string | null
+          nome: string
+          numero_urna?: string | null
+          observacoes?: string | null
+          orcamento_total?: number | null
+          partido_sigla?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativa?: boolean
+          candidato_pessoa_id?: string | null
+          cargo?: Database["public"]["Enums"]["cargo_eleitoral"]
+          coligacao?: string | null
+          created_at?: string
+          data_eleicao?: string
+          data_inicio_plano?: string
+          id?: string
+          meta_votos?: number | null
+          municipio_id?: string | null
+          nome?: string
+          numero_urna?: string | null
+          observacoes?: string | null
+          orcamento_total?: number | null
+          partido_sigla?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campanhas_candidato_pessoa_id_fkey"
+            columns: ["candidato_pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "pessoas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campanhas_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "mapa_estrategico_bairros"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "campanhas_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
             referencedRelation: "municipios"
             referencedColumns: ["id"]
           },
@@ -424,6 +756,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "bairros"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comunidades_bairro_id_fkey"
+            columns: ["bairro_id"]
+            isOneToOne: false
+            referencedRelation: "mapa_estrategico_bairros"
+            referencedColumns: ["bairro_id"]
           },
         ]
       }
@@ -504,6 +843,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "bairros"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandas_bairro_id_fkey"
+            columns: ["bairro_id"]
+            isOneToOne: false
+            referencedRelation: "mapa_estrategico_bairros"
+            referencedColumns: ["bairro_id"]
+          },
+          {
+            foreignKeyName: "demandas_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "mapa_estrategico_bairros"
+            referencedColumns: ["municipio_id"]
           },
           {
             foreignKeyName: "demandas_municipio_id_fkey"
@@ -693,6 +1046,13 @@ export type Database = {
             foreignKeyName: "distritos_municipio_id_fkey"
             columns: ["municipio_id"]
             isOneToOne: false
+            referencedRelation: "mapa_estrategico_bairros"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "distritos_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
             referencedRelation: "municipios"
             referencedColumns: ["id"]
           },
@@ -769,6 +1129,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "materiais"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estoques_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "mapa_estrategico_bairros"
+            referencedColumns: ["municipio_id"]
           },
           {
             foreignKeyName: "estoques_municipio_id_fkey"
@@ -920,8 +1287,11 @@ export type Database = {
           full_name: string
           genero: string | null
           id: string
+          meta_votos: number | null
           nivel_relacionamento: Database["public"]["Enums"]["nivel_relacionamento"]
           observacoes: string | null
+          proxima_acao: string | null
+          responsavel_area: string | null
           updated_at: string
         }
         Insert: {
@@ -933,8 +1303,11 @@ export type Database = {
           full_name: string
           genero?: string | null
           id?: string
+          meta_votos?: number | null
           nivel_relacionamento?: Database["public"]["Enums"]["nivel_relacionamento"]
           observacoes?: string | null
+          proxima_acao?: string | null
+          responsavel_area?: string | null
           updated_at?: string
         }
         Update: {
@@ -946,8 +1319,11 @@ export type Database = {
           full_name?: string
           genero?: string | null
           id?: string
+          meta_votos?: number | null
           nivel_relacionamento?: Database["public"]["Enums"]["nivel_relacionamento"]
           observacoes?: string | null
+          proxima_acao?: string | null
+          responsavel_area?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -1122,6 +1498,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "bairros"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pessoas_enderecos_bairro_id_fkey"
+            columns: ["bairro_id"]
+            isOneToOne: false
+            referencedRelation: "mapa_estrategico_bairros"
+            referencedColumns: ["bairro_id"]
+          },
+          {
+            foreignKeyName: "pessoas_enderecos_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "mapa_estrategico_bairros"
+            referencedColumns: ["municipio_id"]
           },
           {
             foreignKeyName: "pessoas_enderecos_municipio_id_fkey"
@@ -1491,6 +1881,13 @@ export type Database = {
             foreignKeyName: "roteiros_visita_municipio_id_fkey"
             columns: ["municipio_id"]
             isOneToOne: false
+            referencedRelation: "mapa_estrategico_bairros"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "roteiros_visita_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
             referencedRelation: "municipios"
             referencedColumns: ["id"]
           },
@@ -1648,6 +2045,13 @@ export type Database = {
             foreignKeyName: "zonas_eleitorais_municipio_id_fkey"
             columns: ["municipio_id"]
             isOneToOne: false
+            referencedRelation: "mapa_estrategico_bairros"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "zonas_eleitorais_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
             referencedRelation: "municipios"
             referencedColumns: ["id"]
           },
@@ -1655,6 +2059,23 @@ export type Database = {
       }
     }
     Views: {
+      mapa_estrategico_bairros: {
+        Row: {
+          apoiadores: number | null
+          bairro_id: string | null
+          bairro_nome: string | null
+          classificacao:
+            | Database["public"]["Enums"]["classificacao_territorial"]
+            | null
+          demandas_abertas: number | null
+          demandas_resolvidas: number | null
+          eleitores_cadastrados: number | null
+          meta_votos_total: number | null
+          municipio_id: string | null
+          municipio_nome: string | null
+        }
+        Relationships: []
+      }
       profiles_public: {
         Row: {
           avatar_url: string | null
@@ -1678,6 +2099,10 @@ export type Database = {
       }
     }
     Functions: {
+      gerar_plano_90_dias: {
+        Args: { _campanha_id: string }
+        Returns: undefined
+      }
       has_manage_role: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
@@ -1694,6 +2119,24 @@ export type Database = {
         | "lideranca"
         | "operador"
         | "visualizador"
+      area_campanha:
+        | "organizacao"
+        | "campo"
+        | "digital"
+        | "financeiro"
+        | "juridico"
+        | "comunicacao"
+        | "logistica"
+        | "dados"
+      cargo_eleitoral:
+        | "vereador"
+        | "prefeito"
+        | "vice_prefeito"
+        | "deputado_estadual"
+        | "deputado_federal"
+        | "senador"
+        | "governador"
+        | "presidente"
       categoria_demanda:
         | "saude"
         | "educacao"
@@ -1719,6 +2162,11 @@ export type Database = {
         | "disputa"
         | "risco"
         | "baixa_presenca"
+      fase_campanha:
+        | "pre_campanha"
+        | "lancamento"
+        | "consolidacao"
+        | "reta_final"
       finalidade_lgpd:
         | "comunicacao_politica"
         | "pesquisa"
@@ -1766,6 +2214,12 @@ export type Database = {
         | "arquivada"
       status_despesa: "pendente" | "aprovada" | "paga" | "cancelada"
       status_roteiro: "planejado" | "em_campo" | "concluido" | "cancelado"
+      status_tarefa:
+        | "pendente"
+        | "em_andamento"
+        | "concluida"
+        | "atrasada"
+        | "cancelada"
       tipo_agenda:
         | "visita"
         | "evento"
@@ -1948,6 +2402,26 @@ export const Constants = {
         "operador",
         "visualizador",
       ],
+      area_campanha: [
+        "organizacao",
+        "campo",
+        "digital",
+        "financeiro",
+        "juridico",
+        "comunicacao",
+        "logistica",
+        "dados",
+      ],
+      cargo_eleitoral: [
+        "vereador",
+        "prefeito",
+        "vice_prefeito",
+        "deputado_estadual",
+        "deputado_federal",
+        "senador",
+        "governador",
+        "presidente",
+      ],
       categoria_demanda: [
         "saude",
         "educacao",
@@ -1975,6 +2449,12 @@ export const Constants = {
         "disputa",
         "risco",
         "baixa_presenca",
+      ],
+      fase_campanha: [
+        "pre_campanha",
+        "lancamento",
+        "consolidacao",
+        "reta_final",
       ],
       finalidade_lgpd: [
         "comunicacao_politica",
@@ -2029,6 +2509,13 @@ export const Constants = {
       ],
       status_despesa: ["pendente", "aprovada", "paga", "cancelada"],
       status_roteiro: ["planejado", "em_campo", "concluido", "cancelado"],
+      status_tarefa: [
+        "pendente",
+        "em_andamento",
+        "concluida",
+        "atrasada",
+        "cancelada",
+      ],
       tipo_agenda: [
         "visita",
         "evento",
