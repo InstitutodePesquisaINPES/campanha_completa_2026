@@ -16,7 +16,7 @@ export function useCampanhas() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("campanhas")
-        .select("*, municipios(nome), pessoas(full_name)")
+        .select("*, municipios(nome), estados(sigla, nome), pessoas(full_name)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -31,7 +31,7 @@ export function useCampanha(id?: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("campanhas")
-        .select("*, municipios(nome), pessoas(full_name)")
+        .select("*, municipios(nome), estados(sigla, nome), pessoas(full_name)")
         .eq("id", id!)
         .maybeSingle();
       if (error) throw error;

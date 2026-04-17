@@ -56,6 +56,10 @@ export default function PlanoCampanhaPage() {
                     <Badge variant="outline" className="text-[10px] capitalize">{campanha.cargo.replace("_", " ")}</Badge>
                   </div>
                   <div className="text-lg font-bold truncate">{campanha.nome}</div>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {(campanha as any).municipios?.nome ?? (campanha as any).estados?.nome ?? "Sem escopo"}
+                    {(campanha as any).municipios_foco_ids?.length > 0 && ` · +${(campanha as any).municipios_foco_ids.length} foco`}
+                  </p>
                   <p className="text-xs text-muted-foreground">{campanha.numero_urna ? `Nº ${campanha.numero_urna}` : "Sem nº urna"}{campanha.partido_sigla ? ` · ${campanha.partido_sigla}` : ""}</p>
                 </CardContent>
               </Card>
