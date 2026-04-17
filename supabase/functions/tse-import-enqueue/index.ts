@@ -17,19 +17,28 @@ Deno.serve(async (req) => {
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    const auth = req.headers.get("Authorization") ?? "";
-    const userClient = createClient(SUPABASE_URL, ANON_KEY, {
-      global: { headers: { Authorization: auth } },
-    });
-    const { data: userRes } = await userClient.auth.getUser();
-    if (!userRes?.user) return json({ error: "unauthorized" }, 401);
-
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
-    const { data: isAdmin } = await admin.rpc("has_role", {
-      _user_id: userRes.user.id,
-      _role: "admin",
-    });
-    if (!isAdmin) return json({ error: "forbidden" }, 403);
+
+    // Permite chamada interna (server-to-server) com service-role no header x-internal-key
+    const internalKey = req.headers.get("x-internal-key") ?? "";
+    let userId: string | null = null;
+
+    if (internalKey && internalKey === SERVICE_KEY) {
+      userId = null; // chamada interna confiável
+    } else {
+      const auth = req.headers.get("Authorization") ?? "";
+      const userClient = createClient(SUPABASE_URL, ANON_KEY, {
+        global: { headers: { Authorization: auth } },
+      });
+      const { data: userRes } = await userClient.auth.getUser();
+      if (!userRes?.user) return json({ error: "unauthorized" }, 401);
+      const { data: isAdmin } = await admin.rpc("has_role", {
+        _user_id: userRes.user.id,
+        _role: "admin",
+      });
+      if (!isAdmin) return json({ error: "forbidden" }, 403);
+      userId = userRes.user.id;
+    }
 
     const body = await req.json();
     const uf = String(body.uf ?? "").toUpperCase();
@@ -44,7 +53,7 @@ Deno.serve(async (req) => {
         rows.push({
           tipo, uf, ano,
           status: "queued",
-          created_by: userRes.user.id,
+          created_by: userId,
           source_url: buildSourceUrl(tipo, uf, ano),
         });
       }
