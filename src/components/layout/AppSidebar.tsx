@@ -152,10 +152,10 @@ export function AppSidebar() {
       <SidebarFooter className="p-2">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
+            <SidebarMenuButton asChild tooltip="Meu perfil">
               <NavLink to="/perfil" className="flex items-center gap-2">
-                <Avatar className="h-6 w-6">
-                  <AvatarFallback className="text-[10px] bg-primary/20 text-primary">
+                <Avatar className="h-6 w-6 shrink-0">
+                  <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
@@ -166,7 +166,7 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={signOut}>
+            <SidebarMenuButton onClick={signOut} tooltip="Sair">
               <LogOut className="h-4 w-4" />
               {!collapsed && <span>Sair</span>}
             </SidebarMenuButton>
