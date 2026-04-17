@@ -484,6 +484,131 @@ export type Database = {
           },
         ]
       }
+      campanha_parametros: {
+        Row: {
+          campanha_id: string
+          created_at: string
+          custo_por_voto_reais: number
+          escala_deputado_estadual: number
+          escala_deputado_federal: number
+          escala_governador: number
+          escala_prefeito: number
+          escala_presidente: number
+          escala_senador: number
+          escala_vereador: number
+          escala_vice_governador: number
+          escala_vice_prefeito: number
+          id: string
+          min_cadastro: number
+          min_fiscais: number
+          min_orcamento_reais: number
+          min_visitas: number
+          min_visitas_semana: number
+          pct_cadastro_sobre_votos: number
+          pct_visitas_sobre_votos: number
+          preservar_concluidas: boolean
+          tarefas_executivo: Json
+          tarefas_legislativo: Json
+          tarefas_municipio_foco: Json
+          tse_debates_ativo: boolean
+          tse_debates_dias: number
+          tse_hgpe_ativo: boolean
+          tse_hgpe_dias: number
+          tse_prestacao_ativo: boolean
+          tse_prestacao_dias: number
+          tse_propaganda_ativo: boolean
+          tse_propaganda_dias: number
+          tse_registro_ativo: boolean
+          tse_registro_dias: number
+          updated_at: string
+          votos_por_fiscal: number
+        }
+        Insert: {
+          campanha_id: string
+          created_at?: string
+          custo_por_voto_reais?: number
+          escala_deputado_estadual?: number
+          escala_deputado_federal?: number
+          escala_governador?: number
+          escala_prefeito?: number
+          escala_presidente?: number
+          escala_senador?: number
+          escala_vereador?: number
+          escala_vice_governador?: number
+          escala_vice_prefeito?: number
+          id?: string
+          min_cadastro?: number
+          min_fiscais?: number
+          min_orcamento_reais?: number
+          min_visitas?: number
+          min_visitas_semana?: number
+          pct_cadastro_sobre_votos?: number
+          pct_visitas_sobre_votos?: number
+          preservar_concluidas?: boolean
+          tarefas_executivo?: Json
+          tarefas_legislativo?: Json
+          tarefas_municipio_foco?: Json
+          tse_debates_ativo?: boolean
+          tse_debates_dias?: number
+          tse_hgpe_ativo?: boolean
+          tse_hgpe_dias?: number
+          tse_prestacao_ativo?: boolean
+          tse_prestacao_dias?: number
+          tse_propaganda_ativo?: boolean
+          tse_propaganda_dias?: number
+          tse_registro_ativo?: boolean
+          tse_registro_dias?: number
+          updated_at?: string
+          votos_por_fiscal?: number
+        }
+        Update: {
+          campanha_id?: string
+          created_at?: string
+          custo_por_voto_reais?: number
+          escala_deputado_estadual?: number
+          escala_deputado_federal?: number
+          escala_governador?: number
+          escala_prefeito?: number
+          escala_presidente?: number
+          escala_senador?: number
+          escala_vereador?: number
+          escala_vice_governador?: number
+          escala_vice_prefeito?: number
+          id?: string
+          min_cadastro?: number
+          min_fiscais?: number
+          min_orcamento_reais?: number
+          min_visitas?: number
+          min_visitas_semana?: number
+          pct_cadastro_sobre_votos?: number
+          pct_visitas_sobre_votos?: number
+          preservar_concluidas?: boolean
+          tarefas_executivo?: Json
+          tarefas_legislativo?: Json
+          tarefas_municipio_foco?: Json
+          tse_debates_ativo?: boolean
+          tse_debates_dias?: number
+          tse_hgpe_ativo?: boolean
+          tse_hgpe_dias?: number
+          tse_prestacao_ativo?: boolean
+          tse_prestacao_dias?: number
+          tse_propaganda_ativo?: boolean
+          tse_propaganda_dias?: number
+          tse_registro_ativo?: boolean
+          tse_registro_dias?: number
+          updated_at?: string
+          votos_por_fiscal?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campanha_parametros_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: true
+            referencedRelation: "campanhas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campanha_semanas: {
         Row: {
           campanha_id: string
@@ -2575,6 +2700,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      inicializar_parametros_campanha: {
+        Args: { _campanha_id: string }
+        Returns: string
       }
     }
     Enums: {
