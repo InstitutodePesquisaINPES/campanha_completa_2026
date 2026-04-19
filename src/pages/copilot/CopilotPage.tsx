@@ -18,8 +18,21 @@ import ReactMarkdown from "react-markdown";
 
 type Msg = { role: "user" | "assistant"; content: string };
 type CopilotDialogState = AICopilotMutationPayload;
+type CopilotCategory = "estrategista" | "analista" | "comunicador" | "juridico" | "financeiro" | "territorial" | "geral";
 
-const CATEGORIAS = ["estrategista","analista","comunicador","juridico","financeiro","territorial","geral"];
+const CATEGORIAS: CopilotCategory[] = ["estrategista","analista","comunicador","juridico","financeiro","territorial","geral"];
+
+function createCopilotDialogState(): CopilotDialogState {
+  return {
+    nome: "",
+    descricao: "",
+    ativo: true,
+    temperatura: 0.7,
+    max_tokens: 2048,
+    categoria: "geral",
+    prompt_sistema: "",
+  };
+}
 
 export default function CopilotPage() {
   const { data: copilots } = useAICopilots();
@@ -65,7 +78,7 @@ export default function CopilotPage() {
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm flex items-center gap-2"><Sparkles className="h-4 w-4" />Copilots</CardTitle>
               {isAdmin && (
-                <Button size="sm" variant="ghost" onClick={() => setEditDialog({ ativo: true, temperatura: 0.7, max_tokens: 2048, categoria: "geral", prompt_sistema: "" })}>
+                <Button size="sm" variant="ghost" onClick={() => setEditDialog(createCopilotDialogState())}>
                   <Plus className="h-4 w-4" />
                 </Button>
               )}
@@ -136,7 +149,7 @@ export default function CopilotPage() {
                 <div><Label>Nome</Label><Input value={editDialog.nome ?? ""} onChange={e => setEditDialog({ ...editDialog, nome: e.target.value })} /></div>
                 <div>
                   <Label>Categoria</Label>
-                  <Select value={editDialog.categoria} onValueChange={v => setEditDialog({ ...editDialog, categoria: v })}>
+                  <Select value={editDialog.categoria} onValueChange={v => setEditDialog({ ...editDialog, categoria: v as CopilotCategory })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>{CATEGORIAS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                   </Select>
