@@ -764,6 +764,106 @@ export type Database = {
           },
         ]
       }
+      bairros_estrategicos: {
+        Row: {
+          bairro_id: string
+          campanha_id: string
+          classificacao: Database["public"]["Enums"]["classificacao_estrategica"]
+          created_at: string
+          id: string
+          meta_votos: number
+          municipio_estrategico_id: string | null
+          num_apoiadores: number | null
+          num_eleitores: number | null
+          num_liderancas: number | null
+          observacoes: string | null
+          prioridade: number
+          responsavel_id: string | null
+          score: number
+          updated_at: string
+          votos_estimados: number | null
+        }
+        Insert: {
+          bairro_id: string
+          campanha_id: string
+          classificacao?: Database["public"]["Enums"]["classificacao_estrategica"]
+          created_at?: string
+          id?: string
+          meta_votos?: number
+          municipio_estrategico_id?: string | null
+          num_apoiadores?: number | null
+          num_eleitores?: number | null
+          num_liderancas?: number | null
+          observacoes?: string | null
+          prioridade?: number
+          responsavel_id?: string | null
+          score?: number
+          updated_at?: string
+          votos_estimados?: number | null
+        }
+        Update: {
+          bairro_id?: string
+          campanha_id?: string
+          classificacao?: Database["public"]["Enums"]["classificacao_estrategica"]
+          created_at?: string
+          id?: string
+          meta_votos?: number
+          municipio_estrategico_id?: string | null
+          num_apoiadores?: number | null
+          num_eleitores?: number | null
+          num_liderancas?: number | null
+          observacoes?: string | null
+          prioridade?: number
+          responsavel_id?: string | null
+          score?: number
+          updated_at?: string
+          votos_estimados?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bairros_estrategicos_bairro_id_fkey"
+            columns: ["bairro_id"]
+            isOneToOne: false
+            referencedRelation: "bairros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bairros_estrategicos_bairro_id_fkey"
+            columns: ["bairro_id"]
+            isOneToOne: false
+            referencedRelation: "mapa_estrategico_bairros"
+            referencedColumns: ["bairro_id"]
+          },
+          {
+            foreignKeyName: "bairros_estrategicos_bairro_id_fkey"
+            columns: ["bairro_id"]
+            isOneToOne: false
+            referencedRelation: "v_lacunas_territoriais"
+            referencedColumns: ["bairro_id"]
+          },
+          {
+            foreignKeyName: "bairros_estrategicos_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bairros_estrategicos_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_indicadores_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+          {
+            foreignKeyName: "bairros_estrategicos_municipio_estrategico_id_fkey"
+            columns: ["municipio_estrategico_id"]
+            isOneToOne: false
+            referencedRelation: "municipios_estrategicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campanha_fases: {
         Row: {
           campanha_id: string
@@ -880,6 +980,7 @@ export type Database = {
           campanha_id: string
           created_at: string
           custo_por_voto_reais: number
+          duracao_dias: number
           escala_deputado_estadual: number
           escala_deputado_federal: number
           escala_governador: number
@@ -889,12 +990,15 @@ export type Database = {
           escala_vereador: number
           escala_vice_governador: number
           escala_vice_prefeito: number
+          etapas_sobrepostas: boolean
+          fases_config: Json
           id: string
           min_cadastro: number
           min_fiscais: number
           min_orcamento_reais: number
           min_visitas: number
           min_visitas_semana: number
+          num_fases: number
           pct_cadastro_sobre_votos: number
           pct_visitas_sobre_votos: number
           preservar_concluidas: boolean
@@ -918,6 +1022,7 @@ export type Database = {
           campanha_id: string
           created_at?: string
           custo_por_voto_reais?: number
+          duracao_dias?: number
           escala_deputado_estadual?: number
           escala_deputado_federal?: number
           escala_governador?: number
@@ -927,12 +1032,15 @@ export type Database = {
           escala_vereador?: number
           escala_vice_governador?: number
           escala_vice_prefeito?: number
+          etapas_sobrepostas?: boolean
+          fases_config?: Json
           id?: string
           min_cadastro?: number
           min_fiscais?: number
           min_orcamento_reais?: number
           min_visitas?: number
           min_visitas_semana?: number
+          num_fases?: number
           pct_cadastro_sobre_votos?: number
           pct_visitas_sobre_votos?: number
           preservar_concluidas?: boolean
@@ -956,6 +1064,7 @@ export type Database = {
           campanha_id?: string
           created_at?: string
           custo_por_voto_reais?: number
+          duracao_dias?: number
           escala_deputado_estadual?: number
           escala_deputado_federal?: number
           escala_governador?: number
@@ -965,12 +1074,15 @@ export type Database = {
           escala_vereador?: number
           escala_vice_governador?: number
           escala_vice_prefeito?: number
+          etapas_sobrepostas?: boolean
+          fases_config?: Json
           id?: string
           min_cadastro?: number
           min_fiscais?: number
           min_orcamento_reais?: number
           min_visitas?: number
           min_visitas_semana?: number
+          num_fases?: number
           pct_cadastro_sobre_votos?: number
           pct_visitas_sobre_votos?: number
           preservar_concluidas?: boolean
@@ -2375,6 +2487,216 @@ export type Database = {
           },
         ]
       }
+      liderancas_locais: {
+        Row: {
+          alinhamento:
+            | Database["public"]["Enums"]["vereador_alinhamento"]
+            | null
+          apelido: string | null
+          bairro_id: string | null
+          campanha_id: string | null
+          cargo_publico_anterior: string | null
+          classificacao: Database["public"]["Enums"]["lideranca_classificacao"]
+          created_at: string
+          email: string | null
+          endereco: string | null
+          foto_url: string | null
+          id: string
+          igreja_denominacao: string | null
+          influencia_score: number
+          ja_foi_candidato: boolean | null
+          latitude: number | null
+          lider_religioso: boolean | null
+          longitude: number | null
+          municipio_id: string | null
+          nome: string
+          nome_associacao: string | null
+          num_fieis_estimado: number | null
+          num_interacoes: number
+          num_membros_associacao: number | null
+          observacoes: string | null
+          pessoa_id: string | null
+          presidente_associacao: boolean | null
+          profissao: string | null
+          profissao_influente: boolean | null
+          proximo_contato_em: string | null
+          rede_contatos_estimada: number
+          redes_sociais: Json | null
+          responsavel_id: string | null
+          status: Database["public"]["Enums"]["lideranca_status"]
+          tags: string[] | null
+          tamanho_familia_estimado: number | null
+          telefone: string | null
+          tem_familia_grande: boolean | null
+          tipo: Database["public"]["Enums"]["lideranca_tipo"]
+          tipos_secundarios:
+            | Database["public"]["Enums"]["lideranca_tipo"][]
+            | null
+          ultimo_contato_em: string | null
+          updated_at: string
+          votos_estimados: number
+          votos_recebidos_anterior: number | null
+          whatsapp: string | null
+        }
+        Insert: {
+          alinhamento?:
+            | Database["public"]["Enums"]["vereador_alinhamento"]
+            | null
+          apelido?: string | null
+          bairro_id?: string | null
+          campanha_id?: string | null
+          cargo_publico_anterior?: string | null
+          classificacao?: Database["public"]["Enums"]["lideranca_classificacao"]
+          created_at?: string
+          email?: string | null
+          endereco?: string | null
+          foto_url?: string | null
+          id?: string
+          igreja_denominacao?: string | null
+          influencia_score?: number
+          ja_foi_candidato?: boolean | null
+          latitude?: number | null
+          lider_religioso?: boolean | null
+          longitude?: number | null
+          municipio_id?: string | null
+          nome: string
+          nome_associacao?: string | null
+          num_fieis_estimado?: number | null
+          num_interacoes?: number
+          num_membros_associacao?: number | null
+          observacoes?: string | null
+          pessoa_id?: string | null
+          presidente_associacao?: boolean | null
+          profissao?: string | null
+          profissao_influente?: boolean | null
+          proximo_contato_em?: string | null
+          rede_contatos_estimada?: number
+          redes_sociais?: Json | null
+          responsavel_id?: string | null
+          status?: Database["public"]["Enums"]["lideranca_status"]
+          tags?: string[] | null
+          tamanho_familia_estimado?: number | null
+          telefone?: string | null
+          tem_familia_grande?: boolean | null
+          tipo?: Database["public"]["Enums"]["lideranca_tipo"]
+          tipos_secundarios?:
+            | Database["public"]["Enums"]["lideranca_tipo"][]
+            | null
+          ultimo_contato_em?: string | null
+          updated_at?: string
+          votos_estimados?: number
+          votos_recebidos_anterior?: number | null
+          whatsapp?: string | null
+        }
+        Update: {
+          alinhamento?:
+            | Database["public"]["Enums"]["vereador_alinhamento"]
+            | null
+          apelido?: string | null
+          bairro_id?: string | null
+          campanha_id?: string | null
+          cargo_publico_anterior?: string | null
+          classificacao?: Database["public"]["Enums"]["lideranca_classificacao"]
+          created_at?: string
+          email?: string | null
+          endereco?: string | null
+          foto_url?: string | null
+          id?: string
+          igreja_denominacao?: string | null
+          influencia_score?: number
+          ja_foi_candidato?: boolean | null
+          latitude?: number | null
+          lider_religioso?: boolean | null
+          longitude?: number | null
+          municipio_id?: string | null
+          nome?: string
+          nome_associacao?: string | null
+          num_fieis_estimado?: number | null
+          num_interacoes?: number
+          num_membros_associacao?: number | null
+          observacoes?: string | null
+          pessoa_id?: string | null
+          presidente_associacao?: boolean | null
+          profissao?: string | null
+          profissao_influente?: boolean | null
+          proximo_contato_em?: string | null
+          rede_contatos_estimada?: number
+          redes_sociais?: Json | null
+          responsavel_id?: string | null
+          status?: Database["public"]["Enums"]["lideranca_status"]
+          tags?: string[] | null
+          tamanho_familia_estimado?: number | null
+          telefone?: string | null
+          tem_familia_grande?: boolean | null
+          tipo?: Database["public"]["Enums"]["lideranca_tipo"]
+          tipos_secundarios?:
+            | Database["public"]["Enums"]["lideranca_tipo"][]
+            | null
+          ultimo_contato_em?: string | null
+          updated_at?: string
+          votos_estimados?: number
+          votos_recebidos_anterior?: number | null
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "liderancas_locais_bairro_id_fkey"
+            columns: ["bairro_id"]
+            isOneToOne: false
+            referencedRelation: "bairros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "liderancas_locais_bairro_id_fkey"
+            columns: ["bairro_id"]
+            isOneToOne: false
+            referencedRelation: "mapa_estrategico_bairros"
+            referencedColumns: ["bairro_id"]
+          },
+          {
+            foreignKeyName: "liderancas_locais_bairro_id_fkey"
+            columns: ["bairro_id"]
+            isOneToOne: false
+            referencedRelation: "v_lacunas_territoriais"
+            referencedColumns: ["bairro_id"]
+          },
+          {
+            foreignKeyName: "liderancas_locais_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "liderancas_locais_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_indicadores_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+          {
+            foreignKeyName: "liderancas_locais_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "mapa_estrategico_bairros"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "liderancas_locais_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "liderancas_locais_pessoa_id_fkey"
+            columns: ["pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "pessoas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       materiais: {
         Row: {
           ativo: boolean
@@ -2586,6 +2908,86 @@ export type Database = {
             columns: ["estado_id"]
             isOneToOne: false
             referencedRelation: "estados"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      municipios_estrategicos: {
+        Row: {
+          acoes_chave: Json | null
+          campanha_id: string
+          classificacao: Database["public"]["Enums"]["classificacao_estrategica"]
+          created_at: string
+          id: string
+          meta_votos: number
+          municipio_id: string
+          observacoes: string | null
+          potencial_votos: number | null
+          prioridade: number
+          responsavel_id: string | null
+          score: number
+          updated_at: string
+          votos_historicos: number | null
+        }
+        Insert: {
+          acoes_chave?: Json | null
+          campanha_id: string
+          classificacao?: Database["public"]["Enums"]["classificacao_estrategica"]
+          created_at?: string
+          id?: string
+          meta_votos?: number
+          municipio_id: string
+          observacoes?: string | null
+          potencial_votos?: number | null
+          prioridade?: number
+          responsavel_id?: string | null
+          score?: number
+          updated_at?: string
+          votos_historicos?: number | null
+        }
+        Update: {
+          acoes_chave?: Json | null
+          campanha_id?: string
+          classificacao?: Database["public"]["Enums"]["classificacao_estrategica"]
+          created_at?: string
+          id?: string
+          meta_votos?: number
+          municipio_id?: string
+          observacoes?: string | null
+          potencial_votos?: number | null
+          prioridade?: number
+          responsavel_id?: string | null
+          score?: number
+          updated_at?: string
+          votos_historicos?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "municipios_estrategicos_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "municipios_estrategicos_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_indicadores_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+          {
+            foreignKeyName: "municipios_estrategicos_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "mapa_estrategico_bairros"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "municipios_estrategicos_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
             referencedColumns: ["id"]
           },
         ]
@@ -4242,6 +4644,168 @@ export type Database = {
           },
         ]
       }
+      vereador_bairro_forca: {
+        Row: {
+          bairro_id: string
+          created_at: string
+          fonte: string | null
+          id: string
+          pct_dos_votos: number | null
+          vereador_id: string
+          votos_estimados: number
+        }
+        Insert: {
+          bairro_id: string
+          created_at?: string
+          fonte?: string | null
+          id?: string
+          pct_dos_votos?: number | null
+          vereador_id: string
+          votos_estimados?: number
+        }
+        Update: {
+          bairro_id?: string
+          created_at?: string
+          fonte?: string | null
+          id?: string
+          pct_dos_votos?: number | null
+          vereador_id?: string
+          votos_estimados?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vereador_bairro_forca_bairro_id_fkey"
+            columns: ["bairro_id"]
+            isOneToOne: false
+            referencedRelation: "bairros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vereador_bairro_forca_bairro_id_fkey"
+            columns: ["bairro_id"]
+            isOneToOne: false
+            referencedRelation: "mapa_estrategico_bairros"
+            referencedColumns: ["bairro_id"]
+          },
+          {
+            foreignKeyName: "vereador_bairro_forca_bairro_id_fkey"
+            columns: ["bairro_id"]
+            isOneToOne: false
+            referencedRelation: "v_lacunas_territoriais"
+            referencedColumns: ["bairro_id"]
+          },
+          {
+            foreignKeyName: "vereador_bairro_forca_vereador_id_fkey"
+            columns: ["vereador_id"]
+            isOneToOne: false
+            referencedRelation: "vereadores_historicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vereadores_historicos: {
+        Row: {
+          alinhamento:
+            | Database["public"]["Enums"]["vereador_alinhamento"]
+            | null
+          ano: number
+          area_abrangencia: Json | null
+          bairros_forca_ids: string[] | null
+          cod_municipio_tse: string | null
+          created_at: string
+          eleito: boolean | null
+          faixa_votos: Database["public"]["Enums"]["vereador_faixa_votos"]
+          id: string
+          ja_contactado: boolean | null
+          municipio_id: string | null
+          nome_completo: string
+          nome_urna: string | null
+          numero_urna: string | null
+          observacoes: string | null
+          partido_sigla: string | null
+          pessoa_id: string | null
+          posicao_ranking: number | null
+          potencial_apoio: number | null
+          uf: string
+          updated_at: string
+          votos_recebidos: number
+        }
+        Insert: {
+          alinhamento?:
+            | Database["public"]["Enums"]["vereador_alinhamento"]
+            | null
+          ano: number
+          area_abrangencia?: Json | null
+          bairros_forca_ids?: string[] | null
+          cod_municipio_tse?: string | null
+          created_at?: string
+          eleito?: boolean | null
+          faixa_votos?: Database["public"]["Enums"]["vereador_faixa_votos"]
+          id?: string
+          ja_contactado?: boolean | null
+          municipio_id?: string | null
+          nome_completo: string
+          nome_urna?: string | null
+          numero_urna?: string | null
+          observacoes?: string | null
+          partido_sigla?: string | null
+          pessoa_id?: string | null
+          posicao_ranking?: number | null
+          potencial_apoio?: number | null
+          uf: string
+          updated_at?: string
+          votos_recebidos?: number
+        }
+        Update: {
+          alinhamento?:
+            | Database["public"]["Enums"]["vereador_alinhamento"]
+            | null
+          ano?: number
+          area_abrangencia?: Json | null
+          bairros_forca_ids?: string[] | null
+          cod_municipio_tse?: string | null
+          created_at?: string
+          eleito?: boolean | null
+          faixa_votos?: Database["public"]["Enums"]["vereador_faixa_votos"]
+          id?: string
+          ja_contactado?: boolean | null
+          municipio_id?: string | null
+          nome_completo?: string
+          nome_urna?: string | null
+          numero_urna?: string | null
+          observacoes?: string | null
+          partido_sigla?: string | null
+          pessoa_id?: string | null
+          posicao_ranking?: number | null
+          potencial_apoio?: number | null
+          uf?: string
+          updated_at?: string
+          votos_recebidos?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vereadores_historicos_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "mapa_estrategico_bairros"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "vereadores_historicos_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vereadores_historicos_pessoa_id_fkey"
+            columns: ["pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "pessoas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       zonas_eleitorais: {
         Row: {
           created_at: string
@@ -4618,6 +5182,10 @@ export type Database = {
         }
         Returns: string
       }
+      faixa_votos_vereador: {
+        Args: { _votos: number }
+        Returns: Database["public"]["Enums"]["vereador_faixa_votos"]
+      }
       gerar_plano_90_dias: {
         Args: { _campanha_id: string }
         Returns: undefined
@@ -4644,6 +5212,10 @@ export type Database = {
           _tipo?: Database["public"]["Enums"]["notificacao_tipo"]
           _titulo: string
         }
+        Returns: number
+      }
+      popular_vereadores_historicos: {
+        Args: { _ano?: number; _uf?: string; _votos_min?: number }
         Returns: number
       }
       unaccent: { Args: { "": string }; Returns: string }
@@ -4730,6 +5302,12 @@ export type Database = {
         | "evento"
         | "juridico"
         | "outros"
+      classificacao_estrategica:
+        | "reduto"
+        | "disputa"
+        | "expansao"
+        | "perdido"
+        | "neutro"
       classificacao_territorial:
         | "reduto"
         | "expansao"
@@ -4753,6 +5331,7 @@ export type Database = {
         | "cancelado"
         | "vencido"
       fase_campanha:
+        | "diagnostico"
         | "pre_campanha"
         | "lancamento"
         | "consolidacao"
@@ -4764,6 +5343,26 @@ export type Database = {
         | "mandato"
       import_job_status: "pendente" | "rodando" | "sucesso" | "erro" | "parcial"
       incidente_status: "aberto" | "em_apuracao" | "resolvido" | "arquivado"
+      lideranca_classificacao: "A" | "B" | "C" | "D"
+      lideranca_status:
+        | "mapeado"
+        | "contactado"
+        | "reuniao_marcada"
+        | "comprometido"
+        | "aliado"
+        | "neutro"
+        | "adversario"
+      lideranca_tipo:
+        | "religiosa"
+        | "associativa"
+        | "politica"
+        | "comunitaria"
+        | "empresarial"
+        | "sindical"
+        | "cultural"
+        | "esportiva"
+        | "familiar"
+        | "profissional"
       mencao_canal:
         | "instagram"
         | "facebook"
@@ -4961,6 +5560,19 @@ export type Database = {
         | "candidatos"
         | "resultados"
         | "prestacao_contas"
+      vereador_alinhamento:
+        | "aliado"
+        | "simpatizante"
+        | "neutro"
+        | "adversario"
+        | "desconhecido"
+      vereador_faixa_votos:
+        | "ate_150"
+        | "f_150_500"
+        | "f_500_1000"
+        | "f_1000_2000"
+        | "f_2000_5000"
+        | "acima_5000"
       zona_tipo: "urbano" | "rural" | "misto" | "desconhecido"
     }
     CompositeTypes: {
@@ -5170,6 +5782,13 @@ export const Constants = {
         "juridico",
         "outros",
       ],
+      classificacao_estrategica: [
+        "reduto",
+        "disputa",
+        "expansao",
+        "perdido",
+        "neutro",
+      ],
       classificacao_territorial: [
         "reduto",
         "expansao",
@@ -5197,6 +5816,7 @@ export const Constants = {
         "vencido",
       ],
       fase_campanha: [
+        "diagnostico",
         "pre_campanha",
         "lancamento",
         "consolidacao",
@@ -5210,6 +5830,28 @@ export const Constants = {
       ],
       import_job_status: ["pendente", "rodando", "sucesso", "erro", "parcial"],
       incidente_status: ["aberto", "em_apuracao", "resolvido", "arquivado"],
+      lideranca_classificacao: ["A", "B", "C", "D"],
+      lideranca_status: [
+        "mapeado",
+        "contactado",
+        "reuniao_marcada",
+        "comprometido",
+        "aliado",
+        "neutro",
+        "adversario",
+      ],
+      lideranca_tipo: [
+        "religiosa",
+        "associativa",
+        "politica",
+        "comunitaria",
+        "empresarial",
+        "sindical",
+        "cultural",
+        "esportiva",
+        "familiar",
+        "profissional",
+      ],
       mencao_canal: [
         "instagram",
         "facebook",
@@ -5430,6 +6072,21 @@ export const Constants = {
         "candidatos",
         "resultados",
         "prestacao_contas",
+      ],
+      vereador_alinhamento: [
+        "aliado",
+        "simpatizante",
+        "neutro",
+        "adversario",
+        "desconhecido",
+      ],
+      vereador_faixa_votos: [
+        "ate_150",
+        "f_150_500",
+        "f_500_1000",
+        "f_1000_2000",
+        "f_2000_5000",
+        "acima_5000",
       ],
       zona_tipo: ["urbano", "rural", "misto", "desconhecido"],
     },

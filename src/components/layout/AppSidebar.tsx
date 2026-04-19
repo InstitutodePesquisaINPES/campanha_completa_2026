@@ -46,8 +46,9 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const mainItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Plano Estratégico", url: "/plano-estrategico", icon: Target },
   { title: "Sala de Situação", url: "/comando", icon: Activity },
-  { title: "Plano 90 dias", url: "/plano", icon: Vote },
+  { title: "Plano de Campanha", url: "/plano", icon: Vote },
 ];
 
 const modulesItems = [
@@ -62,6 +63,7 @@ const modulesItems = [
 ];
 
 const analyticsItems = [
+  { title: "Inteligência Política", url: "/inteligencia-politica", icon: Brain },
   { title: "Mapa Estratégico", url: "/mapa-estrategico", icon: Target },
   { title: "Inteligência Territorial", url: "/inteligencia", icon: Brain },
   { title: "Copilots IA", url: "/copilot", icon: Sparkles },
