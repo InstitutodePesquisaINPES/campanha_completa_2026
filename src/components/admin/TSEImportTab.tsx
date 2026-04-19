@@ -13,6 +13,7 @@ import { Database, Play, RefreshCw, X, Activity, Loader2 } from "lucide-react";
 import { useEnqueueTSE, useTSEJobs, useTSEStats, useRunWorker, useCancelTSEJob, useTSEJobLogs, type TseJobTipo, type TseImportJob } from "@/hooks/useTSEImport";
 import { toast } from "sonner";
 import { TSECsvUpload } from "./TSECsvUpload";
+import { IBGEImportPanel } from "./IBGEImportPanel";
 
 const UFS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 const ANOS = [2024, 2022, 2020, 2018, 2016];
