@@ -29,6 +29,8 @@ import DocumentosPage from "./pages/documentos/DocumentosPage";
 import ComandoPage from "./pages/comando/ComandoPage";
 import CompliancePage from "./pages/compliance/CompliancePage";
 import InteligenciaPage from "./pages/inteligencia/InteligenciaPage";
+import CopilotPage from "./pages/copilot/CopilotPage";
+import PesquisasPage from "./pages/pesquisas/PesquisasPage";
 
 const queryClient = new QueryClient();
 
@@ -63,6 +65,8 @@ const App = () => (
               <Route path="/mapas" element={<MapasPage />} />
               <Route path="/documentos" element={<DocumentosPage />} />
               <Route path="/comunicacao" element={<ComunicacaoPage />} />
+              <Route path="/copilot" element={<CopilotPage />} />
+              <Route path="/pesquisas" element={<PesquisasPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

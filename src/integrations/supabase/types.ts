@@ -240,6 +240,358 @@ export type Database = {
           },
         ]
       }
+      ai_conversas: {
+        Row: {
+          arquivada: boolean
+          copilot_id: string | null
+          created_at: string
+          custo_estimado: number
+          id: string
+          titulo: string
+          total_mensagens: number
+          total_tokens: number
+          ultima_mensagem_em: string
+          user_id: string
+        }
+        Insert: {
+          arquivada?: boolean
+          copilot_id?: string | null
+          created_at?: string
+          custo_estimado?: number
+          id?: string
+          titulo?: string
+          total_mensagens?: number
+          total_tokens?: number
+          ultima_mensagem_em?: string
+          user_id: string
+        }
+        Update: {
+          arquivada?: boolean
+          copilot_id?: string | null
+          created_at?: string
+          custo_estimado?: number
+          id?: string
+          titulo?: string
+          total_mensagens?: number
+          total_tokens?: number
+          ultima_mensagem_em?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_conversas_copilot_id_fkey"
+            columns: ["copilot_id"]
+            isOneToOne: false
+            referencedRelation: "ai_copilots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_copilots: {
+        Row: {
+          ativo: boolean
+          categoria: Database["public"]["Enums"]["ai_copilot_categoria"]
+          cor: string | null
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          icone: string | null
+          id: string
+          max_tokens: number
+          modelo_id: string | null
+          nome: string
+          ordem: number
+          prompt_sistema: string
+          temperatura: number
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          categoria?: Database["public"]["Enums"]["ai_copilot_categoria"]
+          cor?: string | null
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          icone?: string | null
+          id?: string
+          max_tokens?: number
+          modelo_id?: string | null
+          nome: string
+          ordem?: number
+          prompt_sistema: string
+          temperatura?: number
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          categoria?: Database["public"]["Enums"]["ai_copilot_categoria"]
+          cor?: string | null
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          icone?: string | null
+          id?: string
+          max_tokens?: number
+          modelo_id?: string | null
+          nome?: string
+          ordem?: number
+          prompt_sistema?: string
+          temperatura?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_copilots_modelo_id_fkey"
+            columns: ["modelo_id"]
+            isOneToOne: false
+            referencedRelation: "ai_modelos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_mensagens: {
+        Row: {
+          content: string
+          conversa_id: string
+          created_at: string
+          id: string
+          modelo_usado: string | null
+          role: string
+          tokens_input: number | null
+          tokens_output: number | null
+        }
+        Insert: {
+          content: string
+          conversa_id: string
+          created_at?: string
+          id?: string
+          modelo_usado?: string | null
+          role: string
+          tokens_input?: number | null
+          tokens_output?: number | null
+        }
+        Update: {
+          content?: string
+          conversa_id?: string
+          created_at?: string
+          id?: string
+          modelo_usado?: string | null
+          role?: string
+          tokens_input?: number | null
+          tokens_output?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_mensagens_conversa_id_fkey"
+            columns: ["conversa_id"]
+            isOneToOne: false
+            referencedRelation: "ai_conversas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_modelos: {
+        Row: {
+          ativo: boolean
+          contexto_tokens: number
+          created_at: string
+          custo_input_por_1m: number
+          custo_output_por_1m: number
+          descricao: string | null
+          id: string
+          max_output_tokens: number
+          modelo_id: string
+          nome: string
+          provedor_id: string
+          suporta_reasoning: boolean
+          suporta_streaming: boolean
+          suporta_tools: boolean
+          suporta_vision: boolean
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          contexto_tokens?: number
+          created_at?: string
+          custo_input_por_1m?: number
+          custo_output_por_1m?: number
+          descricao?: string | null
+          id?: string
+          max_output_tokens?: number
+          modelo_id: string
+          nome: string
+          provedor_id: string
+          suporta_reasoning?: boolean
+          suporta_streaming?: boolean
+          suporta_tools?: boolean
+          suporta_vision?: boolean
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          contexto_tokens?: number
+          created_at?: string
+          custo_input_por_1m?: number
+          custo_output_por_1m?: number
+          descricao?: string | null
+          id?: string
+          max_output_tokens?: number
+          modelo_id?: string
+          nome?: string
+          provedor_id?: string
+          suporta_reasoning?: boolean
+          suporta_streaming?: boolean
+          suporta_tools?: boolean
+          suporta_vision?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_modelos_provedor_id_fkey"
+            columns: ["provedor_id"]
+            isOneToOne: false
+            referencedRelation: "ai_provedores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_provedores: {
+        Row: {
+          base_url: string
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          headers_extra: Json
+          id: string
+          nome: string
+          organization_id: string | null
+          prioridade: number
+          rate_limit_rpm: number | null
+          secret_name: string
+          status: Database["public"]["Enums"]["ai_provedor_status"]
+          tipo: Database["public"]["Enums"]["ai_provedor_tipo"]
+          ultimo_teste_em: string | null
+          ultimo_teste_erro: string | null
+          ultimo_teste_ok: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          base_url: string
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          headers_extra?: Json
+          id?: string
+          nome: string
+          organization_id?: string | null
+          prioridade?: number
+          rate_limit_rpm?: number | null
+          secret_name: string
+          status?: Database["public"]["Enums"]["ai_provedor_status"]
+          tipo: Database["public"]["Enums"]["ai_provedor_tipo"]
+          ultimo_teste_em?: string | null
+          ultimo_teste_erro?: string | null
+          ultimo_teste_ok?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          base_url?: string
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          headers_extra?: Json
+          id?: string
+          nome?: string
+          organization_id?: string | null
+          prioridade?: number
+          rate_limit_rpm?: number | null
+          secret_name?: string
+          status?: Database["public"]["Enums"]["ai_provedor_status"]
+          tipo?: Database["public"]["Enums"]["ai_provedor_tipo"]
+          ultimo_teste_em?: string | null
+          ultimo_teste_erro?: string | null
+          ultimo_teste_ok?: boolean | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ai_uso_log: {
+        Row: {
+          conversa_id: string | null
+          copilot_id: string | null
+          created_at: string
+          custo_estimado: number
+          erro: string | null
+          id: string
+          latencia_ms: number | null
+          modelo_id: string | null
+          provedor_id: string | null
+          sucesso: boolean
+          tokens_input: number
+          tokens_output: number
+          user_id: string | null
+        }
+        Insert: {
+          conversa_id?: string | null
+          copilot_id?: string | null
+          created_at?: string
+          custo_estimado?: number
+          erro?: string | null
+          id?: string
+          latencia_ms?: number | null
+          modelo_id?: string | null
+          provedor_id?: string | null
+          sucesso?: boolean
+          tokens_input?: number
+          tokens_output?: number
+          user_id?: string | null
+        }
+        Update: {
+          conversa_id?: string | null
+          copilot_id?: string | null
+          created_at?: string
+          custo_estimado?: number
+          erro?: string | null
+          id?: string
+          latencia_ms?: number | null
+          modelo_id?: string | null
+          provedor_id?: string | null
+          sucesso?: boolean
+          tokens_input?: number
+          tokens_output?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_uso_log_conversa_id_fkey"
+            columns: ["conversa_id"]
+            isOneToOne: false
+            referencedRelation: "ai_conversas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_uso_log_copilot_id_fkey"
+            columns: ["copilot_id"]
+            isOneToOne: false
+            referencedRelation: "ai_copilots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_uso_log_modelo_id_fkey"
+            columns: ["modelo_id"]
+            isOneToOne: false
+            referencedRelation: "ai_modelos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_uso_log_provedor_id_fkey"
+            columns: ["provedor_id"]
+            isOneToOne: false
+            referencedRelation: "ai_provedores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       areas_atuacao: {
         Row: {
           bairros_ids: string[] | null
@@ -867,6 +1219,91 @@ export type Database = {
             columns: ["municipio_id"]
             isOneToOne: false
             referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      captacao_doadores: {
+        Row: {
+          campanha_id: string | null
+          created_at: string
+          data_confirmacao: string | null
+          data_contato: string | null
+          data_recebimento: string | null
+          documento: string | null
+          email: string | null
+          id: string
+          nome: string
+          observacoes: string | null
+          pessoa_id: string | null
+          responsavel_id: string | null
+          status: Database["public"]["Enums"]["captacao_status"]
+          telefone: string | null
+          updated_at: string
+          valor_confirmado: number | null
+          valor_estimado: number | null
+          valor_recebido: number | null
+        }
+        Insert: {
+          campanha_id?: string | null
+          created_at?: string
+          data_confirmacao?: string | null
+          data_contato?: string | null
+          data_recebimento?: string | null
+          documento?: string | null
+          email?: string | null
+          id?: string
+          nome: string
+          observacoes?: string | null
+          pessoa_id?: string | null
+          responsavel_id?: string | null
+          status?: Database["public"]["Enums"]["captacao_status"]
+          telefone?: string | null
+          updated_at?: string
+          valor_confirmado?: number | null
+          valor_estimado?: number | null
+          valor_recebido?: number | null
+        }
+        Update: {
+          campanha_id?: string | null
+          created_at?: string
+          data_confirmacao?: string | null
+          data_contato?: string | null
+          data_recebimento?: string | null
+          documento?: string | null
+          email?: string | null
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          pessoa_id?: string | null
+          responsavel_id?: string | null
+          status?: Database["public"]["Enums"]["captacao_status"]
+          telefone?: string | null
+          updated_at?: string
+          valor_confirmado?: number | null
+          valor_estimado?: number | null
+          valor_recebido?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "captacao_doadores_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "captacao_doadores_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_indicadores_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+          {
+            foreignKeyName: "captacao_doadores_pessoa_id_fkey"
+            columns: ["pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "pessoas"
             referencedColumns: ["id"]
           },
         ]
@@ -1945,6 +2382,148 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      pesquisa_resultados: {
+        Row: {
+          candidato: string
+          cenario: string
+          created_at: string
+          id: string
+          ordem: number
+          partido: string | null
+          percentual: number
+          pesquisa_id: string
+        }
+        Insert: {
+          candidato: string
+          cenario?: string
+          created_at?: string
+          id?: string
+          ordem?: number
+          partido?: string | null
+          percentual: number
+          pesquisa_id: string
+        }
+        Update: {
+          candidato?: string
+          cenario?: string
+          created_at?: string
+          id?: string
+          ordem?: number
+          partido?: string | null
+          percentual?: number
+          pesquisa_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pesquisa_resultados_pesquisa_id_fkey"
+            columns: ["pesquisa_id"]
+            isOneToOne: false
+            referencedRelation: "pesquisas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pesquisas: {
+        Row: {
+          amostra: number | null
+          arquivo_url: string | null
+          campanha_id: string | null
+          created_at: string
+          created_by: string | null
+          custo: number | null
+          data_divulgacao: string | null
+          data_fim_campo: string | null
+          data_inicio_campo: string | null
+          id: string
+          instituto: string | null
+          margem_erro: number | null
+          metodologia: string | null
+          municipio_id: string | null
+          nivel_confianca: number | null
+          observacoes: string | null
+          registro_tse: string | null
+          status: Database["public"]["Enums"]["pesquisa_status"]
+          tipo: Database["public"]["Enums"]["pesquisa_tipo"]
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          amostra?: number | null
+          arquivo_url?: string | null
+          campanha_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          custo?: number | null
+          data_divulgacao?: string | null
+          data_fim_campo?: string | null
+          data_inicio_campo?: string | null
+          id?: string
+          instituto?: string | null
+          margem_erro?: number | null
+          metodologia?: string | null
+          municipio_id?: string | null
+          nivel_confianca?: number | null
+          observacoes?: string | null
+          registro_tse?: string | null
+          status?: Database["public"]["Enums"]["pesquisa_status"]
+          tipo?: Database["public"]["Enums"]["pesquisa_tipo"]
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          amostra?: number | null
+          arquivo_url?: string | null
+          campanha_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          custo?: number | null
+          data_divulgacao?: string | null
+          data_fim_campo?: string | null
+          data_inicio_campo?: string | null
+          id?: string
+          instituto?: string | null
+          margem_erro?: number | null
+          metodologia?: string | null
+          municipio_id?: string | null
+          nivel_confianca?: number | null
+          observacoes?: string | null
+          registro_tse?: string | null
+          status?: Database["public"]["Enums"]["pesquisa_status"]
+          tipo?: Database["public"]["Enums"]["pesquisa_tipo"]
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pesquisas_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pesquisas_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_indicadores_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+          {
+            foreignKeyName: "pesquisas_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "mapa_estrategico_bairros"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "pesquisas_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pessoas: {
         Row: {
@@ -3780,6 +4359,28 @@ export type Database = {
       }
     }
     Enums: {
+      ai_copilot_categoria:
+        | "estrategista"
+        | "analista"
+        | "comunicador"
+        | "juridico"
+        | "financeiro"
+        | "territorial"
+        | "geral"
+      ai_provedor_status: "ativo" | "inativo" | "erro" | "testando"
+      ai_provedor_tipo:
+        | "openai"
+        | "anthropic"
+        | "google"
+        | "groq"
+        | "mistral"
+        | "openrouter"
+        | "azure_openai"
+        | "cohere"
+        | "perplexity"
+        | "xai"
+        | "deepseek"
+        | "custom"
       app_role:
         | "admin"
         | "coordenador"
@@ -3795,6 +4396,13 @@ export type Database = {
         | "comunicacao"
         | "logistica"
         | "dados"
+      captacao_status:
+        | "prospect"
+        | "contatado"
+        | "negociando"
+        | "confirmado"
+        | "recebido"
+        | "recusado"
       cargo_eleitoral:
         | "vereador"
         | "prefeito"
@@ -3940,6 +4548,18 @@ export type Database = {
         | "release"
         | "spot"
         | "outros"
+      pesquisa_status:
+        | "planejada"
+        | "em_campo"
+        | "concluida"
+        | "divulgada"
+        | "cancelada"
+      pesquisa_tipo:
+        | "eleitoral"
+        | "opiniao"
+        | "tracking"
+        | "qualitativa"
+        | "interna"
       porte_empresa: "mei" | "me" | "epp" | "medio" | "grande"
       prioridade_demanda: "baixa" | "media" | "alta" | "urgente"
       risco_categoria:
@@ -4159,6 +4779,30 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      ai_copilot_categoria: [
+        "estrategista",
+        "analista",
+        "comunicador",
+        "juridico",
+        "financeiro",
+        "territorial",
+        "geral",
+      ],
+      ai_provedor_status: ["ativo", "inativo", "erro", "testando"],
+      ai_provedor_tipo: [
+        "openai",
+        "anthropic",
+        "google",
+        "groq",
+        "mistral",
+        "openrouter",
+        "azure_openai",
+        "cohere",
+        "perplexity",
+        "xai",
+        "deepseek",
+        "custom",
+      ],
       app_role: [
         "admin",
         "coordenador",
@@ -4175,6 +4819,14 @@ export const Constants = {
         "comunicacao",
         "logistica",
         "dados",
+      ],
+      captacao_status: [
+        "prospect",
+        "contatado",
+        "negociando",
+        "confirmado",
+        "recebido",
+        "recusado",
       ],
       cargo_eleitoral: [
         "vereador",
@@ -4337,6 +4989,20 @@ export const Constants = {
         "release",
         "spot",
         "outros",
+      ],
+      pesquisa_status: [
+        "planejada",
+        "em_campo",
+        "concluida",
+        "divulgada",
+        "cancelada",
+      ],
+      pesquisa_tipo: [
+        "eleitoral",
+        "opiniao",
+        "tracking",
+        "qualitativa",
+        "interna",
       ],
       porte_empresa: ["mei", "me", "epp", "medio", "grande"],
       prioridade_demanda: ["baixa", "media", "alta", "urgente"],

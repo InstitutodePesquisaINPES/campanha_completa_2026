@@ -20,6 +20,8 @@ import {
   Activity,
   ShieldCheck,
   Brain,
+  Sparkles,
+  TrendingUp,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -62,6 +64,8 @@ const modulesItems = [
 const analyticsItems = [
   { title: "Mapa Estratégico", url: "/mapa-estrategico", icon: Target },
   { title: "Inteligência Territorial", url: "/inteligencia", icon: Brain },
+  { title: "Copilots IA", url: "/copilot", icon: Sparkles },
+  { title: "Pesquisas", url: "/pesquisas", icon: TrendingUp },
   { title: "BI / Dashboards", url: "/bi", icon: BarChart3 },
   { title: "Mapas", url: "/mapas", icon: Map },
 ];
