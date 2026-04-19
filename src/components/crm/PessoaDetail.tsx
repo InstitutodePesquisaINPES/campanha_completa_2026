@@ -65,13 +65,34 @@ export function PessoaDetail({ pessoaId, onBack }: { pessoaId: string; onBack: (
     } catch (e: any) { toast({ variant: "destructive", description: e.message }); }
   };
 
+  const isPJ = (pessoa as any).tipo_pessoa === "pj";
+  const displayName = isPJ
+    ? ((pessoa as any).nome_fantasia || (pessoa as any).razao_social || pessoa.full_name)
+    : pessoa.full_name;
+  const fmtCnpj = (cnpj: string | null) => {
+    if (!cnpj) return null;
+    const c = cnpj.replace(/\D/g, "").padStart(14, "0");
+    return `${c.slice(0,2)}.${c.slice(2,5)}.${c.slice(5,8)}/${c.slice(8,12)}-${c.slice(12,14)}`;
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <Button variant="ghost" size="icon" onClick={onBack}><ArrowLeft className="h-5 w-5" /></Button>
-        <div className="flex-1">
-          <h2 className="text-xl font-bold">{pessoa.full_name}</h2>
-          <p className="text-xs text-muted-foreground">CPF: {pessoa.cpf ? `***.***${pessoa.cpf.slice(6, 9)}-${pessoa.cpf.slice(9)}` : "Não informado"}</p>
+        <div className="flex-1 min-w-[200px]">
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-[10px]">{isPJ ? "PJ" : "PF"}</Badge>
+            <h2 className="text-xl font-bold">{displayName}</h2>
+          </div>
+          {isPJ ? (
+            <p className="text-xs text-muted-foreground">
+              CNPJ: {fmtCnpj((pessoa as any).cnpj) || "Não informado"}
+              {(pessoa as any).razao_social && (pessoa as any).razao_social !== displayName && ` · ${(pessoa as any).razao_social}`}
+              {(pessoa as any).segmento && ` · ${(pessoa as any).segmento}`}
+            </p>
+          ) : (
+            <p className="text-xs text-muted-foreground">CPF: {pessoa.cpf ? `***.***${pessoa.cpf.slice(6, 9)}-${pessoa.cpf.slice(9)}` : "Não informado"}</p>
+          )}
         </div>
         <Select value={pessoa.nivel_relacionamento} onValueChange={(v) => handleUpdateNivel(v as NivelRelacionamento)}>
           <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
