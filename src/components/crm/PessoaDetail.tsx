@@ -47,10 +47,29 @@ export function PessoaDetail({ pessoaId, onBack }: { pessoaId: string; onBack: (
   // Consentimento form
   const [lgpdForm, setLgpdForm] = useState({ finalidade: "comunicacao_politica" as any, consentido: true, canal_coleta: "" });
   // Endereço form
-  const [eForm, setEForm] = useState({ logradouro: "", numero: "", cep: "", municipio_id: "", bairro_id: "", tipo: "residencial" as any });
+  const [eForm, setEForm] = useState({ logradouro: "", numero: "", complemento: "", cep: "", municipio_id: "", bairro_id: "", tipo: "residencial" as any });
+  const [cepLoading, setCepLoading] = useState(false);
 
   const { data: municipios = [] } = useMunicipios();
   const { data: bairros = [] } = useBairros(eForm.municipio_id || undefined);
+
+  const handleCepLookup = async () => {
+    const clean = eForm.cep.replace(/\D/g, "");
+    if (clean.length !== 8) { toast({ variant: "destructive", description: "CEP precisa ter 8 dígitos." }); return; }
+    setCepLoading(true);
+    try {
+      const data = await fetchCep(clean);
+      if (!data) { toast({ variant: "destructive", description: "CEP não encontrado." }); return; }
+      const mun = municipios.find((m: any) => m.nome.toLowerCase() === data.localidade.toLowerCase());
+      const munId = mun?.id || "";
+      const bairrosDoMun = munId ? (await import("@/integrations/supabase/client")).supabase.from("bairros").select("id, nome").eq("municipio_id", munId) : null;
+      const bairroData = bairrosDoMun ? (await bairrosDoMun).data || [] : [];
+      const bai = bairroData.find((b: any) => b.nome.toLowerCase() === data.bairro.toLowerCase());
+      setEForm((prev) => ({ ...prev, logradouro: data.logradouro || prev.logradouro, complemento: data.complemento || prev.complemento, municipio_id: munId || prev.municipio_id, bairro_id: bai?.id || "" }));
+      toast({ title: "Endereço preenchido!", description: mun ? "Município localizado." : "Município não cadastrado — selecione manualmente." });
+    } catch (e: any) { toast({ variant: "destructive", description: e.message }); }
+    finally { setCepLoading(false); }
+  };
 
   if (isLoading || !pessoa) {
     return <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
