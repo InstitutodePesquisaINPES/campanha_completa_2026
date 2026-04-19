@@ -28,6 +28,7 @@ import CampoPage from "./pages/campo/CampoPage";
 import DocumentosPage from "./pages/documentos/DocumentosPage";
 import ComandoPage from "./pages/comando/ComandoPage";
 import CompliancePage from "./pages/compliance/CompliancePage";
+import InteligenciaPage from "./pages/inteligencia/InteligenciaPage";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +55,7 @@ const App = () => (
               <Route path="/materiais" element={<MateriaisPageRoute />} />
               <Route path="/financeiro" element={<FinanceiroPageRoute />} />
               <Route path="/compliance" element={<CompliancePage />} />
+              <Route path="/inteligencia" element={<InteligenciaPage />} />
               <Route path="/comando" element={<ComandoPage />} />
               <Route path="/plano" element={<PlanoCampanhaPage />} />
               <Route path="/mapa-estrategico" element={<MapaEstrategicoPage />} />
