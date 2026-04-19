@@ -1370,6 +1370,7 @@ export type Database = {
       }
       municipios: {
         Row: {
+          classificacao_estrategica: string | null
           created_at: string
           eleitorado_total: number | null
           estado_id: string
@@ -1378,10 +1379,13 @@ export type Database = {
           latitude: number | null
           longitude: number | null
           nome: string
+          notas_estrategicas: string | null
           populacao: number | null
+          prioridade_campanha: number | null
           updated_at: string
         }
         Insert: {
+          classificacao_estrategica?: string | null
           created_at?: string
           eleitorado_total?: number | null
           estado_id: string
@@ -1390,10 +1394,13 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           nome: string
+          notas_estrategicas?: string | null
           populacao?: number | null
+          prioridade_campanha?: number | null
           updated_at?: string
         }
         Update: {
+          classificacao_estrategica?: string | null
           created_at?: string
           eleitorado_total?: number | null
           estado_id?: string
@@ -1402,7 +1409,9 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           nome?: string
+          notas_estrategicas?: string | null
           populacao?: number | null
+          prioridade_campanha?: number | null
           updated_at?: string
         }
         Relationships: [
