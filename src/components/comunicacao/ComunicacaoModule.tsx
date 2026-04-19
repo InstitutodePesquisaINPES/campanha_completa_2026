@@ -23,7 +23,7 @@ const templates = [
 ];
 
 export function ComunicacaoModule() {
-  const [tab, setTab] = useState("templates");
+  const [tab, setTab] = useState("calendario");
   const { data: pessoas } = usePessoas();
   const { data: tags } = useTags();
   const [selectedTemplate, setSelectedTemplate] = useState(templates[0]);
