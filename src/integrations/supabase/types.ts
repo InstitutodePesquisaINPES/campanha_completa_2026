@@ -939,6 +939,92 @@ export type Database = {
           },
         ]
       }
+      contratos: {
+        Row: {
+          arquivo_url: string | null
+          campanha_id: string | null
+          centro_custo_id: string | null
+          created_at: string
+          created_by: string | null
+          data_fim: string
+          data_inicio: string
+          fornecedor_pessoa_id: string | null
+          id: string
+          numero: string | null
+          objeto: string
+          observacoes: string | null
+          responsavel_id: string | null
+          status: Database["public"]["Enums"]["contrato_status"]
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          arquivo_url?: string | null
+          campanha_id?: string | null
+          centro_custo_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_fim: string
+          data_inicio: string
+          fornecedor_pessoa_id?: string | null
+          id?: string
+          numero?: string | null
+          objeto: string
+          observacoes?: string | null
+          responsavel_id?: string | null
+          status?: Database["public"]["Enums"]["contrato_status"]
+          updated_at?: string
+          valor?: number
+        }
+        Update: {
+          arquivo_url?: string | null
+          campanha_id?: string | null
+          centro_custo_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_fim?: string
+          data_inicio?: string
+          fornecedor_pessoa_id?: string | null
+          id?: string
+          numero?: string | null
+          objeto?: string
+          observacoes?: string | null
+          responsavel_id?: string | null
+          status?: Database["public"]["Enums"]["contrato_status"]
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contratos_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contratos_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_indicadores_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+          {
+            foreignKeyName: "contratos_centro_custo_id_fkey"
+            columns: ["centro_custo_id"]
+            isOneToOne: false
+            referencedRelation: "centros_custo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contratos_fornecedor_pessoa_id_fkey"
+            columns: ["fornecedor_pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "pessoas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       demandas: {
         Row: {
           bairro_id: string | null
@@ -1315,6 +1401,124 @@ export type Database = {
             columns: ["municipio_id"]
             isOneToOne: false
             referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evidencias: {
+        Row: {
+          arquivo_url: string
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          entidade_id: string
+          entidade_tipo: string
+          id: string
+          mime_type: string | null
+          tamanho_bytes: number | null
+          titulo: string
+          versao: number
+        }
+        Insert: {
+          arquivo_url: string
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          entidade_id: string
+          entidade_tipo: string
+          id?: string
+          mime_type?: string | null
+          tamanho_bytes?: number | null
+          titulo: string
+          versao?: number
+        }
+        Update: {
+          arquivo_url?: string
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          entidade_id?: string
+          entidade_tipo?: string
+          id?: string
+          mime_type?: string | null
+          tamanho_bytes?: number | null
+          titulo?: string
+          versao?: number
+        }
+        Relationships: []
+      }
+      incidentes: {
+        Row: {
+          acoes_tomadas: string | null
+          campanha_id: string | null
+          categoria: Database["public"]["Enums"]["risco_categoria"]
+          created_at: string
+          created_by: string | null
+          data_ocorrencia: string
+          data_resolucao: string | null
+          descricao: string | null
+          id: string
+          responsavel_id: string | null
+          risco_id: string | null
+          severidade: Database["public"]["Enums"]["risco_severidade"]
+          status: Database["public"]["Enums"]["incidente_status"]
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          acoes_tomadas?: string | null
+          campanha_id?: string | null
+          categoria: Database["public"]["Enums"]["risco_categoria"]
+          created_at?: string
+          created_by?: string | null
+          data_ocorrencia?: string
+          data_resolucao?: string | null
+          descricao?: string | null
+          id?: string
+          responsavel_id?: string | null
+          risco_id?: string | null
+          severidade?: Database["public"]["Enums"]["risco_severidade"]
+          status?: Database["public"]["Enums"]["incidente_status"]
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          acoes_tomadas?: string | null
+          campanha_id?: string | null
+          categoria?: Database["public"]["Enums"]["risco_categoria"]
+          created_at?: string
+          created_by?: string | null
+          data_ocorrencia?: string
+          data_resolucao?: string | null
+          descricao?: string | null
+          id?: string
+          responsavel_id?: string | null
+          risco_id?: string | null
+          severidade?: Database["public"]["Enums"]["risco_severidade"]
+          status?: Database["public"]["Enums"]["incidente_status"]
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incidentes_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incidentes_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_indicadores_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+          {
+            foreignKeyName: "incidentes_risco_id_fkey"
+            columns: ["risco_id"]
+            isOneToOne: false
+            referencedRelation: "riscos"
             referencedColumns: ["id"]
           },
         ]
@@ -2142,6 +2346,75 @@ export type Database = {
           },
           {
             foreignKeyName: "reunioes_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_indicadores_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+        ]
+      }
+      riscos: {
+        Row: {
+          campanha_id: string | null
+          categoria: Database["public"]["Enums"]["risco_categoria"]
+          created_at: string
+          created_by: string | null
+          data_revisao: string | null
+          descricao: string | null
+          id: string
+          impacto: number
+          plano_mitigacao: string | null
+          probabilidade: number
+          responsavel_id: string | null
+          severidade: Database["public"]["Enums"]["risco_severidade"]
+          status: Database["public"]["Enums"]["risco_status"]
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          campanha_id?: string | null
+          categoria: Database["public"]["Enums"]["risco_categoria"]
+          created_at?: string
+          created_by?: string | null
+          data_revisao?: string | null
+          descricao?: string | null
+          id?: string
+          impacto?: number
+          plano_mitigacao?: string | null
+          probabilidade?: number
+          responsavel_id?: string | null
+          severidade?: Database["public"]["Enums"]["risco_severidade"]
+          status?: Database["public"]["Enums"]["risco_status"]
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          campanha_id?: string | null
+          categoria?: Database["public"]["Enums"]["risco_categoria"]
+          created_at?: string
+          created_by?: string | null
+          data_revisao?: string | null
+          descricao?: string | null
+          id?: string
+          impacto?: number
+          plano_mitigacao?: string | null
+          probabilidade?: number
+          responsavel_id?: string | null
+          severidade?: Database["public"]["Enums"]["risco_severidade"]
+          status?: Database["public"]["Enums"]["risco_status"]
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "riscos_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "riscos_campanha_id_fkey"
             columns: ["campanha_id"]
             isOneToOne: false
             referencedRelation: "v_indicadores_campanha"
@@ -3022,6 +3295,95 @@ export type Database = {
         }
         Relationships: []
       }
+      v_contratos_alerta: {
+        Row: {
+          arquivo_url: string | null
+          campanha_id: string | null
+          centro_custo_id: string | null
+          created_at: string | null
+          created_by: string | null
+          data_fim: string | null
+          data_inicio: string | null
+          dias_para_vencer: number | null
+          fornecedor_pessoa_id: string | null
+          id: string | null
+          numero: string | null
+          objeto: string | null
+          observacoes: string | null
+          responsavel_id: string | null
+          status: Database["public"]["Enums"]["contrato_status"] | null
+          updated_at: string | null
+          valor: number | null
+        }
+        Insert: {
+          arquivo_url?: string | null
+          campanha_id?: string | null
+          centro_custo_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          data_fim?: string | null
+          data_inicio?: string | null
+          dias_para_vencer?: never
+          fornecedor_pessoa_id?: string | null
+          id?: string | null
+          numero?: string | null
+          objeto?: string | null
+          observacoes?: string | null
+          responsavel_id?: string | null
+          status?: Database["public"]["Enums"]["contrato_status"] | null
+          updated_at?: string | null
+          valor?: number | null
+        }
+        Update: {
+          arquivo_url?: string | null
+          campanha_id?: string | null
+          centro_custo_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          data_fim?: string | null
+          data_inicio?: string | null
+          dias_para_vencer?: never
+          fornecedor_pessoa_id?: string | null
+          id?: string | null
+          numero?: string | null
+          objeto?: string | null
+          observacoes?: string | null
+          responsavel_id?: string | null
+          status?: Database["public"]["Enums"]["contrato_status"] | null
+          updated_at?: string | null
+          valor?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contratos_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contratos_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_indicadores_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+          {
+            foreignKeyName: "contratos_centro_custo_id_fkey"
+            columns: ["centro_custo_id"]
+            isOneToOne: false
+            referencedRelation: "centros_custo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contratos_fornecedor_pessoa_id_fkey"
+            columns: ["fornecedor_pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "pessoas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_indicadores_campanha: {
         Row: {
           campanha_id: string | null
@@ -3183,6 +3545,12 @@ export type Database = {
         | "disputa"
         | "risco"
         | "baixa_presenca"
+      contrato_status:
+        | "rascunho"
+        | "vigente"
+        | "encerrado"
+        | "cancelado"
+        | "vencido"
       fase_campanha:
         | "pre_campanha"
         | "lancamento"
@@ -3193,6 +3561,7 @@ export type Database = {
         | "pesquisa"
         | "campanha"
         | "mandato"
+      incidente_status: "aberto" | "em_apuracao" | "resolvido" | "arquivado"
       nivel_relacionamento:
         | "desconhecido"
         | "frio"
@@ -3232,6 +3601,19 @@ export type Database = {
         | "equipe"
       porte_empresa: "mei" | "me" | "epp" | "medio" | "grande"
       prioridade_demanda: "baixa" | "media" | "alta" | "urgente"
+      risco_categoria:
+        | "juridico"
+        | "reputacional"
+        | "financeiro"
+        | "operacional"
+        | "eleitoral"
+      risco_severidade: "baixa" | "media" | "alta" | "critica"
+      risco_status:
+        | "identificado"
+        | "em_mitigacao"
+        | "mitigado"
+        | "aceito"
+        | "materializado"
       status_agenda:
         | "planejado"
         | "confirmado"
@@ -3492,6 +3874,13 @@ export const Constants = {
         "risco",
         "baixa_presenca",
       ],
+      contrato_status: [
+        "rascunho",
+        "vigente",
+        "encerrado",
+        "cancelado",
+        "vencido",
+      ],
       fase_campanha: [
         "pre_campanha",
         "lancamento",
@@ -3504,6 +3893,7 @@ export const Constants = {
         "campanha",
         "mandato",
       ],
+      incidente_status: ["aberto", "em_apuracao", "resolvido", "arquivado"],
       nivel_relacionamento: [
         "desconhecido",
         "frio",
@@ -3547,6 +3937,21 @@ export const Constants = {
       ],
       porte_empresa: ["mei", "me", "epp", "medio", "grande"],
       prioridade_demanda: ["baixa", "media", "alta", "urgente"],
+      risco_categoria: [
+        "juridico",
+        "reputacional",
+        "financeiro",
+        "operacional",
+        "eleitoral",
+      ],
+      risco_severidade: ["baixa", "media", "alta", "critica"],
+      risco_status: [
+        "identificado",
+        "em_mitigacao",
+        "mitigado",
+        "aceito",
+        "materializado",
+      ],
       status_agenda: [
         "planejado",
         "confirmado",

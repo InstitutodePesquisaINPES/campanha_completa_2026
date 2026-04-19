@@ -18,6 +18,7 @@ import {
   Vote,
   Target,
   Activity,
+  ShieldCheck,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -54,6 +55,7 @@ const modulesItems = [
   { title: "Campo", url: "/campo", icon: Truck },
   { title: "Materiais", url: "/materiais", icon: Package },
   { title: "Financeiro", url: "/financeiro", icon: DollarSign },
+  { title: "Compliance", url: "/compliance", icon: ShieldCheck },
 ];
 
 const analyticsItems = [
