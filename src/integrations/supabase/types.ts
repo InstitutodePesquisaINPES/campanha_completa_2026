@@ -5190,6 +5190,10 @@ export type Database = {
         Args: { _campanha_id: string }
         Returns: undefined
       }
+      gerar_plano_campanha: {
+        Args: { _campanha_id: string }
+        Returns: undefined
+      }
       has_manage_role: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
