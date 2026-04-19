@@ -12,6 +12,37 @@ import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Brain, Plus, Pencil, Trash2, Zap, Check, X, AlertCircle, ExternalLink } from "lucide-react";
 import { useAIProvedores, useAIModelos, useUpsertProvedor, useDeleteProvedor, useTestProvedor, useUpsertModelo, useDeleteModelo, useAIUsoLog } from "@/hooks/useAI";
+import type { Database, Json } from "@/integrations/supabase/types";
+
+type ProviderType = "openai" | "anthropic" | "google" | "groq" | "mistral" | "openrouter" | "azure_openai" | "cohere" | "perplexity" | "xai" | "deepseek" | "custom";
+type ProviderStatus = "ativo" | "inativo" | "erro" | "testando";
+
+type ProviderDialogState = {
+  id?: string;
+  nome: string;
+  tipo: ProviderType;
+  descricao?: string | null;
+  base_url: string;
+  secret_name: string;
+  prioridade: number;
+  status: ProviderStatus;
+  headers_extra?: Record<string, string>;
+};
+
+type ModelDialogState = {
+  id?: string;
+  provedor_id?: string | null;
+  nome: string;
+  modelo_id: string;
+  contexto_tokens: number;
+  max_output_tokens: number;
+  custo_input_por_1m: number;
+  custo_output_por_1m: number;
+  suporta_vision?: boolean;
+  suporta_tools?: boolean;
+  suporta_reasoning?: boolean;
+  ativo: boolean;
+};
 
 const TIPOS = [
   { v: "openai", label: "OpenAI" },
@@ -26,14 +57,64 @@ const TIPOS = [
   { v: "azure_openai", label: "Azure OpenAI" },
   { v: "cohere", label: "Cohere" },
   { v: "custom", label: "Custom (OpenAI-compatible)" },
-];
+ ] as const;
+
+type ProviderRow = Database["public"]["Tables"]["ai_provedores"]["Row"];
+
+function jsonToHeaders(value: Json | null | undefined): Record<string, string> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  return Object.fromEntries(Object.entries(value).filter((entry): entry is [string, string] => typeof entry[1] === "string"));
+}
+
+function toProviderDialogState(provider: ProviderRow): ProviderDialogState {
+  return {
+    id: provider.id,
+    nome: provider.nome,
+    tipo: provider.tipo as ProviderType,
+    descricao: provider.descricao,
+    base_url: provider.base_url,
+    secret_name: provider.secret_name,
+    prioridade: provider.prioridade,
+    status: provider.status as ProviderStatus,
+    headers_extra: jsonToHeaders(provider.headers_extra),
+  };
+}
+
+function createProviderDialogState(): ProviderDialogState {
+  return {
+    nome: "",
+    tipo: "openai",
+    descricao: "",
+    base_url: "https://api.openai.com/v1",
+    secret_name: "OPENAI_API_KEY",
+    prioridade: 100,
+    status: "inativo",
+    headers_extra: {},
+  };
+}
+
+function createModelDialogState(): ModelDialogState {
+  return {
+    nome: "",
+    modelo_id: "",
+    provedor_id: null,
+    ativo: true,
+    contexto_tokens: 8192,
+    max_output_tokens: 4096,
+    custo_input_por_1m: 0,
+    custo_output_por_1m: 0,
+    suporta_reasoning: false,
+    suporta_tools: false,
+    suporta_vision: false,
+  };
+}
 
 export function CentralIATab() {
   const { data: provedores } = useAIProvedores();
   const { data: modelos } = useAIModelos();
   const [tab, setTab] = useState("provedores");
-  const [provDialog, setProvDialog] = useState<any>(null);
-  const [modeloDialog, setModeloDialog] = useState<any>(null);
+  const [provDialog, setProvDialog] = useState<ProviderDialogState | null>(null);
+  const [modeloDialog, setModeloDialog] = useState<ModelDialogState | null>(null);
   const upsertProv = useUpsertProvedor();
   const deleteProv = useDeleteProvedor();
   const testProv = useTestProvedor();
@@ -58,7 +139,7 @@ export function CentralIATab() {
 
         <TabsContent value="provedores" className="space-y-3 mt-4">
           <div className="flex justify-end">
-            <Button onClick={() => setProvDialog({ tipo: "openai", base_url: "https://api.openai.com/v1", secret_name: "OPENAI_API_KEY", status: "inativo", prioridade: 100, headers_extra: {} })}>
+            <Button onClick={() => setProvDialog(createProviderDialogState())}>
               <Plus className="h-4 w-4 mr-1" />Novo Provedor
             </Button>
           </div>
@@ -84,7 +165,7 @@ export function CentralIATab() {
                     <Button size="sm" variant="outline" onClick={() => testProv.mutate(p.id)} disabled={testProv.isPending}>
                       <Zap className="h-3.5 w-3.5 mr-1" />Testar
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={() => setProvDialog(p)}><Pencil className="h-3.5 w-3.5" /></Button>
+                    <Button size="sm" variant="ghost" onClick={() => setProvDialog(toProviderDialogState(p))}><Pencil className="h-3.5 w-3.5" /></Button>
                     <Button size="sm" variant="ghost" onClick={() => { if (confirm("Remover provedor e seus modelos?")) deleteProv.mutate(p.id); }}>
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
@@ -97,7 +178,7 @@ export function CentralIATab() {
 
         <TabsContent value="modelos" className="space-y-3 mt-4">
           <div className="flex justify-end">
-            <Button onClick={() => setModeloDialog({ ativo: true, contexto_tokens: 8192, max_output_tokens: 4096, custo_input_por_1m: 0, custo_output_por_1m: 0 })}>
+            <Button onClick={() => setModeloDialog(createModelDialogState())}>
               <Plus className="h-4 w-4 mr-1" />Novo Modelo
             </Button>
           </div>
@@ -116,7 +197,7 @@ export function CentralIATab() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {modelos?.map((m: any) => (
+                {modelos?.map((m) => (
                   <TableRow key={m.id}>
                     <TableCell className="font-medium">{m.nome}</TableCell>
                     <TableCell><Badge variant="outline">{m.ai_provedores?.nome}</Badge></TableCell>
@@ -164,7 +245,7 @@ export function CentralIATab() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {uso?.map((u: any) => (
+                  {uso?.map((u) => (
                     <TableRow key={u.id}>
                       <TableCell className="text-xs">{new Date(u.created_at).toLocaleString("pt-BR")}</TableCell>
                       <TableCell className="text-xs">{u.ai_provedores?.nome} / {u.ai_modelos?.nome}</TableCell>
@@ -172,7 +253,7 @@ export function CentralIATab() {
                       <TableCell className="text-xs">{u.tokens_input}↓ {u.tokens_output}↑</TableCell>
                       <TableCell className="text-xs">${Number(u.custo_estimado).toFixed(4)}</TableCell>
                       <TableCell className="text-xs">{u.latencia_ms}ms</TableCell>
-                      <TableCell>{u.sucesso ? <Check className="h-4 w-4 text-green-600" /> : <X className="h-4 w-4 text-destructive" />}</TableCell>
+                       <TableCell>{u.sucesso ? <Check className="h-4 w-4 text-primary" /> : <X className="h-4 w-4 text-destructive" />}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -216,7 +297,7 @@ export function CentralIATab() {
                 <div><Label>Nome</Label><Input value={provDialog.nome ?? ""} onChange={e => setProvDialog({ ...provDialog, nome: e.target.value })} /></div>
                 <div>
                   <Label>Tipo</Label>
-                  <Select value={provDialog.tipo} onValueChange={v => setProvDialog({ ...provDialog, tipo: v })}>
+                  <Select value={provDialog.tipo} onValueChange={v => setProvDialog({ ...provDialog, tipo: v as ProviderType })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>{TIPOS.map(t => <SelectItem key={t.v} value={t.v}>{t.label}</SelectItem>)}</SelectContent>
                   </Select>
@@ -233,7 +314,7 @@ export function CentralIATab() {
                 <div><Label>Prioridade</Label><Input type="number" value={provDialog.prioridade ?? 100} onChange={e => setProvDialog({ ...provDialog, prioridade: Number(e.target.value) })} /></div>
                 <div>
                   <Label>Status</Label>
-                  <Select value={provDialog.status} onValueChange={v => setProvDialog({ ...provDialog, status: v })}>
+                  <Select value={provDialog.status} onValueChange={v => setProvDialog({ ...provDialog, status: v as ProviderStatus })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="inativo">Inativo</SelectItem>
@@ -247,7 +328,7 @@ export function CentralIATab() {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setProvDialog(null)}>Cancelar</Button>
-            <Button onClick={() => { upsertProv.mutate(provDialog, { onSuccess: () => setProvDialog(null) }); }}>Salvar</Button>
+            <Button onClick={() => { if (!provDialog.nome.trim()) return; upsertProv.mutate(provDialog, { onSuccess: () => setProvDialog(null) }); }}>Salvar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -287,7 +368,7 @@ export function CentralIATab() {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setModeloDialog(null)}>Cancelar</Button>
-            <Button onClick={() => upsertModelo.mutate(modeloDialog, { onSuccess: () => setModeloDialog(null) })}>Salvar</Button>
+            <Button onClick={() => { if (!modeloDialog.nome.trim() || !modeloDialog.modelo_id.trim() || !modeloDialog.provedor_id) return; upsertModelo.mutate({ ...modeloDialog, provedor_id: modeloDialog.provedor_id }, { onSuccess: () => setModeloDialog(null) }); }}>Salvar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

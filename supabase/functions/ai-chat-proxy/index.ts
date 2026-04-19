@@ -17,6 +17,30 @@ interface ChatRequest {
   max_tokens?: number;
 }
 
+interface ProviderRecord {
+  id: string;
+  nome: string;
+  tipo: string;
+  status: string;
+  base_url: string;
+  secret_name: string;
+  headers_extra?: Record<string, string> | null;
+}
+
+interface ModelRecord {
+  id: string;
+  modelo_id: string;
+  custo_input_por_1m: number | string;
+  custo_output_por_1m: number | string;
+  ai_provedores: ProviderRecord | null;
+}
+
+interface ProviderChatResult {
+  content: string;
+  tokensIn: number;
+  tokensOut: number;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -60,7 +84,7 @@ Deno.serve(async (req) => {
       .eq("id", modeloId).maybeSingle();
     if (!modelo) return json({ error: "Modelo não encontrado" }, 404);
 
-    const provedor = (modelo as any).ai_provedores;
+    const provedor = (modelo as ModelRecord).ai_provedores;
     if (!provedor || provedor.status !== "ativo") {
       return json({ error: `Provedor ${provedor?.nome ?? ""} inativo` }, 400);
     }
@@ -76,7 +100,7 @@ Deno.serve(async (req) => {
       : body.messages;
 
     const start = Date.now();
-    let result: { content: string; tokensIn: number; tokensOut: number };
+    let result: ProviderChatResult;
 
     if (provedor.tipo === "anthropic") {
       result = await callAnthropic(provedor.base_url, apiKey, modelo.modelo_id, finalMessages, temperature, maxTokens);
@@ -141,7 +165,7 @@ function json(data: unknown, status = 200) {
   });
 }
 
-async function callOpenAICompatible(baseUrl: string, key: string, model: string, messages: any[], temperature: number, maxTokens: number, headersExtra: Record<string, string>) {
+async function callOpenAICompatible(baseUrl: string, key: string, model: string, messages: Array<{ role: string; content: string }>, temperature: number, maxTokens: number, headersExtra: Record<string, string> = {}) {
   const r = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", ...headersExtra },
@@ -156,7 +180,7 @@ async function callOpenAICompatible(baseUrl: string, key: string, model: string,
   };
 }
 
-async function callAnthropic(baseUrl: string, key: string, model: string, messages: any[], temperature: number, maxTokens: number) {
+async function callAnthropic(baseUrl: string, key: string, model: string, messages: Array<{ role: string; content: string }>, temperature: number, maxTokens: number) {
   const system = messages.find(m => m.role === "system")?.content;
   const filtered = messages.filter(m => m.role !== "system");
   const r = await fetch(`${baseUrl}/messages`, {
@@ -173,7 +197,7 @@ async function callAnthropic(baseUrl: string, key: string, model: string, messag
   };
 }
 
-async function callGoogle(baseUrl: string, key: string, model: string, messages: any[], temperature: number, maxTokens: number) {
+async function callGoogle(baseUrl: string, key: string, model: string, messages: Array<{ role: string; content: string }>, temperature: number, maxTokens: number) {
   const system = messages.find(m => m.role === "system")?.content;
   const contents = messages.filter(m => m.role !== "system").map(m => ({
     role: m.role === "assistant" ? "model" : "user",
