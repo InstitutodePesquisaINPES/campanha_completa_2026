@@ -12,15 +12,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, Plus, Trash2, Phone, MapPin, UserCheck, Clock, Shield } from "lucide-react";
+import { NIVEL_FUNIL, NIVEIS_ORDENADOS, PAPEL_INFO, type NivelRelacionamento } from "@/lib/crm/classificacao";
 
-const nivelLabels: Record<string, string> = { desconhecido: "Desconhecido", frio: "Frio", morno: "Morno", quente: "Quente", aliado: "Aliado", lideranca: "Liderança" };
-const nivelColors: Record<string, string> = { desconhecido: "bg-gray-500/15 text-gray-400", frio: "bg-blue-500/15 text-blue-400", morno: "bg-yellow-500/15 text-yellow-400", quente: "bg-orange-500/15 text-orange-400", aliado: "bg-green-500/15 text-green-400", lideranca: "bg-purple-500/15 text-purple-400" };
 const tipoContatoLabels: Record<string, string> = { celular: "Celular", fixo: "Fixo", whatsapp: "WhatsApp", email: "E-mail", instagram: "Instagram", facebook: "Facebook", twitter: "Twitter" };
-const papelLabels: Record<string, string> = { eleitor: "Eleitor", apoiador: "Apoiador", lideranca: "Liderança", coordenador_bairro: "Coord. Bairro", doador: "Doador", fornecedor: "Fornecedor", imprensa: "Imprensa", institucional: "Institucional", demandante: "Demandante", equipe: "Equipe" };
+const papelLabels: Record<string, string> = Object.fromEntries(Object.entries(PAPEL_INFO).map(([k, v]) => [k, v.label]));
 const tipoInteracaoLabels: Record<string, string> = { ligacao: "Ligação", visita: "Visita", whatsapp: "WhatsApp", email: "E-mail", reuniao: "Reunião", evento: "Evento" };
-const finalidadeLabels: Record<string, string> = { comunicacao_politica: "Comunicação Política", pesquisa: "Pesquisa", campanha: "Campanha", mandato: "Mandato" };
-
-type NivelRelacionamento = "desconhecido" | "frio" | "morno" | "quente" | "aliado" | "lideranca";
+const finalidadeLabels: Record<string, string> = { comunicacao_politica: "Comunicação política", pesquisa: "Pesquisa", campanha: "Campanha eleitoral", mandato: "Mandato / pós-eleição" };
 
 export function PessoaDetail({ pessoaId, onBack }: { pessoaId: string; onBack: () => void }) {
   const { toast } = useToast();
