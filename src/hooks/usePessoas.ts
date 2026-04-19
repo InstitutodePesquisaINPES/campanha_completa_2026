@@ -3,7 +3,30 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
 type NivelRelacionamento = "desconhecido" | "frio" | "morno" | "quente" | "aliado" | "lideranca";
+type TipoPessoa = "pf" | "pj";
+type PorteEmpresa = "mei" | "me" | "epp" | "medio" | "grande";
 type TipoContato = "celular" | "fixo" | "whatsapp" | "email" | "instagram" | "facebook" | "twitter";
+
+export type PessoaInput = {
+  full_name: string;
+  tipo_pessoa?: TipoPessoa;
+  cpf?: string;
+  cnpj?: string;
+  razao_social?: string;
+  nome_fantasia?: string;
+  inscricao_estadual?: string;
+  inscricao_municipal?: string;
+  porte?: PorteEmpresa;
+  segmento?: string;
+  site?: string;
+  data_fundacao?: string;
+  responsavel_legal?: string;
+  data_nascimento?: string;
+  genero?: string;
+  escolaridade?: string;
+  nivel_relacionamento?: NivelRelacionamento;
+  observacoes?: string;
+};
 type TipoEndereco = "residencial" | "comercial" | "referencia";
 type PapelPessoa = "eleitor" | "apoiador" | "lideranca" | "coordenador_bairro" | "doador" | "fornecedor" | "imprensa" | "institucional" | "demandante" | "equipe";
 type TipoVinculo = "familiar" | "comunitario" | "profissional" | "politico" | "indicacao";
@@ -11,13 +34,17 @@ type TipoInteracao = "ligacao" | "visita" | "whatsapp" | "email" | "reuniao" | "
 type FinalidadeLgpd = "comunicacao_politica" | "pesquisa" | "campanha" | "mandato";
 
 // ---- PESSOAS ----
-export function usePessoas(search?: string, nivel?: string) {
+export function usePessoas(search?: string, nivel?: string, tipo?: string) {
   return useQuery({
-    queryKey: ["pessoas", search, nivel],
+    queryKey: ["pessoas", search, nivel, tipo],
     queryFn: async () => {
-      let q = supabase.from("pessoas").select("*, pessoas_papeis(papel, ativo), pessoas_contatos(tipo, valor, principal), pessoas_tags(tag_id, tags(nome, cor))").order("full_name").limit(200);
-      if (search) q = q.ilike("full_name", `%${search}%`);
+      let q = supabase.from("pessoas").select("*, pessoas_papeis(papel, ativo), pessoas_contatos(tipo, valor, principal), pessoas_tags(tag_id, tags(nome, cor))").order("full_name").limit(500);
+      if (search) {
+        const s = `%${search}%`;
+        q = q.or(`full_name.ilike.${s},razao_social.ilike.${s},nome_fantasia.ilike.${s},cpf.ilike.${s},cnpj.ilike.${s}`);
+      }
       if (nivel && nivel !== "all") q = q.eq("nivel_relacionamento", nivel as NivelRelacionamento);
+      if (tipo && tipo !== "all") q = q.eq("tipo_pessoa", tipo as TipoPessoa);
       const { data, error } = await q;
       if (error) throw error;
       return data || [];
@@ -46,8 +73,8 @@ export function useCreatePessoa() {
   const qc = useQueryClient();
   const { user } = useAuth();
   return useMutation({
-    mutationFn: async (values: { full_name: string; cpf?: string; data_nascimento?: string; genero?: string; escolaridade?: string; nivel_relacionamento?: NivelRelacionamento; observacoes?: string }) => {
-      const { data, error } = await supabase.from("pessoas").insert({ ...values, created_by: user?.id }).select().single();
+    mutationFn: async (values: PessoaInput) => {
+      const { data, error } = await supabase.from("pessoas").insert({ ...values, created_by: user?.id } as any).select().single();
       if (error) throw error;
       return data;
     },
@@ -58,8 +85,8 @@ export function useCreatePessoa() {
 export function useUpdatePessoa() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...values }: { id: string; full_name?: string; cpf?: string; data_nascimento?: string; genero?: string; escolaridade?: string; nivel_relacionamento?: NivelRelacionamento; observacoes?: string }) => {
-      const { data, error } = await supabase.from("pessoas").update(values).eq("id", id).select().single();
+    mutationFn: async ({ id, ...values }: { id: string } & Partial<PessoaInput>) => {
+      const { data, error } = await supabase.from("pessoas").update(values as any).eq("id", id).select().single();
       if (error) throw error;
       return data;
     },
