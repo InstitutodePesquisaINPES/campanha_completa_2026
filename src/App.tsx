@@ -23,7 +23,7 @@ import MapasPage from "./pages/mapas/MapasPage";
 import ComunicacaoPage from "./pages/comunicacao/ComunicacaoPage";
 import PlanoCampanhaPage from "./pages/plano/PlanoCampanhaPage";
 import MapaEstrategicoPage from "./pages/mapa-estrategico/MapaEstrategicoPage";
-import PlaceholderPage from "./pages/PlaceholderPage";
+
 import CampoPage from "./pages/campo/CampoPage";
 import DocumentosPage from "./pages/documentos/DocumentosPage";
 import ComandoPage from "./pages/comando/ComandoPage";
