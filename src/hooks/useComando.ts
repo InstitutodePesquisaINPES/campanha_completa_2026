@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useEffect, useState } from "react";
 
 export function useIndicadoresCampanha() {
   return useQuery({
@@ -32,6 +33,37 @@ export function useIndicadoresCampanha() {
       } | null;
     },
   });
+}
+
+/**
+ * Realtime subscriptions para o Sala de Situação.
+ * Invalida indicadores e tarefas quando há mudanças nas tabelas relevantes.
+ * Retorna status "live" para indicador visual.
+ */
+export function useComandoRealtime(campanhaId?: string) {
+  const qc = useQueryClient();
+  const [live, setLive] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+
+  useEffect(() => {
+    const tables = ["demandas", "agenda", "campanha_tarefas", "despesas", "pessoas"];
+    const ch = supabase.channel("comando-realtime");
+    tables.forEach((t) => {
+      ch.on("postgres_changes", { event: "*", schema: "public", table: t }, () => {
+        qc.invalidateQueries({ queryKey: ["indicadores-campanha"] });
+        if (campanhaId) qc.invalidateQueries({ queryKey: ["burndown", campanhaId] });
+        setLastUpdate(new Date());
+      });
+    });
+    ch.subscribe((status) => {
+      setLive(status === "SUBSCRIBED");
+    });
+    return () => {
+      supabase.removeChannel(ch);
+    };
+  }, [qc, campanhaId]);
+
+  return { live, lastUpdate };
 }
 
 export function useBurndown(campanhaId?: string) {
