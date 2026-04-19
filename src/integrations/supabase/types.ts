@@ -429,6 +429,13 @@ export type Database = {
             referencedRelation: "campanhas"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "campanha_fases_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_indicadores_campanha"
+            referencedColumns: ["campanha_id"]
+          },
         ]
       }
       campanha_metas: {
@@ -481,6 +488,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "campanhas"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campanha_metas_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_indicadores_campanha"
+            referencedColumns: ["campanha_id"]
           },
         ]
       }
@@ -607,6 +621,13 @@ export type Database = {
             referencedRelation: "campanhas"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "campanha_parametros_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: true
+            referencedRelation: "v_indicadores_campanha"
+            referencedColumns: ["campanha_id"]
+          },
         ]
       }
       campanha_semanas: {
@@ -659,6 +680,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "campanhas"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campanha_semanas_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_indicadores_campanha"
+            referencedColumns: ["campanha_id"]
           },
         ]
       }
@@ -727,6 +755,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "campanhas"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campanha_tarefas_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_indicadores_campanha"
+            referencedColumns: ["campanha_id"]
           },
           {
             foreignKeyName: "campanha_tarefas_fase_id_fkey"
@@ -2007,6 +2042,113 @@ export type Database = {
           },
         ]
       }
+      reuniao_deliberacoes: {
+        Row: {
+          created_at: string
+          descricao: string
+          id: string
+          observacoes: string | null
+          prazo: string | null
+          responsavel_id: string | null
+          reuniao_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descricao: string
+          id?: string
+          observacoes?: string | null
+          prazo?: string | null
+          responsavel_id?: string | null
+          reuniao_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string
+          id?: string
+          observacoes?: string | null
+          prazo?: string | null
+          responsavel_id?: string | null
+          reuniao_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reuniao_deliberacoes_reuniao_id_fkey"
+            columns: ["reuniao_id"]
+            isOneToOne: false
+            referencedRelation: "reunioes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reunioes: {
+        Row: {
+          ata: string | null
+          campanha_id: string | null
+          created_at: string
+          created_by: string | null
+          data_reuniao: string
+          id: string
+          local: string | null
+          pauta: string | null
+          responsavel_id: string | null
+          status: string
+          tipo: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          ata?: string | null
+          campanha_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_reuniao: string
+          id?: string
+          local?: string | null
+          pauta?: string | null
+          responsavel_id?: string | null
+          status?: string
+          tipo?: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          ata?: string | null
+          campanha_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_reuniao?: string
+          id?: string
+          local?: string | null
+          pauta?: string | null
+          responsavel_id?: string | null
+          status?: string
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reunioes_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reunioes_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_indicadores_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+        ]
+      }
       roteiros_paradas: {
         Row: {
           concluido: boolean
@@ -2722,6 +2864,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "user_scopes_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_indicadores_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+          {
             foreignKeyName: "user_scopes_estado_id_fkey"
             columns: ["estado_id"]
             isOneToOne: false
@@ -2836,6 +2985,32 @@ export type Database = {
         }
         Relationships: []
       }
+      v_burndown_tarefas: {
+        Row: {
+          campanha_id: string | null
+          concluidas_acumulado: number | null
+          concluidas_dia: number | null
+          data_prevista: string | null
+          total_acumulado: number | null
+          total_dia: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campanha_tarefas_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campanha_tarefas_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_indicadores_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+        ]
+      }
       v_busca_global: {
         Row: {
           created_at: string | null
@@ -2844,6 +3019,63 @@ export type Database = {
           subtitulo: string | null
           tipo: string | null
           titulo: string | null
+        }
+        Relationships: []
+      }
+      v_indicadores_campanha: {
+        Row: {
+          campanha_id: string | null
+          campanha_nome: string | null
+          cargo: Database["public"]["Enums"]["cargo_eleitoral"] | null
+          data_eleicao: string | null
+          demandas_abertas: number | null
+          demandas_resolvidas: number | null
+          demandas_urgentes: number | null
+          dias_restantes: number | null
+          eventos_futuros: number | null
+          meta_votos: number | null
+          orcamento_total: number | null
+          tarefas_atrasadas: number | null
+          tarefas_concluidas: number | null
+          tarefas_total: number | null
+          total_gasto: number | null
+          total_pessoas: number | null
+        }
+        Insert: {
+          campanha_id?: string | null
+          campanha_nome?: string | null
+          cargo?: Database["public"]["Enums"]["cargo_eleitoral"] | null
+          data_eleicao?: string | null
+          demandas_abertas?: never
+          demandas_resolvidas?: never
+          demandas_urgentes?: never
+          dias_restantes?: never
+          eventos_futuros?: never
+          meta_votos?: number | null
+          orcamento_total?: never
+          tarefas_atrasadas?: never
+          tarefas_concluidas?: never
+          tarefas_total?: never
+          total_gasto?: never
+          total_pessoas?: never
+        }
+        Update: {
+          campanha_id?: string | null
+          campanha_nome?: string | null
+          cargo?: Database["public"]["Enums"]["cargo_eleitoral"] | null
+          data_eleicao?: string | null
+          demandas_abertas?: never
+          demandas_resolvidas?: never
+          demandas_urgentes?: never
+          dias_restantes?: never
+          eventos_futuros?: never
+          meta_votos?: number | null
+          orcamento_total?: never
+          tarefas_atrasadas?: never
+          tarefas_concluidas?: never
+          tarefas_total?: never
+          total_gasto?: never
+          total_pessoas?: never
         }
         Relationships: []
       }

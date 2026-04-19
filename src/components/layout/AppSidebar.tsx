@@ -17,6 +17,7 @@ import {
   User,
   Vote,
   Target,
+  Activity,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -41,6 +42,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const mainItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Sala de Situação", url: "/comando", icon: Activity },
   { title: "Plano 90 dias", url: "/plano", icon: Vote },
 ];
 
