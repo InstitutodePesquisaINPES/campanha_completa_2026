@@ -898,6 +898,220 @@ export type Database = {
         }
         Relationships: []
       }
+      comunicacao_mencoes: {
+        Row: {
+          alcance_estimado: number | null
+          autor: string | null
+          campanha_id: string | null
+          canal: Database["public"]["Enums"]["mencao_canal"]
+          conteudo: string
+          created_at: string
+          created_by: string | null
+          data_mencao: string
+          id: string
+          respondido_em: string | null
+          respondido_por: string | null
+          resposta: string | null
+          sentimento: Database["public"]["Enums"]["mencao_sentimento"]
+          status: Database["public"]["Enums"]["mencao_status"]
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          alcance_estimado?: number | null
+          autor?: string | null
+          campanha_id?: string | null
+          canal?: Database["public"]["Enums"]["mencao_canal"]
+          conteudo: string
+          created_at?: string
+          created_by?: string | null
+          data_mencao?: string
+          id?: string
+          respondido_em?: string | null
+          respondido_por?: string | null
+          resposta?: string | null
+          sentimento?: Database["public"]["Enums"]["mencao_sentimento"]
+          status?: Database["public"]["Enums"]["mencao_status"]
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          alcance_estimado?: number | null
+          autor?: string | null
+          campanha_id?: string | null
+          canal?: Database["public"]["Enums"]["mencao_canal"]
+          conteudo?: string
+          created_at?: string
+          created_by?: string | null
+          data_mencao?: string
+          id?: string
+          respondido_em?: string | null
+          respondido_por?: string | null
+          resposta?: string | null
+          sentimento?: Database["public"]["Enums"]["mencao_sentimento"]
+          status?: Database["public"]["Enums"]["mencao_status"]
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comunicacao_mencoes_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comunicacao_mencoes_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_indicadores_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+        ]
+      }
+      comunicacao_pautas: {
+        Row: {
+          campanha_id: string | null
+          canal: Database["public"]["Enums"]["pauta_canal"]
+          created_at: string
+          created_by: string | null
+          data_publicacao: string | null
+          descricao: string | null
+          id: string
+          observacoes: string | null
+          responsavel_id: string | null
+          status: Database["public"]["Enums"]["pauta_status"]
+          tags: string[] | null
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          campanha_id?: string | null
+          canal?: Database["public"]["Enums"]["pauta_canal"]
+          created_at?: string
+          created_by?: string | null
+          data_publicacao?: string | null
+          descricao?: string | null
+          id?: string
+          observacoes?: string | null
+          responsavel_id?: string | null
+          status?: Database["public"]["Enums"]["pauta_status"]
+          tags?: string[] | null
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          campanha_id?: string | null
+          canal?: Database["public"]["Enums"]["pauta_canal"]
+          created_at?: string
+          created_by?: string | null
+          data_publicacao?: string | null
+          descricao?: string | null
+          id?: string
+          observacoes?: string | null
+          responsavel_id?: string | null
+          status?: Database["public"]["Enums"]["pauta_status"]
+          tags?: string[] | null
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comunicacao_pautas_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comunicacao_pautas_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_indicadores_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+        ]
+      }
+      comunicacao_pecas: {
+        Row: {
+          aprovado_em: string | null
+          aprovador_id: string | null
+          arquivo_url: string | null
+          campanha_id: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          observacoes_juridicas: string | null
+          pauta_id: string | null
+          status: Database["public"]["Enums"]["peca_status"]
+          texto_legenda: string | null
+          thumbnail_url: string | null
+          tipo: Database["public"]["Enums"]["peca_tipo"]
+          titulo: string
+          updated_at: string
+          versao: number
+        }
+        Insert: {
+          aprovado_em?: string | null
+          aprovador_id?: string | null
+          arquivo_url?: string | null
+          campanha_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          observacoes_juridicas?: string | null
+          pauta_id?: string | null
+          status?: Database["public"]["Enums"]["peca_status"]
+          texto_legenda?: string | null
+          thumbnail_url?: string | null
+          tipo?: Database["public"]["Enums"]["peca_tipo"]
+          titulo: string
+          updated_at?: string
+          versao?: number
+        }
+        Update: {
+          aprovado_em?: string | null
+          aprovador_id?: string | null
+          arquivo_url?: string | null
+          campanha_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          observacoes_juridicas?: string | null
+          pauta_id?: string | null
+          status?: Database["public"]["Enums"]["peca_status"]
+          texto_legenda?: string | null
+          thumbnail_url?: string | null
+          tipo?: Database["public"]["Enums"]["peca_tipo"]
+          titulo?: string
+          updated_at?: string
+          versao?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comunicacao_pecas_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comunicacao_pecas_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_indicadores_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+          {
+            foreignKeyName: "comunicacao_pecas_pauta_id_fkey"
+            columns: ["pauta_id"]
+            isOneToOne: false
+            referencedRelation: "comunicacao_pautas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comunidades: {
         Row: {
           bairro_id: string
@@ -3502,6 +3716,16 @@ export type Database = {
           },
         ]
       }
+      v_warroom_kpis: {
+        Row: {
+          crises_ativas: number | null
+          mencoes_novas: number | null
+          negativas_24h: number | null
+          positivas_24h: number | null
+          total_7d: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       criar_notificacao: {
@@ -3623,6 +3847,24 @@ export type Database = {
         | "campanha"
         | "mandato"
       incidente_status: "aberto" | "em_apuracao" | "resolvido" | "arquivado"
+      mencao_canal:
+        | "instagram"
+        | "facebook"
+        | "twitter"
+        | "tiktok"
+        | "youtube"
+        | "whatsapp"
+        | "imprensa"
+        | "blog"
+        | "grupo"
+        | "outros"
+      mencao_sentimento: "positivo" | "neutro" | "negativo" | "crise"
+      mencao_status:
+        | "novo"
+        | "em_analise"
+        | "respondido"
+        | "escalado"
+        | "arquivado"
       nivel_relacionamento:
         | "desconhecido"
         | "frio"
@@ -3660,6 +3902,44 @@ export type Database = {
         | "institucional"
         | "demandante"
         | "equipe"
+      pauta_canal:
+        | "instagram"
+        | "facebook"
+        | "tiktok"
+        | "youtube"
+        | "whatsapp"
+        | "site"
+        | "imprensa"
+        | "radio"
+        | "tv"
+        | "outdoor"
+        | "outros"
+      pauta_status:
+        | "ideia"
+        | "aprovada"
+        | "em_producao"
+        | "agendada"
+        | "publicada"
+        | "cancelada"
+      peca_status:
+        | "rascunho"
+        | "em_revisao"
+        | "aprovacao_juridica"
+        | "aprovada"
+        | "reprovada"
+        | "publicada"
+      peca_tipo:
+        | "post"
+        | "video"
+        | "reels"
+        | "story"
+        | "jingle"
+        | "santinho"
+        | "adesivo"
+        | "outdoor"
+        | "release"
+        | "spot"
+        | "outros"
       porte_empresa: "mei" | "me" | "epp" | "medio" | "grande"
       prioridade_demanda: "baixa" | "media" | "alta" | "urgente"
       risco_categoria:
@@ -3955,6 +4235,26 @@ export const Constants = {
         "mandato",
       ],
       incidente_status: ["aberto", "em_apuracao", "resolvido", "arquivado"],
+      mencao_canal: [
+        "instagram",
+        "facebook",
+        "twitter",
+        "tiktok",
+        "youtube",
+        "whatsapp",
+        "imprensa",
+        "blog",
+        "grupo",
+        "outros",
+      ],
+      mencao_sentimento: ["positivo", "neutro", "negativo", "crise"],
+      mencao_status: [
+        "novo",
+        "em_analise",
+        "respondido",
+        "escalado",
+        "arquivado",
+      ],
       nivel_relacionamento: [
         "desconhecido",
         "frio",
@@ -3995,6 +4295,48 @@ export const Constants = {
         "institucional",
         "demandante",
         "equipe",
+      ],
+      pauta_canal: [
+        "instagram",
+        "facebook",
+        "tiktok",
+        "youtube",
+        "whatsapp",
+        "site",
+        "imprensa",
+        "radio",
+        "tv",
+        "outdoor",
+        "outros",
+      ],
+      pauta_status: [
+        "ideia",
+        "aprovada",
+        "em_producao",
+        "agendada",
+        "publicada",
+        "cancelada",
+      ],
+      peca_status: [
+        "rascunho",
+        "em_revisao",
+        "aprovacao_juridica",
+        "aprovada",
+        "reprovada",
+        "publicada",
+      ],
+      peca_tipo: [
+        "post",
+        "video",
+        "reels",
+        "story",
+        "jingle",
+        "santinho",
+        "adesivo",
+        "outdoor",
+        "release",
+        "spot",
+        "outros",
       ],
       porte_empresa: ["mei", "me", "epp", "medio", "grande"],
       prioridade_demanda: ["baixa", "media", "alta", "urgente"],
