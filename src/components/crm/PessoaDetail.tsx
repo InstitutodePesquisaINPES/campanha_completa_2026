@@ -188,16 +188,30 @@ export function PessoaDetail({ pessoaId, onBack }: { pessoaId: string; onBack: (
                 </Select>
               </div>
               <div className="flex gap-2">
+                <Input className="w-32" placeholder="CEP" value={eForm.cep} onChange={(e) => setEForm({ ...eForm, cep: e.target.value })} onBlur={() => { if (eForm.cep.replace(/\D/g, "").length === 8) handleCepLookup(); }} />
+                <Button size="sm" variant="outline" onClick={handleCepLookup} disabled={cepLoading}>
+                  {cepLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                </Button>
                 <Input className="flex-1" placeholder="Logradouro" value={eForm.logradouro} onChange={(e) => setEForm({ ...eForm, logradouro: e.target.value })} />
                 <Input className="w-20" placeholder="Nº" value={eForm.numero} onChange={(e) => setEForm({ ...eForm, numero: e.target.value })} />
-                <Input className="w-28" placeholder="CEP" value={eForm.cep} onChange={(e) => setEForm({ ...eForm, cep: e.target.value })} />
+              </div>
+              <div className="flex gap-2">
+                <Input className="flex-1" placeholder="Complemento (opcional)" value={eForm.complemento} onChange={(e) => setEForm({ ...eForm, complemento: e.target.value })} />
+                <Select value={eForm.tipo} onValueChange={(v) => setEForm({ ...eForm, tipo: v })}>
+                  <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="residencial">Residencial</SelectItem>
+                    <SelectItem value="comercial">Comercial</SelectItem>
+                    <SelectItem value="referencia">Referência</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Button size="sm" onClick={async () => {
                   try {
-                    await createEndereco.mutateAsync({ pessoa_id: pessoaId, logradouro: eForm.logradouro || undefined, numero: eForm.numero || undefined, cep: eForm.cep || undefined, municipio_id: eForm.municipio_id || undefined, bairro_id: eForm.bairro_id || undefined, tipo: eForm.tipo });
-                    setEForm({ logradouro: "", numero: "", cep: "", municipio_id: "", bairro_id: "", tipo: "residencial" });
+                    await createEndereco.mutateAsync({ pessoa_id: pessoaId, logradouro: eForm.logradouro || undefined, numero: eForm.numero || undefined, complemento: eForm.complemento || undefined, cep: eForm.cep || undefined, municipio_id: eForm.municipio_id || undefined, bairro_id: eForm.bairro_id || undefined, tipo: eForm.tipo });
+                    setEForm({ logradouro: "", numero: "", complemento: "", cep: "", municipio_id: "", bairro_id: "", tipo: "residencial" });
                     toast({ title: "Endereço adicionado!" });
                   } catch (e: any) { toast({ variant: "destructive", description: e.message }); }
-                }}><Plus className="h-4 w-4" /></Button>
+                }}><Plus className="h-4 w-4 mr-1" />Adicionar</Button>
               </div>
               {enderecos.map((e: any) => (
                 <div key={e.id} className="flex items-center justify-between p-2 rounded bg-accent/30">
