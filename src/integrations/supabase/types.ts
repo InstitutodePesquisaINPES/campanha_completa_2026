@@ -1424,6 +1424,54 @@ export type Database = {
           },
         ]
       }
+      notificacoes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          entidade_id: string | null
+          entidade_tipo: string | null
+          id: string
+          lida: boolean
+          lida_em: string | null
+          link: string | null
+          mensagem: string | null
+          prioridade: Database["public"]["Enums"]["notificacao_prioridade"]
+          tipo: Database["public"]["Enums"]["notificacao_tipo"]
+          titulo: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          entidade_id?: string | null
+          entidade_tipo?: string | null
+          id?: string
+          lida?: boolean
+          lida_em?: string | null
+          link?: string | null
+          mensagem?: string | null
+          prioridade?: Database["public"]["Enums"]["notificacao_prioridade"]
+          tipo?: Database["public"]["Enums"]["notificacao_tipo"]
+          titulo: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          entidade_id?: string | null
+          entidade_tipo?: string | null
+          id?: string
+          lida?: boolean
+          lida_em?: string | null
+          link?: string | null
+          mensagem?: string | null
+          prioridade?: Database["public"]["Enums"]["notificacao_prioridade"]
+          tipo?: Database["public"]["Enums"]["notificacao_tipo"]
+          titulo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       pessoas: {
         Row: {
           cnpj: string | null
@@ -2637,6 +2685,65 @@ export type Database = {
         }
         Relationships: []
       }
+      user_scopes: {
+        Row: {
+          campanha_id: string | null
+          created_at: string
+          created_by: string | null
+          estado_id: string | null
+          id: string
+          municipio_id: string | null
+          user_id: string
+        }
+        Insert: {
+          campanha_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          estado_id?: string | null
+          id?: string
+          municipio_id?: string | null
+          user_id: string
+        }
+        Update: {
+          campanha_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          estado_id?: string | null
+          id?: string
+          municipio_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_scopes_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_scopes_estado_id_fkey"
+            columns: ["estado_id"]
+            isOneToOne: false
+            referencedRelation: "estados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_scopes_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "mapa_estrategico_bairros"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "user_scopes_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       zonas_eleitorais: {
         Row: {
           created_at: string
@@ -2729,8 +2836,32 @@ export type Database = {
         }
         Relationships: []
       }
+      v_busca_global: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          link: string | null
+          subtitulo: string | null
+          tipo: string | null
+          titulo: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      criar_notificacao: {
+        Args: {
+          _entidade_id?: string
+          _entidade_tipo?: string
+          _link?: string
+          _mensagem?: string
+          _prioridade?: Database["public"]["Enums"]["notificacao_prioridade"]
+          _tipo?: Database["public"]["Enums"]["notificacao_tipo"]
+          _titulo: string
+          _user_id: string
+        }
+        Returns: string
+      }
       gerar_plano_90_dias: {
         Args: { _campanha_id: string }
         Returns: undefined
@@ -2747,7 +2878,27 @@ export type Database = {
         Args: { _campanha_id: string }
         Returns: string
       }
+      notificar_gestores: {
+        Args: {
+          _entidade_id?: string
+          _entidade_tipo?: string
+          _link?: string
+          _mensagem?: string
+          _prioridade?: Database["public"]["Enums"]["notificacao_prioridade"]
+          _tipo?: Database["public"]["Enums"]["notificacao_tipo"]
+          _titulo: string
+        }
+        Returns: number
+      }
       unaccent: { Args: { "": string }; Returns: string }
+      user_has_campanha_scope: {
+        Args: { _campanha_id: string; _user_id: string }
+        Returns: boolean
+      }
+      user_has_municipio_scope: {
+        Args: { _municipio_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role:
@@ -2817,6 +2968,17 @@ export type Database = {
         | "quente"
         | "aliado"
         | "lideranca"
+      notificacao_prioridade: "baixa" | "media" | "alta" | "urgente"
+      notificacao_tipo:
+        | "info"
+        | "sucesso"
+        | "aviso"
+        | "erro"
+        | "demanda"
+        | "agenda"
+        | "financeiro"
+        | "tarefa"
+        | "sistema"
       origem_demanda:
         | "visita"
         | "telefone"
@@ -3117,6 +3279,18 @@ export const Constants = {
         "quente",
         "aliado",
         "lideranca",
+      ],
+      notificacao_prioridade: ["baixa", "media", "alta", "urgente"],
+      notificacao_tipo: [
+        "info",
+        "sucesso",
+        "aviso",
+        "erro",
+        "demanda",
+        "agenda",
+        "financeiro",
+        "tarefa",
+        "sistema",
       ],
       origem_demanda: [
         "visita",
