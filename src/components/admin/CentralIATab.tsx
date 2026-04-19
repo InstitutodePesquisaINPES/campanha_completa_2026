@@ -80,6 +80,35 @@ function toProviderDialogState(provider: ProviderRow): ProviderDialogState {
   };
 }
 
+function createProviderDialogState(): ProviderDialogState {
+  return {
+    nome: "",
+    tipo: "openai",
+    descricao: "",
+    base_url: "https://api.openai.com/v1",
+    secret_name: "OPENAI_API_KEY",
+    prioridade: 100,
+    status: "inativo",
+    headers_extra: {},
+  };
+}
+
+function createModelDialogState(): ModelDialogState {
+  return {
+    nome: "",
+    modelo_id: "",
+    provedor_id: null,
+    ativo: true,
+    contexto_tokens: 8192,
+    max_output_tokens: 4096,
+    custo_input_por_1m: 0,
+    custo_output_por_1m: 0,
+    suporta_reasoning: false,
+    suporta_tools: false,
+    suporta_vision: false,
+  };
+}
+
 export function CentralIATab() {
   const { data: provedores } = useAIProvedores();
   const { data: modelos } = useAIModelos();
@@ -110,7 +139,7 @@ export function CentralIATab() {
 
         <TabsContent value="provedores" className="space-y-3 mt-4">
           <div className="flex justify-end">
-            <Button onClick={() => setProvDialog({ tipo: "openai", base_url: "https://api.openai.com/v1", secret_name: "OPENAI_API_KEY", status: "inativo", prioridade: 100, headers_extra: {} })}>
+            <Button onClick={() => setProvDialog(createProviderDialogState())}>
               <Plus className="h-4 w-4 mr-1" />Novo Provedor
             </Button>
           </div>
@@ -136,7 +165,7 @@ export function CentralIATab() {
                     <Button size="sm" variant="outline" onClick={() => testProv.mutate(p.id)} disabled={testProv.isPending}>
                       <Zap className="h-3.5 w-3.5 mr-1" />Testar
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={() => setProvDialog(p)}><Pencil className="h-3.5 w-3.5" /></Button>
+                    <Button size="sm" variant="ghost" onClick={() => setProvDialog(toProviderDialogState(p))}><Pencil className="h-3.5 w-3.5" /></Button>
                     <Button size="sm" variant="ghost" onClick={() => { if (confirm("Remover provedor e seus modelos?")) deleteProv.mutate(p.id); }}>
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
@@ -149,7 +178,7 @@ export function CentralIATab() {
 
         <TabsContent value="modelos" className="space-y-3 mt-4">
           <div className="flex justify-end">
-            <Button onClick={() => setModeloDialog({ ativo: true, contexto_tokens: 8192, max_output_tokens: 4096, custo_input_por_1m: 0, custo_output_por_1m: 0 })}>
+            <Button onClick={() => setModeloDialog(createModelDialogState())}>
               <Plus className="h-4 w-4 mr-1" />Novo Modelo
             </Button>
           </div>
@@ -268,7 +297,7 @@ export function CentralIATab() {
                 <div><Label>Nome</Label><Input value={provDialog.nome ?? ""} onChange={e => setProvDialog({ ...provDialog, nome: e.target.value })} /></div>
                 <div>
                   <Label>Tipo</Label>
-                  <Select value={provDialog.tipo} onValueChange={v => setProvDialog({ ...provDialog, tipo: v })}>
+                  <Select value={provDialog.tipo} onValueChange={v => setProvDialog({ ...provDialog, tipo: v as ProviderType })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>{TIPOS.map(t => <SelectItem key={t.v} value={t.v}>{t.label}</SelectItem>)}</SelectContent>
                   </Select>
@@ -285,7 +314,7 @@ export function CentralIATab() {
                 <div><Label>Prioridade</Label><Input type="number" value={provDialog.prioridade ?? 100} onChange={e => setProvDialog({ ...provDialog, prioridade: Number(e.target.value) })} /></div>
                 <div>
                   <Label>Status</Label>
-                  <Select value={provDialog.status} onValueChange={v => setProvDialog({ ...provDialog, status: v })}>
+                  <Select value={provDialog.status} onValueChange={v => setProvDialog({ ...provDialog, status: v as ProviderStatus })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="inativo">Inativo</SelectItem>
@@ -299,7 +328,7 @@ export function CentralIATab() {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setProvDialog(null)}>Cancelar</Button>
-            <Button onClick={() => { upsertProv.mutate(provDialog, { onSuccess: () => setProvDialog(null) }); }}>Salvar</Button>
+            <Button onClick={() => { if (!provDialog.nome.trim()) return; upsertProv.mutate(provDialog, { onSuccess: () => setProvDialog(null) }); }}>Salvar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -339,7 +368,7 @@ export function CentralIATab() {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setModeloDialog(null)}>Cancelar</Button>
-            <Button onClick={() => upsertModelo.mutate(modeloDialog, { onSuccess: () => setModeloDialog(null) })}>Salvar</Button>
+            <Button onClick={() => { if (!modeloDialog.nome.trim() || !modeloDialog.modelo_id.trim() || !modeloDialog.provedor_id) return; upsertModelo.mutate({ ...modeloDialog, provedor_id: modeloDialog.provedor_id }, { onSuccess: () => setModeloDialog(null) }); }}>Salvar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
