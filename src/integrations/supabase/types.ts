@@ -91,6 +91,13 @@ export type Database = {
             referencedColumns: ["bairro_id"]
           },
           {
+            foreignKeyName: "agenda_bairro_id_fkey"
+            columns: ["bairro_id"]
+            isOneToOne: false
+            referencedRelation: "v_lacunas_territoriais"
+            referencedColumns: ["bairro_id"]
+          },
+          {
             foreignKeyName: "agenda_municipio_id_fkey"
             columns: ["municipio_id"]
             isOneToOne: false
@@ -937,6 +944,13 @@ export type Database = {
             referencedRelation: "mapa_estrategico_bairros"
             referencedColumns: ["bairro_id"]
           },
+          {
+            foreignKeyName: "comunidades_bairro_id_fkey"
+            columns: ["bairro_id"]
+            isOneToOne: false
+            referencedRelation: "v_lacunas_territoriais"
+            referencedColumns: ["bairro_id"]
+          },
         ]
       }
       contratos: {
@@ -1108,6 +1122,13 @@ export type Database = {
             columns: ["bairro_id"]
             isOneToOne: false
             referencedRelation: "mapa_estrategico_bairros"
+            referencedColumns: ["bairro_id"]
+          },
+          {
+            foreignKeyName: "demandas_bairro_id_fkey"
+            columns: ["bairro_id"]
+            isOneToOne: false
+            referencedRelation: "v_lacunas_territoriais"
             referencedColumns: ["bairro_id"]
           },
           {
@@ -1971,6 +1992,13 @@ export type Database = {
             columns: ["bairro_id"]
             isOneToOne: false
             referencedRelation: "mapa_estrategico_bairros"
+            referencedColumns: ["bairro_id"]
+          },
+          {
+            foreignKeyName: "pessoas_enderecos_bairro_id_fkey"
+            columns: ["bairro_id"]
+            isOneToOne: false
+            referencedRelation: "v_lacunas_territoriais"
             referencedColumns: ["bairro_id"]
           },
           {
@@ -3440,6 +3468,39 @@ export type Database = {
           total_pessoas?: never
         }
         Relationships: []
+      }
+      v_lacunas_territoriais: {
+        Row: {
+          bairro_id: string | null
+          bairro_nome: string | null
+          classificacao:
+            | Database["public"]["Enums"]["classificacao_territorial"]
+            | null
+          demandas_abertas: number | null
+          latitude: number | null
+          longitude: number | null
+          municipio_id: string | null
+          municipio_nome: string | null
+          score_prioridade: number | null
+          total_eventos: number | null
+          total_pessoas: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bairros_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "mapa_estrategico_bairros"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "bairros_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
