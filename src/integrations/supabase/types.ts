@@ -684,43 +684,61 @@ export type Database = {
       }
       bairros: {
         Row: {
+          area_km2: number | null
           classificacao:
             | Database["public"]["Enums"]["classificacao_territorial"]
             | null
           created_at: string
           distrito_id: string | null
+          geometria: Json | null
           id: string
           latitude: number | null
           longitude: number | null
           municipio_id: string
           nome: string
+          osm_atualizado_em: string | null
+          osm_id: number | null
+          populacao_estimada: number | null
           updated_at: string
+          zona_tipo: Database["public"]["Enums"]["zona_tipo"] | null
         }
         Insert: {
+          area_km2?: number | null
           classificacao?:
             | Database["public"]["Enums"]["classificacao_territorial"]
             | null
           created_at?: string
           distrito_id?: string | null
+          geometria?: Json | null
           id?: string
           latitude?: number | null
           longitude?: number | null
           municipio_id: string
           nome: string
+          osm_atualizado_em?: string | null
+          osm_id?: number | null
+          populacao_estimada?: number | null
           updated_at?: string
+          zona_tipo?: Database["public"]["Enums"]["zona_tipo"] | null
         }
         Update: {
+          area_km2?: number | null
           classificacao?:
             | Database["public"]["Enums"]["classificacao_territorial"]
             | null
           created_at?: string
           distrito_id?: string | null
+          geometria?: Json | null
           id?: string
           latitude?: number | null
           longitude?: number | null
           municipio_id?: string
           nome?: string
+          osm_atualizado_em?: string | null
+          osm_id?: number | null
+          populacao_estimada?: number | null
           updated_at?: string
+          zona_tipo?: Database["public"]["Enums"]["zona_tipo"] | null
         }
         Relationships: [
           {
@@ -1604,6 +1622,99 @@ export type Database = {
           },
         ]
       }
+      contrato_aprovacoes: {
+        Row: {
+          aprovador_id: string | null
+          contrato_id: string
+          created_at: string
+          decidido_em: string | null
+          exige_observacao: boolean
+          id: string
+          observacao: string | null
+          ordem: number
+          papel: Database["public"]["Enums"]["contrato_aprovacao_papel"]
+          status: Database["public"]["Enums"]["contrato_aprovacao_status"]
+          updated_at: string
+        }
+        Insert: {
+          aprovador_id?: string | null
+          contrato_id: string
+          created_at?: string
+          decidido_em?: string | null
+          exige_observacao?: boolean
+          id?: string
+          observacao?: string | null
+          ordem: number
+          papel: Database["public"]["Enums"]["contrato_aprovacao_papel"]
+          status?: Database["public"]["Enums"]["contrato_aprovacao_status"]
+          updated_at?: string
+        }
+        Update: {
+          aprovador_id?: string | null
+          contrato_id?: string
+          created_at?: string
+          decidido_em?: string | null
+          exige_observacao?: boolean
+          id?: string
+          observacao?: string | null
+          ordem?: number
+          papel?: Database["public"]["Enums"]["contrato_aprovacao_papel"]
+          status?: Database["public"]["Enums"]["contrato_aprovacao_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contrato_aprovacoes_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrato_aprovacoes_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "v_contratos_alerta"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contrato_workflow_template: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          exige_observacao: boolean
+          id: string
+          nome: string
+          ordem: number
+          papel: Database["public"]["Enums"]["contrato_aprovacao_papel"]
+          valor_max: number | null
+          valor_min: number
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          exige_observacao?: boolean
+          id?: string
+          nome: string
+          ordem: number
+          papel: Database["public"]["Enums"]["contrato_aprovacao_papel"]
+          valor_max?: number | null
+          valor_min?: number
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          exige_observacao?: boolean
+          id?: string
+          nome?: string
+          ordem?: number
+          papel?: Database["public"]["Enums"]["contrato_aprovacao_papel"]
+          valor_max?: number | null
+          valor_min?: number
+        }
+        Relationships: []
+      }
       contratos: {
         Row: {
           arquivo_url: string | null
@@ -1686,6 +1797,75 @@ export type Database = {
             columns: ["fornecedor_pessoa_id"]
             isOneToOne: false
             referencedRelation: "pessoas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dados_externos_jobs: {
+        Row: {
+          concluido_em: string | null
+          created_at: string
+          created_by: string | null
+          erro: string | null
+          fonte: string
+          id: string
+          iniciado_em: string | null
+          metadata: Json | null
+          municipio_id: string | null
+          status: Database["public"]["Enums"]["import_job_status"]
+          tipo: string
+          total_atualizados: number
+          total_inseridos: number
+          total_processados: number
+          uf: string | null
+        }
+        Insert: {
+          concluido_em?: string | null
+          created_at?: string
+          created_by?: string | null
+          erro?: string | null
+          fonte: string
+          id?: string
+          iniciado_em?: string | null
+          metadata?: Json | null
+          municipio_id?: string | null
+          status?: Database["public"]["Enums"]["import_job_status"]
+          tipo: string
+          total_atualizados?: number
+          total_inseridos?: number
+          total_processados?: number
+          uf?: string | null
+        }
+        Update: {
+          concluido_em?: string | null
+          created_at?: string
+          created_by?: string | null
+          erro?: string | null
+          fonte?: string
+          id?: string
+          iniciado_em?: string | null
+          metadata?: Json | null
+          municipio_id?: string | null
+          status?: Database["public"]["Enums"]["import_job_status"]
+          tipo?: string
+          total_atualizados?: number
+          total_inseridos?: number
+          total_processados?: number
+          uf?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dados_externos_jobs_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "mapa_estrategico_bairros"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "dados_externos_jobs_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
             referencedColumns: ["id"]
           },
         ]
@@ -2279,51 +2459,126 @@ export type Database = {
           },
         ]
       }
+      municipio_demografia: {
+        Row: {
+          ano: number
+          created_at: string
+          faixa_etaria: string
+          faixa_max: number | null
+          faixa_min: number
+          fonte: string
+          id: string
+          municipio_id: string
+          quantidade: number
+          sexo: string
+        }
+        Insert: {
+          ano: number
+          created_at?: string
+          faixa_etaria: string
+          faixa_max?: number | null
+          faixa_min: number
+          fonte?: string
+          id?: string
+          municipio_id: string
+          quantidade?: number
+          sexo: string
+        }
+        Update: {
+          ano?: number
+          created_at?: string
+          faixa_etaria?: string
+          faixa_max?: number | null
+          faixa_min?: number
+          fonte?: string
+          id?: string
+          municipio_id?: string
+          quantidade?: number
+          sexo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "municipio_demografia_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "mapa_estrategico_bairros"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "municipio_demografia_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       municipios: {
         Row: {
+          ano_referencia: number | null
+          area_km2: number | null
           classificacao_estrategica: string | null
           created_at: string
+          densidade_hab_km2: number | null
           eleitorado_total: number | null
           estado_id: string
           geocodigo_ibge: string | null
+          ibge_atualizado_em: string | null
           id: string
+          idh: number | null
           latitude: number | null
           longitude: number | null
           nome: string
           notas_estrategicas: string | null
           populacao: number | null
+          populacao_2022: number | null
           prioridade_campanha: number | null
           updated_at: string
+          urbano_pct: number | null
         }
         Insert: {
+          ano_referencia?: number | null
+          area_km2?: number | null
           classificacao_estrategica?: string | null
           created_at?: string
+          densidade_hab_km2?: number | null
           eleitorado_total?: number | null
           estado_id: string
           geocodigo_ibge?: string | null
+          ibge_atualizado_em?: string | null
           id?: string
+          idh?: number | null
           latitude?: number | null
           longitude?: number | null
           nome: string
           notas_estrategicas?: string | null
           populacao?: number | null
+          populacao_2022?: number | null
           prioridade_campanha?: number | null
           updated_at?: string
+          urbano_pct?: number | null
         }
         Update: {
+          ano_referencia?: number | null
+          area_km2?: number | null
           classificacao_estrategica?: string | null
           created_at?: string
+          densidade_hab_km2?: number | null
           eleitorado_total?: number | null
           estado_id?: string
           geocodigo_ibge?: string | null
+          ibge_atualizado_em?: string | null
           id?: string
+          idh?: number | null
           latitude?: number | null
           longitude?: number | null
           nome?: string
           notas_estrategicas?: string | null
           populacao?: number | null
+          populacao_2022?: number | null
           prioridade_campanha?: number | null
           updated_at?: string
+          urbano_pct?: number | null
         }
         Relationships: [
           {
@@ -4295,6 +4550,45 @@ export type Database = {
           },
         ]
       }
+      v_minhas_aprovacoes_pendentes: {
+        Row: {
+          contrato_id: string | null
+          created_at: string | null
+          data_fim: string | null
+          data_inicio: string | null
+          exige_observacao: boolean | null
+          fornecedor_pessoa_id: string | null
+          id: string | null
+          numero: string | null
+          objeto: string | null
+          ordem: number | null
+          papel: Database["public"]["Enums"]["contrato_aprovacao_papel"] | null
+          valor: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contrato_aprovacoes_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrato_aprovacoes_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "v_contratos_alerta"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contratos_fornecedor_pessoa_id_fkey"
+            columns: ["fornecedor_pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "pessoas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_warroom_kpis: {
         Row: {
           crises_ativas: number | null
@@ -4307,6 +4601,10 @@ export type Database = {
       }
     }
     Functions: {
+      criar_aprovacoes_contrato: {
+        Args: { _contrato_id: string }
+        Returns: undefined
+      }
       criar_notificacao: {
         Args: {
           _entidade_id?: string
@@ -4438,6 +4736,16 @@ export type Database = {
         | "disputa"
         | "risco"
         | "baixa_presenca"
+      contrato_aprovacao_papel:
+        | "tesoureiro"
+        | "juridico"
+        | "candidato"
+        | "admin"
+      contrato_aprovacao_status:
+        | "pendente"
+        | "aprovado"
+        | "rejeitado"
+        | "revisao"
       contrato_status:
         | "rascunho"
         | "vigente"
@@ -4454,6 +4762,7 @@ export type Database = {
         | "pesquisa"
         | "campanha"
         | "mandato"
+      import_job_status: "pendente" | "rodando" | "sucesso" | "erro" | "parcial"
       incidente_status: "aberto" | "em_apuracao" | "resolvido" | "arquivado"
       mencao_canal:
         | "instagram"
@@ -4652,6 +4961,7 @@ export type Database = {
         | "candidatos"
         | "resultados"
         | "prestacao_contas"
+      zona_tipo: "urbano" | "rural" | "misto" | "desconhecido"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -4867,6 +5177,18 @@ export const Constants = {
         "risco",
         "baixa_presenca",
       ],
+      contrato_aprovacao_papel: [
+        "tesoureiro",
+        "juridico",
+        "candidato",
+        "admin",
+      ],
+      contrato_aprovacao_status: [
+        "pendente",
+        "aprovado",
+        "rejeitado",
+        "revisao",
+      ],
       contrato_status: [
         "rascunho",
         "vigente",
@@ -4886,6 +5208,7 @@ export const Constants = {
         "campanha",
         "mandato",
       ],
+      import_job_status: ["pendente", "rodando", "sucesso", "erro", "parcial"],
       incidente_status: ["aberto", "em_apuracao", "resolvido", "arquivado"],
       mencao_canal: [
         "instagram",
@@ -5108,6 +5431,7 @@ export const Constants = {
         "resultados",
         "prestacao_contas",
       ],
+      zona_tipo: ["urbano", "rural", "misto", "desconhecido"],
     },
   },
 } as const
