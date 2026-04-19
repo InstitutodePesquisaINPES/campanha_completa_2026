@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Brain, Plus, Pencil, Trash2, Zap, Check, X, AlertCircle, ExternalLink } from "lucide-react";
-import { useAIProvedores, useAIModelos, useUpsertProvedor, useDeleteProvedor, useTestProvedor, useUpsertModelo, useDeleteModelo, useAIUsoLog } from "@/hooks/useAI";
+import { useAIProvedores, useAIModelos, useUpsertProvedor, useDeleteProvedor, useTestProvedor, useUpsertModelo, useDeleteModelo, useAIUsoLog, type AIModelPayload, type AIProviderPayload } from "@/hooks/useAI";
 
 const TIPOS = [
   { v: "openai", label: "OpenAI" },
@@ -32,8 +32,8 @@ export function CentralIATab() {
   const { data: provedores } = useAIProvedores();
   const { data: modelos } = useAIModelos();
   const [tab, setTab] = useState("provedores");
-  const [provDialog, setProvDialog] = useState<any>(null);
-  const [modeloDialog, setModeloDialog] = useState<any>(null);
+  const [provDialog, setProvDialog] = useState<AIProviderPayload | null>(null);
+  const [modeloDialog, setModeloDialog] = useState<AIModelPayload | null>(null);
   const upsertProv = useUpsertProvedor();
   const deleteProv = useDeleteProvedor();
   const testProv = useTestProvedor();
@@ -116,7 +116,7 @@ export function CentralIATab() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {modelos?.map((m: any) => (
+                {modelos?.map((m) => (
                   <TableRow key={m.id}>
                     <TableCell className="font-medium">{m.nome}</TableCell>
                     <TableCell><Badge variant="outline">{m.ai_provedores?.nome}</Badge></TableCell>
@@ -164,7 +164,7 @@ export function CentralIATab() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {uso?.map((u: any) => (
+                  {uso?.map((u) => (
                     <TableRow key={u.id}>
                       <TableCell className="text-xs">{new Date(u.created_at).toLocaleString("pt-BR")}</TableCell>
                       <TableCell className="text-xs">{u.ai_provedores?.nome} / {u.ai_modelos?.nome}</TableCell>
