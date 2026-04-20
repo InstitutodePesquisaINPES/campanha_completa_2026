@@ -1,7 +1,7 @@
 // Edge Function: tse-ingest-chunk-public
 // Versão autenticada via JWT (chamada do app via supabase.functions.invoke).
 // Apenas usuários com role 'admin' podem usar.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

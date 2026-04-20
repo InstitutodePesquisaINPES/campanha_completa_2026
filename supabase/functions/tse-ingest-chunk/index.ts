@@ -1,7 +1,7 @@
 // Edge Function: tse-ingest-chunk
 // Recebe lotes de registros do worker externo (GitHub Actions) e faz upsert.
 // Autenticação via header X-Ingest-Token (compara com secret TSE_INGEST_TOKEN).
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
