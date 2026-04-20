@@ -5902,6 +5902,10 @@ export type Database = {
         Args: { _ano?: number; _uf?: string }
         Returns: Json
       }
+      tse_eleitorado_agregado: {
+        Args: { _ano?: number; _municipio?: string; _uf?: string }
+        Returns: Json
+      }
       tse_resumo_municipios: {
         Args: { _ano: number; _uf: string }
         Returns: {
