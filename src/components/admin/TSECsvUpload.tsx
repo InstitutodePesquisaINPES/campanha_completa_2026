@@ -170,7 +170,7 @@ function mapRow(tipo: TipoDado, ano: number, uf: string, row: any): Record<strin
 }
 
 export function TSECsvUpload() {
-  const [tipo, setTipo] = useState<TipoDado>("eleitorado");
+  const [tipo, setTipo] = useState<TipoDado>("eleitorado_perfil");
   const [ano, setAno] = useState<number>(2024);
   const [uf, setUf] = useState<string>("BA");
   const [file, setFile] = useState<File | null>(null);
