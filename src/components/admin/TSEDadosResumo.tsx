@@ -27,45 +27,14 @@ export function TSEDadosResumo() {
   const carregar = async () => {
     setLoading(true);
     try {
-      // Busca agregada por município no perfil de eleitorado
-      const { data: eleit } = await supabase
-        .from("tse_eleitorado_perfil")
-        .select("municipio, quantidade_eleitores")
-        .eq("ano", ano)
-        .eq("uf", uf)
-        .limit(50000);
-
-      const { data: cand } = await supabase
-        .from("tse_votacao_candidato_perfil")
-        .select("municipio")
-        .eq("ano", ano)
-        .eq("uf", uf)
-        .limit(50000);
-
-      const mapEleit = new Map<string, { eleitores: number; registros: number }>();
-      (eleit ?? []).forEach((r: any) => {
-        const m = r.municipio ?? "—";
-        const cur = mapEleit.get(m) ?? { eleitores: 0, registros: 0 };
-        cur.eleitores += Number(r.quantidade_eleitores ?? 0);
-        cur.registros += 1;
-        mapEleit.set(m, cur);
-      });
-
-      const mapCand = new Map<string, number>();
-      (cand ?? []).forEach((r: any) => {
-        const m = r.municipio ?? "—";
-        mapCand.set(m, (mapCand.get(m) ?? 0) + 1);
-      });
-
-      const todos = new Set<string>([...mapEleit.keys(), ...mapCand.keys()]);
-      const arr: LinhaMunicipio[] = Array.from(todos).map((m) => ({
-        municipio: m,
-        eleitores: mapEleit.get(m)?.eleitores ?? 0,
-        registros_perfil: mapEleit.get(m)?.registros ?? 0,
-        candidatos_perfil: mapCand.get(m) ?? 0,
+      const { data, error } = await supabase.rpc("tse_resumo_municipios" as any, { _ano: ano, _uf: uf });
+      if (error) throw error;
+      const arr: LinhaMunicipio[] = (data ?? []).map((r: any) => ({
+        municipio: r.municipio ?? "—",
+        eleitores: Number(r.eleitores ?? 0),
+        registros_perfil: Number(r.registros_perfil ?? 0),
+        candidatos_perfil: Number(r.candidatos_perfil ?? 0),
       }));
-      arr.sort((a, b) => b.eleitores - a.eleitores);
-
       setLinhas(arr);
       setTotais({
         municipios: arr.filter((x) => x.eleitores > 0 || x.candidatos_perfil > 0).length,
