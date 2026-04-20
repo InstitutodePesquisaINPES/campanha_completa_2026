@@ -19,8 +19,9 @@ type Tabela =
 interface Payload {
   tabela: Tabela;
   registros: Record<string, unknown>[];
-  truncate_filter?: { ano: number; uf: string }; // se enviado no 1º chunk, limpa antes
+  truncate_filter?: { ano: number; uf: string };
   job_id?: string;
+  reset_existing?: boolean;
 }
 
 const ALLOWED: Tabela[] = [
@@ -50,8 +51,7 @@ Deno.serve(async (req) => {
     if (!ALLOWED.includes(body.tabela)) return json({ error: "tabela inválida" }, 400);
     if (!Array.isArray(body.registros)) return json({ error: "registros deve ser array" }, 400);
 
-    // Limpeza opcional (apenas no primeiro chunk de uma importação)
-    if (body.truncate_filter) {
+    if (body.reset_existing && body.truncate_filter) {
       const { ano, uf } = body.truncate_filter;
       const { error: delErr } = await supabase
         .from(body.tabela)
@@ -65,15 +65,30 @@ Deno.serve(async (req) => {
       return json({ ok: true, inserted: 0 });
     }
 
-    // Insert em sub-lotes de 500
-    const SUBLOTE = 500;
+    const SUBLOTE = 250;
     let inserted = 0;
+    const isTransient = (msg: string) =>
+      /deadlock detected|could not serialize|lock timeout|timeout|temporarily unavailable|connection/i.test(msg);
+
     for (let i = 0; i < body.registros.length; i += SUBLOTE) {
       const slice = body.registros.slice(i, i + SUBLOTE);
-      const { error } = await supabase.from(body.tabela).insert(slice);
-      if (error) {
-        console.error("insert error:", error.message);
-        return json({ error: error.message, inserted }, 500);
+      let attempt = 0;
+      let lastErr = "";
+      while (attempt < 4) {
+        const { error } = await supabase.from(body.tabela).insert(slice);
+        if (!error) { lastErr = ""; break; }
+        lastErr = error.message;
+        if (!isTransient(lastErr)) {
+          console.error("insert error (fatal):", lastErr);
+          return json({ error: lastErr, inserted, retry: false }, 200);
+        }
+        attempt++;
+        const wait = 200 * Math.pow(2, attempt) + Math.floor(Math.random() * 250);
+        console.warn(`transient error (attempt ${attempt}): ${lastErr} — retry in ${wait}ms`);
+        await new Promise((r) => setTimeout(r, wait));
+      }
+      if (lastErr) {
+        return json({ error: lastErr, inserted, retry: true }, 200);
       }
       inserted += slice.length;
     }
@@ -90,7 +105,7 @@ Deno.serve(async (req) => {
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error(msg);
-    return json({ error: msg }, 500);
+    return json({ error: msg, retry: /deadlock|timeout|connection/i.test(msg) }, 200);
   }
 });
 

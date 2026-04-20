@@ -78,11 +78,11 @@ export function useTriggerImport() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       qc.invalidateQueries({ queryKey: ["import-jobs"] });
       qc.invalidateQueries({ queryKey: ["municipios"] });
       qc.invalidateQueries({ queryKey: ["bairros"] });
-      toast.success("Importação iniciada");
+      toast.success(data?.mensagem || (data?.ja_concluido ? "Importação já estava completa" : "Importação iniciada"));
     },
     onError: (e: Error) => toast.error(`Falha: ${e.message}`),
   });

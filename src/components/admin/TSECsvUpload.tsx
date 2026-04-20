@@ -120,14 +120,13 @@ export function TSECsvUpload() {
     setProgress(0); setEnviados(0); setTotalLidos(0); setDone(false); setErro(null);
   };
 
-  const sendChunk = async (registros: any[], firstChunk: boolean): Promise<number> => {
+  const sendChunk = async (registros: any[], _firstChunk: boolean): Promise<number> => {
     let attempt = 0;
     while (true) {
       const { data, error } = await supabase.functions.invoke("tse-ingest-chunk-public", {
         body: {
           tabela,
           registros,
-          ...(firstChunk && attempt === 0 ? { truncate_filter: { ano, uf } } : {}),
         },
       });
       if (error) throw new Error(error.message);

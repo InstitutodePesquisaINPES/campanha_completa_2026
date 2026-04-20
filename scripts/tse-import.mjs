@@ -87,30 +87,35 @@ function downloadStream(url) {
   });
 }
 
-let firstChunkSent = false;
-async function postChunk(registros) {
-  const body = {
-    tabela: tabelaDestino(),
-    registros,
-  };
-  if (!firstChunkSent) {
-    body.truncate_filter = { ano: ANO, uf: UF };
-    firstChunkSent = true;
-  }
-
+async function postChunk(registros, attempt = 0) {
   const res = await fetch(INGEST_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "X-Ingest-Token": TOKEN,
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      tabela: tabelaDestino(),
+      registros,
+    }),
   });
-  if (!res.ok) {
+
+  const json = await res.json().catch(async () => {
     const txt = await res.text();
-    throw new Error(`Ingest falhou ${res.status}: ${txt}`);
+    throw new Error(`Resposta inválida do ingest: ${txt}`);
+  });
+
+  if (json?.retry && attempt < 5) {
+    const wait = 500 * Math.pow(2, attempt + 1) + Math.floor(Math.random() * 500);
+    await new Promise((r) => setTimeout(r, wait));
+    return postChunk(registros, attempt + 1);
   }
-  return res.json();
+
+  if (!res.ok || json?.error) {
+    throw new Error(json?.error || `Ingest falhou ${res.status}`);
+  }
+
+  return json;
 }
 
 // ---------- Mappers (CSV TSE → tabela Supabase) ----------

@@ -88,16 +88,43 @@ async function processMunicipio(supabase: any, mun: { id: string; nome: string }
   return { inseridos, atualizados, total: elements.length };
 }
 
-async function processBulk(jobId: string) {
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-  const { data: municipios = [] } = await supabase
-    .from("municipios")
-    .select("id, nome")
-    .order("nome");
+async function getEstadoIdByUF(supabase: any, uf: string) {
+  const { data } = await supabase.from("estados").select("id").eq("sigla", uf).maybeSingle();
+  return data?.id ?? null;
+}
 
-  const list = municipios || [];
+async function listMunicipiosPendentes(supabase: any, uf: string) {
+  const estadoId = await getEstadoIdByUF(supabase, uf);
+  let query = supabase
+    .from("municipios")
+    .select("id, nome, bairros!left(osm_atualizado_em)")
+    .order("nome");
+  if (estadoId) query = query.eq("estado_id", estadoId);
+
+  const { data = [] } = await query;
+  return (data || []).filter((m: any) => {
+    const bairros = Array.isArray(m.bairros) ? m.bairros : [];
+    return bairros.length === 0 || !bairros.some((b: any) => !!b.osm_atualizado_em);
+  }).map((m: any) => ({ id: m.id, nome: m.nome }));
+}
+
+async function processBulk(jobId: string, uf: string) {
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  const list = await listMunicipiosPendentes(supabase, uf);
   let processados = 0, inseridos = 0, atualizados = 0;
   const erros: string[] = [];
+
+  if (list.length === 0) {
+    await supabase.from("dados_externos_jobs").update({
+      status: "sucesso",
+      total_processados: 0,
+      total_inseridos: 0,
+      total_atualizados: 0,
+      concluido_em: new Date().toISOString(),
+      erro: null,
+    }).eq("id", jobId);
+    return;
+  }
 
   for (const mun of list) {
     try {
@@ -108,7 +135,6 @@ async function processBulk(jobId: string) {
     } catch (e: any) {
       erros.push(`${(mun as any).nome}: ${e.message}`);
     }
-    // Rate limit 1.5s entre municípios (Overpass)
     await new Promise((r) => setTimeout(r, 1500));
 
     if (processados % 5 === 0) {
@@ -134,12 +160,11 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-  const { municipio_id } = await req.json().catch(() => ({}));
+  const { municipio_id, uf = "BA" } = await req.json().catch(() => ({}));
 
-  // ============ SINGLE — síncrono ============
   if (municipio_id) {
     const { data: job } = await supabase.from("dados_externos_jobs").insert({
-      fonte: "OSM", tipo: "bairros_single", uf: "BA", municipio_id,
+      fonte: "OSM", tipo: "bairros_single", uf, municipio_id,
       status: "rodando", iniciado_em: new Date().toISOString(),
     }).select().single();
 
@@ -164,25 +189,61 @@ Deno.serve(async (req) => {
       await supabase.from("dados_externos_jobs").update({
         status: "erro", erro: e.message, concluido_em: new Date().toISOString(),
       }).eq("id", job!.id);
-      return new Response(JSON.stringify({ error: e.message }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      return new Response(JSON.stringify({ ok: false, error: e.message }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
   }
 
-  // ============ BULK — background ============
+  const { data: runningJob } = await supabase
+    .from("dados_externos_jobs")
+    .select("id")
+    .eq("fonte", "OSM")
+    .eq("tipo", "bairros")
+    .eq("uf", uf)
+    .eq("status", "rodando")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (runningJob) {
+    return new Response(
+      JSON.stringify({
+        ok: true,
+        modo: "bulk_background",
+        job_id: runningJob.id,
+        resumed: true,
+        mensagem: "Já existe uma importação OSM em andamento para esta UF.",
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  const pendentes = await listMunicipiosPendentes(supabase, uf);
+  if (pendentes.length === 0) {
+    return new Response(
+      JSON.stringify({
+        ok: true,
+        modo: "bulk_background",
+        ja_concluido: true,
+        mensagem: "Todos os municípios desta UF já possuem bairros OSM importados.",
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
   const { data: job } = await supabase.from("dados_externos_jobs").insert({
-    fonte: "OSM", tipo: "bairros", uf: "BA",
+    fonte: "OSM", tipo: "bairros", uf,
     status: "rodando", iniciado_em: new Date().toISOString(),
   }).select().single();
 
   // @ts-ignore
-  EdgeRuntime.waitUntil(processBulk(job!.id));
+  EdgeRuntime.waitUntil(processBulk(job!.id, uf));
 
   return new Response(
     JSON.stringify({
-      ok: true, modo: "bulk_background", job_id: job!.id,
-      mensagem: "Importação OSM iniciada em background. Acompanhe pelo Histórico.",
+      ok: true, modo: "bulk_background", job_id: job!.id, pendentes: pendentes.length,
+      mensagem: "Importação OSM incremental iniciada em background. Ela continuará apenas os municípios pendentes.",
     }),
     { headers: { ...corsHeaders, "Content-Type": "application/json" } }
   );

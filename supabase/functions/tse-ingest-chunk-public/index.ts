@@ -28,6 +28,7 @@ interface Payload {
   tabela: Tabela;
   registros: Record<string, unknown>[];
   truncate_filter?: { ano: number; uf: string };
+  reset_existing?: boolean;
 }
 
 Deno.serve(async (req) => {
@@ -41,7 +42,6 @@ Deno.serve(async (req) => {
     const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
     const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Verifica usuário e role admin
     const userClient = createClient(SUPABASE_URL, ANON, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
     if (!ALLOWED.includes(body.tabela)) return json({ error: "tabela inválida" }, 400);
     if (!Array.isArray(body.registros)) return json({ error: "registros deve ser array" }, 400);
 
-    if (body.truncate_filter) {
+    if (body.reset_existing && body.truncate_filter) {
       const { ano, uf } = body.truncate_filter;
       const { error: delErr } = await admin
         .from(body.tabela)
