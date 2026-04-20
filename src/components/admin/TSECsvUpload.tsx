@@ -198,20 +198,46 @@ export function TSECsvUpload() {
   const [erro, setErro] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const tabela = TIPOS.find((t) => t.value === tipo)!.tabela;
+  const [tipoDetectado, setTipoDetectado] = useState<TipoDado | null>(null);
+  const [autoDetect, setAutoDetect] = useState(true);
+  const tipoEfetivo: TipoDado = autoDetect && tipoDetectado ? tipoDetectado : tipo;
+  const tabela = TIPOS.find((t) => t.value === tipoEfetivo)!.tabela;
 
   const reset = () => {
     setProgress(0); setEnviados(0); setTotalLidos(0); setDone(false); setErro(null);
   };
 
-  const sendChunk = async (registros: any[], _firstChunk: boolean): Promise<number> => {
+  const handleFile = (f: File | null) => {
+    setFile(f);
+    setTipoDetectado(null);
+    reset();
+    if (!f) return;
+    Papa.parse(f, {
+      header: true,
+      delimiter: ";",
+      skipEmptyLines: true,
+      encoding: "ISO-8859-1",
+      preview: 1,
+      complete: (res) => {
+        const headers = (res.meta.fields ?? []) as string[];
+        const det = detectTipo(headers);
+        if (det) {
+          setTipoDetectado(det);
+          setAutoDetect(true);
+          toast.success(`Tipo detectado: ${TIPOS.find((t) => t.value === det)?.label}`);
+        } else {
+          toast.warning("Não detectei o tipo. Selecione manualmente.");
+          setAutoDetect(false);
+        }
+      },
+    });
+  };
+
+  const sendChunk = async (registros: any[]): Promise<number> => {
     let attempt = 0;
     while (true) {
       const { data, error } = await supabase.functions.invoke("tse-ingest-chunk-public", {
-        body: {
-          tabela,
-          registros,
-        },
+        body: { tabela, registros },
       });
       if (error) throw new Error(error.message);
       const d = data as any;
