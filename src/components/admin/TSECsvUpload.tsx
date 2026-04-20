@@ -121,16 +121,26 @@ export function TSECsvUpload() {
   };
 
   const sendChunk = async (registros: any[], firstChunk: boolean): Promise<number> => {
-    const { data, error } = await supabase.functions.invoke("tse-ingest-chunk-public", {
-      body: {
-        tabela,
-        registros,
-        ...(firstChunk ? { truncate_filter: { ano, uf } } : {}),
-      },
-    });
-    if (error) throw new Error(error.message);
-    if ((data as any)?.error) throw new Error((data as any).error);
-    return (data as any)?.inserted ?? registros.length;
+    let attempt = 0;
+    while (true) {
+      const { data, error } = await supabase.functions.invoke("tse-ingest-chunk-public", {
+        body: {
+          tabela,
+          registros,
+          ...(firstChunk && attempt === 0 ? { truncate_filter: { ano, uf } } : {}),
+        },
+      });
+      if (error) throw new Error(error.message);
+      const d = data as any;
+      if (d?.retry && attempt < 5) {
+        attempt++;
+        const wait = 500 * Math.pow(2, attempt) + Math.floor(Math.random() * 500);
+        await new Promise((r) => setTimeout(r, wait));
+        continue;
+      }
+      if (d?.error) throw new Error(d.error);
+      return d?.inserted ?? registros.length;
+    }
   };
 
   const handleUpload = async () => {
