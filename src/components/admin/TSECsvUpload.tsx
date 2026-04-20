@@ -303,7 +303,7 @@ export function TSECsvUpload() {
           complete: async () => {
             try {
               if (buffer.length > 0) {
-                const ins = await sendChunk(buffer, firstChunk);
+                const ins = await sendChunk(buffer);
                 totalEnv += ins;
                 setEnviados(totalEnv);
               }
