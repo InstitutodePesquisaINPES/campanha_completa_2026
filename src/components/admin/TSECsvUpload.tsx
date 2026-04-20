@@ -10,6 +10,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Upload, FileText, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 
 const UFS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 const ANOS = [2024, 2022, 2020, 2018, 2016];
@@ -203,6 +206,13 @@ export function TSECsvUpload() {
   const tipoEfetivo: TipoDado = autoDetect && tipoDetectado ? tipoDetectado : tipo;
   const tabela = TIPOS.find((t) => t.value === tipoEfetivo)!.tabela;
 
+  // Filtro por município (para CSVs imensos como votação por seção / locais)
+  const [scanningMun, setScanningMun] = useState(false);
+  const [municipiosDisponiveis, setMunicipiosDisponiveis] = useState<{ codigo: string; nome: string }[]>([]);
+  const [municipiosSelecionados, setMunicipiosSelecionados] = useState<Set<string>>(new Set());
+  const [filtroBuscaMun, setFiltroBuscaMun] = useState("");
+  const podeFiltrarMunicipio = ["resultados", "locais", "votacao_candidato_perfil", "eleitorado_perfil", "eleitorado", "candidatos"].includes(tipoEfetivo);
+
   const reset = () => {
     setProgress(0); setEnviados(0); setTotalLidos(0); setDone(false); setErro(null);
   };
@@ -210,6 +220,9 @@ export function TSECsvUpload() {
   const handleFile = (f: File | null) => {
     setFile(f);
     setTipoDetectado(null);
+    setMunicipiosDisponiveis([]);
+    setMunicipiosSelecionados(new Set());
+    setFiltroBuscaMun("");
     reset();
     if (!f) return;
     Papa.parse(f, {
@@ -238,6 +251,60 @@ export function TSECsvUpload() {
         if (typeof ufRaw === "string" && /^[A-Z]{2}$/.test(ufRaw.trim())) setUf(ufRaw.trim());
       },
     });
+  };
+
+  // Varre o CSV para listar municípios únicos (rápido, só lê os campos de município)
+  const escanearMunicipios = async () => {
+    if (!file) return;
+    setScanningMun(true);
+    setMunicipiosDisponiveis([]);
+    const map = new Map<string, string>();
+    try {
+      await new Promise<void>((resolve, reject) => {
+        Papa.parse(file, {
+          header: true,
+          delimiter: ";",
+          skipEmptyLines: true,
+          encoding: "ISO-8859-1",
+          chunkSize: 1024 * 1024,
+          chunk: (results) => {
+            for (const row of results.data as any[]) {
+              const codigo = String(
+                pick(row, "CD_MUNICIPIO", "CD_MUNIC_TSE", "Código município", "Codigo municipio", "SG_UE") ?? ""
+              ).trim();
+              const nome = String(
+                pick(row, "NM_MUNICIPIO", "Município", "Municipio", "NM_UE") ?? ""
+              ).trim();
+              if (!codigo && !nome) continue;
+              const key = codigo || nome;
+              if (!map.has(key)) map.set(key, nome || codigo);
+            }
+          },
+          complete: () => resolve(),
+          error: (err) => reject(err),
+        });
+      });
+      const list = Array.from(map.entries())
+        .map(([codigo, nome]) => ({ codigo, nome }))
+        .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+      setMunicipiosDisponiveis(list);
+      toast.success(`${list.length} municípios encontrados na planilha`);
+    } catch (e: any) {
+      toast.error("Falha ao varrer municípios: " + (e?.message ?? String(e)));
+    } finally {
+      setScanningMun(false);
+    }
+  };
+
+  const matchMunicipio = (row: any): boolean => {
+    if (municipiosSelecionados.size === 0) return true;
+    const codigo = String(
+      pick(row, "CD_MUNICIPIO", "CD_MUNIC_TSE", "Código município", "Codigo municipio", "SG_UE") ?? ""
+    ).trim();
+    const nome = String(
+      pick(row, "NM_MUNICIPIO", "Município", "Municipio", "NM_UE") ?? ""
+    ).trim();
+    return municipiosSelecionados.has(codigo) || municipiosSelecionados.has(nome);
   };
 
   const sendChunk = async (registros: any[]): Promise<number> => {
@@ -286,6 +353,7 @@ export function TSECsvUpload() {
             try {
               for (const row of results.data as any[]) {
                 totalRead++;
+                if (!matchMunicipio(row)) continue;
                 const mapped = mapRow(tipoEfetivo, ano, uf, row);
                 if (!mapped) continue;
                 buffer.push(mapped);
@@ -404,6 +472,97 @@ export function TSECsvUpload() {
             </p>
           )}
         </div>
+
+        {file && podeFiltrarMunicipio && (
+          <div className="space-y-2 rounded-lg border p-3">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <Label className="text-sm">Filtrar por município (opcional)</Label>
+                <p className="text-xs text-muted-foreground">
+                  Útil para planilhas estaduais imensas. Sem seleção = importa tudo.
+                </p>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={escanearMunicipios}
+                disabled={running || scanningMun}
+              >
+                {scanningMun ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}
+                {municipiosDisponiveis.length > 0 ? "Reescanear" : "Listar municípios"}
+              </Button>
+            </div>
+
+            {municipiosDisponiveis.length > 0 && (
+              <>
+                <div className="flex items-center gap-2">
+                  <Input
+                    placeholder="Buscar município..."
+                    value={filtroBuscaMun}
+                    onChange={(e) => setFiltroBuscaMun(e.target.value)}
+                    className="h-8"
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setMunicipiosSelecionados(new Set())}
+                    disabled={municipiosSelecionados.size === 0}
+                  >
+                    Limpar
+                  </Button>
+                </div>
+                {municipiosSelecionados.size > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {Array.from(municipiosSelecionados).slice(0, 20).map((k) => (
+                      <Badge key={k} variant="secondary" className="text-[10px]">
+                        {municipiosDisponiveis.find((m) => m.codigo === k || m.nome === k)?.nome ?? k}
+                      </Badge>
+                    ))}
+                    {municipiosSelecionados.size > 20 && (
+                      <Badge variant="outline" className="text-[10px]">
+                        +{municipiosSelecionados.size - 20}
+                      </Badge>
+                    )}
+                  </div>
+                )}
+                <ScrollArea className="h-48 rounded border">
+                  <div className="p-2 space-y-1">
+                    {municipiosDisponiveis
+                      .filter((m) =>
+                        !filtroBuscaMun ||
+                        m.nome.toLowerCase().includes(filtroBuscaMun.toLowerCase()) ||
+                        m.codigo.includes(filtroBuscaMun)
+                      )
+                      .slice(0, 500)
+                      .map((m) => {
+                        const key = m.codigo || m.nome;
+                        const checked = municipiosSelecionados.has(key);
+                        return (
+                          <label
+                            key={key}
+                            className="flex items-center gap-2 px-2 py-1 text-xs rounded hover:bg-muted cursor-pointer"
+                          >
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={(v) => {
+                                const next = new Set(municipiosSelecionados);
+                                if (v) next.add(key); else next.delete(key);
+                                setMunicipiosSelecionados(next);
+                              }}
+                            />
+                            <span className="flex-1">{m.nome || "—"}</span>
+                            <span className="text-muted-foreground">{m.codigo}</span>
+                          </label>
+                        );
+                      })}
+                  </div>
+                </ScrollArea>
+              </>
+            )}
+          </div>
+        )}
 
         {(running || done || erro) && (
           <div className="space-y-2">
