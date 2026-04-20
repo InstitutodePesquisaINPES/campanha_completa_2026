@@ -327,7 +327,7 @@ export function TSECsvUpload() {
     }
   };
 
-  const tipoCfg = TIPOS.find((t) => t.value === tipo)!;
+  const tipoCfg = TIPOS.find((t) => t.value === tipoEfetivo)!;
 
   return (
     <Card>
@@ -340,14 +340,20 @@ export function TSECsvUpload() {
           <a className="underline" href="https://dadosabertos.tse.jus.br/" target="_blank" rel="noreferrer">
             dadosabertos.tse.jus.br
           </a>
-          , extraia e envie o CSV. Processamos em chunks de {CHUNK} registros.
+          , extraia e envie o CSV. O tipo é <strong>detectado automaticamente</strong> pelo cabeçalho. Processamos em chunks de {CHUNK} registros.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid gap-4 md:grid-cols-3">
           <div>
-            <Label className="mb-2 block">Tipo de dado</Label>
-            <Select value={tipo} onValueChange={(v) => setTipo(v as TipoDado)} disabled={running}>
+            <Label className="mb-2 block">
+              Tipo de dado {autoDetect && tipoDetectado && <span className="text-[10px] font-normal text-success ml-1">● auto-detectado</span>}
+            </Label>
+            <Select
+              value={tipoEfetivo}
+              onValueChange={(v) => { setTipo(v as TipoDado); setAutoDetect(false); }}
+              disabled={running}
+            >
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {TIPOS.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
