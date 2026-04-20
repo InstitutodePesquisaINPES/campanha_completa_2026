@@ -5360,6 +5360,15 @@ export type Database = {
         Args: { _ano?: number; _uf?: string; _votos_min?: number }
         Returns: number
       }
+      tse_resumo_municipios: {
+        Args: { _ano: number; _uf: string }
+        Returns: {
+          candidatos_perfil: number
+          eleitores: number
+          municipio: string
+          registros_perfil: number
+        }[]
+      }
       unaccent: { Args: { "": string }; Returns: string }
       user_has_campanha_scope: {
         Args: { _campanha_id: string; _user_id: string }
