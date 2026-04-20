@@ -82,6 +82,7 @@ Deno.serve(async (req) => {
       tse_resultados_secao: "ano,turno,uf,cod_municipio_tse,zona,secao,cargo,numero_votavel",
       tse_candidatos: undefined,
       tse_prestacao_contas: undefined,
+      // Tabelas de perfil têm índice único por expressão (COALESCE) — usamos insert + tratamento de duplicate key
       tse_eleitorado_perfil: undefined,
       tse_votacao_candidato_perfil: undefined,
     };
@@ -92,6 +93,8 @@ Deno.serve(async (req) => {
 
     const isTransient = (msg: string) =>
       /deadlock detected|could not serialize|lock timeout|timeout|temporarily unavailable|connection/i.test(msg);
+    const isDuplicate = (msg: string) =>
+      /duplicate key value|unique constraint/i.test(msg);
 
     for (let i = 0; i < body.registros.length; i += SUBLOTE) {
       const slice = body.registros.slice(i, i + SUBLOTE);
@@ -104,9 +107,10 @@ Deno.serve(async (req) => {
         const { error } = await query;
         if (!error) { lastErr = ""; break; }
         lastErr = error.message;
+        // Duplicate key = já importado, ignora silenciosamente
+        if (isDuplicate(lastErr)) { lastErr = ""; break; }
         if (!isTransient(lastErr)) {
           console.error("insert error (fatal):", lastErr);
-          // Retorna 200 para o client conseguir ler o body
           return json({ error: lastErr, inserted, retry: false }, 200);
         }
         attempt++;
