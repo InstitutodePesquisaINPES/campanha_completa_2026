@@ -22,6 +22,22 @@ type TipoDado =
   | "eleitorado_perfil"
   | "votacao_candidato_perfil";
 
+// Detecção automática do tipo de dado pelo cabeçalho do CSV
+function detectTipo(headers: string[]): TipoDado | null {
+  const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+  const H = new Set(headers.map(norm));
+  const has = (...ks: string[]) => ks.every((k) => H.has(norm(k)));
+  const hasAny = (...ks: string[]) => ks.some((k) => H.has(norm(k)));
+
+  if (has("Nome candidato", "Votos nominais") && hasAny("Cor/raça", "Faixa etária", "Gênero", "Grau de instrução")) return "votacao_candidato_perfil";
+  if (has("Quantidade de eleitores") && hasAny("Cor / Raça", "Faixa etária", "Gênero", "Grau de instrução")) return "eleitorado_perfil";
+  if (hasAny("NM_LOCAL_VOTACAO", "DS_LOCAL_VOTACAO")) return "locais";
+  if (hasAny("NM_URNA_CANDIDATO", "NM_CANDIDATO") && hasAny("DS_CARGO", "CD_CARGO")) return "candidatos";
+  if (hasAny("QT_VOTOS") && hasAny("NR_VOTAVEL")) return "resultados";
+  if (hasAny("QT_ELEITORES_PERFIL", "QT_ELEITORES")) return "eleitorado";
+  return null;
+}
+
 const TIPOS: { value: TipoDado; label: string; tabela: string; hint: string }[] = [
   { value: "eleitorado_perfil", label: "Eleitorado consolidado (perfil completo)", tabela: "tse_eleitorado_perfil", hint: "eleitorado_eleicao.csv (cor/raça, faixa etária, gênero, escolaridade, etc.)" },
   { value: "votacao_candidato_perfil", label: "Votação por candidato × perfil eleitor", tabela: "tse_votacao_candidato_perfil", hint: "votacao_candidato.csv (votos por candidato cruzados com perfil)" },
@@ -182,20 +198,46 @@ export function TSECsvUpload() {
   const [erro, setErro] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const tabela = TIPOS.find((t) => t.value === tipo)!.tabela;
+  const [tipoDetectado, setTipoDetectado] = useState<TipoDado | null>(null);
+  const [autoDetect, setAutoDetect] = useState(true);
+  const tipoEfetivo: TipoDado = autoDetect && tipoDetectado ? tipoDetectado : tipo;
+  const tabela = TIPOS.find((t) => t.value === tipoEfetivo)!.tabela;
 
   const reset = () => {
     setProgress(0); setEnviados(0); setTotalLidos(0); setDone(false); setErro(null);
   };
 
-  const sendChunk = async (registros: any[], _firstChunk: boolean): Promise<number> => {
+  const handleFile = (f: File | null) => {
+    setFile(f);
+    setTipoDetectado(null);
+    reset();
+    if (!f) return;
+    Papa.parse(f, {
+      header: true,
+      delimiter: ";",
+      skipEmptyLines: true,
+      encoding: "ISO-8859-1",
+      preview: 1,
+      complete: (res) => {
+        const headers = (res.meta.fields ?? []) as string[];
+        const det = detectTipo(headers);
+        if (det) {
+          setTipoDetectado(det);
+          setAutoDetect(true);
+          toast.success(`Tipo detectado: ${TIPOS.find((t) => t.value === det)?.label}`);
+        } else {
+          toast.warning("Não detectei o tipo. Selecione manualmente.");
+          setAutoDetect(false);
+        }
+      },
+    });
+  };
+
+  const sendChunk = async (registros: any[]): Promise<number> => {
     let attempt = 0;
     while (true) {
       const { data, error } = await supabase.functions.invoke("tse-ingest-chunk-public", {
-        body: {
-          tabela,
-          registros,
-        },
+        body: { tabela, registros },
       });
       if (error) throw new Error(error.message);
       const d = data as any;
@@ -237,13 +279,13 @@ export function TSECsvUpload() {
             try {
               for (const row of results.data as any[]) {
                 totalRead++;
-                const mapped = mapRow(tipo, ano, uf, row);
+                const mapped = mapRow(tipoEfetivo, ano, uf, row);
                 if (!mapped) continue;
                 buffer.push(mapped);
                 if (buffer.length >= CHUNK) {
                   const slice = buffer;
                   buffer = [];
-                  const ins = await sendChunk(slice, firstChunk);
+                  const ins = await sendChunk(slice);
                   firstChunk = false;
                   totalEnv += ins;
                   setEnviados(totalEnv);
@@ -261,7 +303,7 @@ export function TSECsvUpload() {
           complete: async () => {
             try {
               if (buffer.length > 0) {
-                const ins = await sendChunk(buffer, firstChunk);
+                const ins = await sendChunk(buffer);
                 totalEnv += ins;
                 setEnviados(totalEnv);
               }
@@ -285,7 +327,7 @@ export function TSECsvUpload() {
     }
   };
 
-  const tipoCfg = TIPOS.find((t) => t.value === tipo)!;
+  const tipoCfg = TIPOS.find((t) => t.value === tipoEfetivo)!;
 
   return (
     <Card>
@@ -298,14 +340,20 @@ export function TSECsvUpload() {
           <a className="underline" href="https://dadosabertos.tse.jus.br/" target="_blank" rel="noreferrer">
             dadosabertos.tse.jus.br
           </a>
-          , extraia e envie o CSV. Processamos em chunks de {CHUNK} registros.
+          , extraia e envie o CSV. O tipo é <strong>detectado automaticamente</strong> pelo cabeçalho. Processamos em chunks de {CHUNK} registros.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid gap-4 md:grid-cols-3">
           <div>
-            <Label className="mb-2 block">Tipo de dado</Label>
-            <Select value={tipo} onValueChange={(v) => setTipo(v as TipoDado)} disabled={running}>
+            <Label className="mb-2 block">
+              Tipo de dado {autoDetect && tipoDetectado && <span className="text-[10px] font-normal text-success ml-1">● auto-detectado</span>}
+            </Label>
+            <Select
+              value={tipoEfetivo}
+              onValueChange={(v) => { setTipo(v as TipoDado); setAutoDetect(false); }}
+              disabled={running}
+            >
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {TIPOS.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
@@ -341,7 +389,7 @@ export function TSECsvUpload() {
             type="file"
             accept=".csv,text/csv"
             disabled={running}
-            onChange={(e) => { setFile(e.target.files?.[0] ?? null); reset(); }}
+            onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
           />
           {file && (
             <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
