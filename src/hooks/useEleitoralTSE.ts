@@ -54,7 +54,52 @@ export function useTSECandidatos(filters: EleitoralFilters & { busca?: string; e
       if (filters.busca) q = q.or(`nome_completo.ilike.%${filters.busca}%,nome_urna.ilike.%${filters.busca}%`);
       const { data, error } = await q;
       if (error) throw error;
-      return (data ?? []) as any[];
+      if ((data ?? []).length > 0) return data as any[];
+
+      // Fallback: agrega a partir de tse_votacao_candidato_perfil (CSVs do TSE de votação)
+      let q2 = supabase
+        .from("tse_votacao_candidato_perfil")
+        .select("ano,uf,municipio,cod_municipio_tse,cargo,nome_candidato,numero_candidato,partido,situacao_totalizacao,genero,ocupacao,votos_nominais")
+        .eq("uf", filters.uf)
+        .eq("ano", filters.ano)
+        .limit(50000);
+      if (filters.cargo) q2 = q2.ilike("cargo", `%${filters.cargo}%`);
+      if (filters.cod_municipio_tse) q2 = q2.eq("cod_municipio_tse", filters.cod_municipio_tse);
+      if (filters.partido) q2 = q2.eq("partido", filters.partido);
+      if (filters.busca) q2 = q2.ilike("nome_candidato", `%${filters.busca}%`);
+      const { data: rows2, error: e2 } = await q2;
+      if (e2) throw e2;
+      const agg = new Map<string, any>();
+      for (const r of (rows2 ?? []) as any[]) {
+        const key = `${r.ano}|${r.uf}|${r.cod_municipio_tse}|${r.cargo}|${r.numero_candidato}`;
+        const cur = agg.get(key);
+        if (cur) {
+          cur.votos_recebidos += Number(r.votos_nominais ?? 0);
+        } else {
+          const eleito = /eleito/i.test(r.situacao_totalizacao ?? "") && !/n[aã]o/i.test(r.situacao_totalizacao ?? "");
+          agg.set(key, {
+            id: key,
+            ano: r.ano,
+            uf: r.uf,
+            cargo: r.cargo,
+            cod_municipio_tse: r.cod_municipio_tse,
+            partido_sigla: r.partido,
+            numero_urna: r.numero_candidato,
+            nome_urna: r.nome_candidato,
+            nome_completo: r.nome_candidato,
+            cpf: null,
+            votos_recebidos: Number(r.votos_nominais ?? 0),
+            eleito,
+            situacao_eleicao: r.situacao_totalizacao,
+            genero: r.genero,
+            ocupacao: r.ocupacao,
+            data_nascimento: null,
+          });
+        }
+      }
+      const list = Array.from(agg.values()).sort((a, b) => b.votos_recebidos - a.votos_recebidos);
+      if (typeof filters.eleito === "boolean") return list.filter((c) => c.eleito === filters.eleito);
+      return list;
     },
   });
 }
@@ -171,13 +216,16 @@ export function useAnosDisponiveis(uf: string) {
   return useQuery({
     queryKey: ["tse-anos", uf],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("tse_candidatos")
-        .select("ano")
-        .eq("uf", uf)
-        .limit(5000);
-      if (error) throw error;
-      const anos = Array.from(new Set((data ?? []).map((r: any) => r.ano))).sort((a, b) => b - a);
+      const [a, b, c] = await Promise.all([
+        supabase.from("tse_candidatos").select("ano").eq("uf", uf).limit(5000),
+        supabase.from("tse_votacao_candidato_perfil").select("ano").eq("uf", uf).limit(5000),
+        supabase.from("tse_eleitorado_perfil").select("ano").eq("uf", uf).limit(5000),
+      ]);
+      const set = new Set<number>();
+      for (const r of (a.data ?? []) as any[]) set.add(r.ano);
+      for (const r of (b.data ?? []) as any[]) set.add(r.ano);
+      for (const r of (c.data ?? []) as any[]) set.add(r.ano);
+      const anos = Array.from(set).sort((x, y) => y - x);
       return anos.length ? anos : [2024, 2022, 2020, 2018];
     },
   });
