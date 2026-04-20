@@ -80,18 +80,37 @@ Deno.serve(async (req) => {
       tse_prestacao_contas: undefined,
     };
 
-    const SUBLOTE = 500;
+    const SUBLOTE = 250;
     let inserted = 0;
     const onConflict = ON_CONFLICT[body.tabela];
+
+    const isTransient = (msg: string) =>
+      /deadlock detected|could not serialize|lock timeout|timeout|temporarily unavailable|connection/i.test(msg);
+
     for (let i = 0; i < body.registros.length; i += SUBLOTE) {
       const slice = body.registros.slice(i, i + SUBLOTE);
-      const query = onConflict
-        ? admin.from(body.tabela).upsert(slice, { onConflict, ignoreDuplicates: true })
-        : admin.from(body.tabela).insert(slice);
-      const { error } = await query;
-      if (error) {
-        console.error("insert error:", error.message);
-        return json({ error: error.message, inserted }, 500);
+      let attempt = 0;
+      let lastErr = "";
+      while (attempt < 4) {
+        const query = onConflict
+          ? admin.from(body.tabela).upsert(slice, { onConflict, ignoreDuplicates: true })
+          : admin.from(body.tabela).insert(slice);
+        const { error } = await query;
+        if (!error) { lastErr = ""; break; }
+        lastErr = error.message;
+        if (!isTransient(lastErr)) {
+          console.error("insert error (fatal):", lastErr);
+          // Retorna 200 para o client conseguir ler o body
+          return json({ error: lastErr, inserted, retry: false }, 200);
+        }
+        attempt++;
+        const wait = 200 * Math.pow(2, attempt) + Math.floor(Math.random() * 250);
+        console.warn(`transient error (attempt ${attempt}): ${lastErr} — retry in ${wait}ms`);
+        await new Promise((r) => setTimeout(r, wait));
+      }
+      if (lastErr) {
+        // Sinaliza ao client para reenviar este chunk
+        return json({ error: lastErr, inserted, retry: true }, 200);
       }
       inserted += slice.length;
     }
@@ -100,7 +119,7 @@ Deno.serve(async (req) => {
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error(msg);
-    return json({ error: msg }, 500);
+    return json({ error: msg, retry: /deadlock|timeout|connection/i.test(msg) }, 200);
   }
 });
 
