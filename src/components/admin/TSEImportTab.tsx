@@ -13,6 +13,7 @@ import { Database, Play, RefreshCw, X, Activity, Loader2 } from "lucide-react";
 import { useEnqueueTSE, useTSEJobs, useTSEStats, useRunWorker, useCancelTSEJob, useTSEJobLogs, type TseJobTipo, type TseImportJob } from "@/hooks/useTSEImport";
 import { toast } from "sonner";
 import { TSECsvUpload } from "./TSECsvUpload";
+import { TSEDadosResumo } from "./TSEDadosResumo";
 import { IBGEImportPanel } from "./IBGEImportPanel";
 
 const UFS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
@@ -80,6 +81,9 @@ export function TSEImportTab() {
     <div className="space-y-4">
       {/* Upload de CSV */}
       <TSECsvUpload />
+
+      {/* Resumo do que já existe */}
+      <TSEDadosResumo />
 
       {/* Stats */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
