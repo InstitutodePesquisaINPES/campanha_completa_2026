@@ -122,18 +122,42 @@ async function processMunicipio(supabase: any, mun: { id: string; nome: string; 
   }
 }
 
-// Executa em background, processando em paralelo com concorrência limitada
-async function processBulk(jobId: string) {
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-  const { data: municipios = [] } = await supabase
-    .from("municipios")
-    .select("id, nome, geocodigo_ibge")
-    .order("nome");
+async function getEstadoIdByUF(supabase: any, uf: string) {
+  const { data } = await supabase.from("estados").select("id").eq("sigla", uf).maybeSingle();
+  return data?.id ?? null;
+}
 
-  const list = municipios || [];
+async function listMunicipiosDoUF(supabase: any, uf: string) {
+  const estadoId = await getEstadoIdByUF(supabase, uf);
+  let query = supabase.from("municipios").select("id, nome, geocodigo_ibge, ibge_atualizado_em").order("nome");
+  if (estadoId) query = query.eq("estado_id", estadoId);
+  const { data = [] } = await query;
+  return (data || []) as Array<{ id: string; nome: string; geocodigo_ibge: string | null; ibge_atualizado_em?: string | null }>;
+}
+
+async function listMunicipiosPendentes(supabase: any, uf: string) {
+  const municipios = await listMunicipiosDoUF(supabase, uf);
+  return municipios.filter((m) => !!m.geocodigo_ibge && !m.ibge_atualizado_em);
+}
+
+// Executa em background, processando apenas pendências com concorrência limitada
+async function processBulk(jobId: string, uf: string) {
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  const list = await listMunicipiosPendentes(supabase, uf);
   let processados = 0, atualizados = 0;
   const erros: string[] = [];
   const CONCURRENCY = 3;
+
+  if (list.length === 0) {
+    await supabase.from("dados_externos_jobs").update({
+      status: "sucesso",
+      total_processados: 0,
+      total_atualizados: 0,
+      concluido_em: new Date().toISOString(),
+      erro: null,
+    }).eq("id", jobId);
+    return;
+  }
 
   for (let i = 0; i < list.length; i += CONCURRENCY) {
     const batch = list.slice(i, i + CONCURRENCY);
@@ -146,7 +170,6 @@ async function processBulk(jobId: string) {
       else erros.push(`${batch[idx].nome}: ${r.reason?.message || r.reason}`);
     });
 
-    // Atualiza progresso a cada batch
     await supabase.from("dados_externos_jobs").update({
       total_processados: processados,
       total_atualizados: atualizados,
@@ -169,7 +192,6 @@ Deno.serve(async (req) => {
   const body = await req.json().catch(() => ({} as any));
   const { uf = "BA", municipio_id } = body;
 
-  // ============ MODO SINGLE — síncrono, rápido ============
   if (municipio_id) {
     const { data: job } = await supabase
       .from("dados_externos_jobs")
@@ -211,14 +233,49 @@ Deno.serve(async (req) => {
         erro: e.message,
         concluido_em: new Date().toISOString(),
       }).eq("id", job!.id);
-      return new Response(JSON.stringify({ error: e.message }), {
-        status: 500,
+      return new Response(JSON.stringify({ ok: false, error: e.message }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
   }
 
-  // ============ MODO BULK — background ============
+  const { data: runningJob } = await supabase
+    .from("dados_externos_jobs")
+    .select("id")
+    .eq("fonte", "IBGE")
+    .eq("tipo", "municipios")
+    .eq("uf", uf)
+    .eq("status", "rodando")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (runningJob) {
+    return new Response(
+      JSON.stringify({
+        ok: true,
+        modo: "bulk_background",
+        job_id: runningJob.id,
+        resumed: true,
+        mensagem: "Já existe uma importação IBGE em andamento para esta UF.",
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  const pendentes = await listMunicipiosPendentes(supabase, uf);
+  if (pendentes.length === 0) {
+    return new Response(
+      JSON.stringify({
+        ok: true,
+        modo: "bulk_background",
+        ja_concluido: true,
+        mensagem: "Todos os municípios desta UF já possuem dados IBGE importados.",
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
   const { data: job } = await supabase
     .from("dados_externos_jobs")
     .insert({
@@ -232,14 +289,15 @@ Deno.serve(async (req) => {
     .single();
 
   // @ts-ignore EdgeRuntime existe no runtime Supabase
-  EdgeRuntime.waitUntil(processBulk(job!.id));
+  EdgeRuntime.waitUntil(processBulk(job!.id, uf));
 
   return new Response(
     JSON.stringify({
       ok: true,
       modo: "bulk_background",
       job_id: job!.id,
-      mensagem: "Importação iniciada em background. Acompanhe pelo painel de Histórico.",
+      pendentes: pendentes.length,
+      mensagem: "Importação incremental iniciada em background. Ela continuará apenas os municípios pendentes.",
     }),
     { headers: { ...corsHeaders, "Content-Type": "application/json" } }
   );
