@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EleitoralFilters, type Modo } from "@/components/eleitoral/EleitoralFilters";
+import { MunicipioPicker } from "@/components/eleitoral/MunicipioPicker";
 import { VisaoGeralTab } from "@/components/eleitoral/VisaoGeralTab";
 import { CandidatosTab } from "@/components/eleitoral/CandidatosTab";
 import { PerfilEleitoradoTab } from "@/components/eleitoral/PerfilEleitoradoTab";
@@ -29,17 +30,20 @@ export default function EleitoralPage() {
             <p className="text-sm text-muted-foreground">Visão 360° de candidatos, eleitorado e resultados — interligado ao CRM e à inteligência territorial.</p>
           </div>
 
-          <EleitoralFilters
-            modo={modo} setModo={setModo}
-            uf={uf} setUf={setUf}
-            ano={ano} setAno={setAno}
-            cargo={cargo} setCargo={setCargo}
-          />
+          <div className="flex flex-wrap items-center gap-3">
+            <EleitoralFilters
+              modo={modo} setModo={setModo}
+              uf={uf} setUf={setUf}
+              ano={ano} setAno={setAno}
+              cargo={cargo} setCargo={setCargo}
+            />
+            <MunicipioPicker uf={uf} ano={ano} value={municipioPick} onChange={setMunicipioPick} />
+          </div>
 
           {municipioPick && (
             <div className="flex items-center gap-2">
               <Badge variant="secondary" className="gap-1.5 py-1.5 px-3">
-                Município: <strong>{municipioPick.nome}</strong>
+                Município ativo: <strong>{municipioPick.nome}</strong>
                 <Button variant="ghost" size="sm" className="h-4 w-4 p-0 ml-1" onClick={() => setMunicipioPick(null)}>
                   <X className="h-3 w-3" />
                 </Button>
