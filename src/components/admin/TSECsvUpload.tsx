@@ -14,12 +14,20 @@ import { supabase } from "@/integrations/supabase/client";
 const UFS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 const ANOS = [2024, 2022, 2020, 2018, 2016];
 
-type TipoDado = "eleitorado" | "locais" | "candidatos" | "resultados";
+type TipoDado =
+  | "eleitorado"
+  | "locais"
+  | "candidatos"
+  | "resultados"
+  | "eleitorado_perfil"
+  | "votacao_candidato_perfil";
 
 const TIPOS: { value: TipoDado; label: string; tabela: string; hint: string }[] = [
-  { value: "eleitorado", label: "Eleitorado (perfil)", tabela: "tse_eleitorado", hint: "perfil_eleitorado_AAAA.csv" },
+  { value: "eleitorado_perfil", label: "Eleitorado consolidado (perfil completo)", tabela: "tse_eleitorado_perfil", hint: "eleitorado_eleicao.csv (cor/raça, faixa etária, gênero, escolaridade, etc.)" },
+  { value: "votacao_candidato_perfil", label: "Votação por candidato × perfil eleitor", tabela: "tse_votacao_candidato_perfil", hint: "votacao_candidato.csv (votos por candidato cruzados com perfil)" },
+  { value: "eleitorado", label: "Eleitorado por seção (legado)", tabela: "tse_eleitorado", hint: "perfil_eleitorado_AAAA.csv" },
   { value: "locais", label: "Locais de votação", tabela: "tse_locais_votacao", hint: "eleitorado_local_votacao_AAAA.csv" },
-  { value: "candidatos", label: "Candidatos", tabela: "tse_candidatos", hint: "consulta_cand_AAAA_UF.csv" },
+  { value: "candidatos", label: "Candidatos (registro)", tabela: "tse_candidatos", hint: "consulta_cand_AAAA_UF.csv" },
   { value: "resultados", label: "Resultados por seção", tabela: "tse_resultados_secao", hint: "votacao_secao_AAAA_UF.csv" },
 ];
 
@@ -37,11 +45,71 @@ function str(v: any): string | null {
   return s;
 }
 
+// Helper: lookup value by case/diacritic-insensitive header match
+function pick(row: any, ...keys: string[]): any {
+  for (const k of keys) {
+    if (row[k] !== undefined) return row[k];
+  }
+  // Fallback: normalize keys
+  const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+  const wanted = keys.map(norm);
+  for (const k of Object.keys(row)) {
+    if (wanted.includes(norm(k))) return row[k];
+  }
+  return undefined;
+}
+
 function mapRow(tipo: TipoDado, ano: number, uf: string, row: any): Record<string, any> | null {
-  const ufRow = str(row.SG_UF) || str(row.UF) || uf;
+  const ufRow = str(pick(row, "SG_UF", "UF")) || uf;
   if (uf !== "BR" && ufRow && ufRow !== uf) return null;
 
   switch (tipo) {
+    case "eleitorado_perfil": {
+      const anoCsv = num(pick(row, "Ano de eleição", "Ano de eleicao", "ANO_ELEICAO")) ?? ano;
+      return {
+        ano: anoCsv,
+        uf: ufRow,
+        regiao: str(pick(row, "Região", "Regiao")),
+        municipio: str(pick(row, "Município", "Municipio")),
+        pais: str(pick(row, "País", "Pais")),
+        cor_raca: str(pick(row, "Cor / Raça", "Cor/Raça", "Cor / Raca", "Cor/Raca")),
+        estado_civil: str(pick(row, "Estado civil")),
+        faixa_etaria: str(pick(row, "Faixa etária", "Faixa etaria")),
+        genero: str(pick(row, "Gênero", "Genero")),
+        grau_instrucao: str(pick(row, "Grau de instrução", "Grau de instrucao")),
+        identidade_genero: str(pick(row, "Identidade de gênero", "Identidade de genero")),
+        interprete_libras: str(pick(row, "Intérprete de libras", "Interprete de libras")),
+        quilombola: str(pick(row, "Quilombola")),
+        quantidade_eleitores: num(pick(row, "Quantidade de eleitores")) ?? 0,
+        data_carga: str(pick(row, "Data de carga")),
+      };
+    }
+    case "votacao_candidato_perfil": {
+      const anoCsv = num(pick(row, "Ano de eleição", "Ano de eleicao")) ?? ano;
+      return {
+        ano: anoCsv,
+        uf: ufRow,
+        regiao: str(pick(row, "Região", "Regiao")),
+        municipio: str(pick(row, "Município", "Municipio")),
+        cod_municipio_tse: str(pick(row, "Código município", "Codigo municipio")),
+        cargo: str(pick(row, "Cargo")) || "",
+        nome_candidato: str(pick(row, "Nome candidato")),
+        numero_candidato: str(pick(row, "Número candidato", "Numero candidato")),
+        ocupacao: str(pick(row, "Ocupação", "Ocupacao")),
+        partido: str(pick(row, "Partido")),
+        situacao_totalizacao: str(pick(row, "Situação totalização", "Situacao totalizacao")),
+        turno: num(pick(row, "Turno")) ?? 1,
+        zona: num(pick(row, "Zona")),
+        cor_raca: str(pick(row, "Cor/raça", "Cor / Raça", "Cor/raca")),
+        estado_civil: str(pick(row, "Estado civil")),
+        faixa_etaria: str(pick(row, "Faixa etária", "Faixa etaria")),
+        genero: str(pick(row, "Gênero", "Genero")),
+        grau_instrucao: str(pick(row, "Grau de instrução", "Grau de instrucao")),
+        votos_validos: num(pick(row, "Votos válidos", "Votos validos")) ?? 0,
+        votos_nominais: num(pick(row, "Votos nominais")) ?? 0,
+        data_carga: str(pick(row, "Data de carga")),
+      };
+    }
     case "eleitorado":
       return {
         ano, uf: ufRow,
@@ -102,7 +170,7 @@ function mapRow(tipo: TipoDado, ano: number, uf: string, row: any): Record<strin
 }
 
 export function TSECsvUpload() {
-  const [tipo, setTipo] = useState<TipoDado>("eleitorado");
+  const [tipo, setTipo] = useState<TipoDado>("eleitorado_perfil");
   const [ano, setAno] = useState<number>(2024);
   const [uf, setUf] = useState<string>("BA");
   const [file, setFile] = useState<File | null>(null);

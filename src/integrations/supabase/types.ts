@@ -4271,6 +4271,66 @@ export type Database = {
           },
         ]
       }
+      tse_eleitorado_perfil: {
+        Row: {
+          ano: number
+          cor_raca: string | null
+          created_at: string
+          data_carga: string | null
+          estado_civil: string | null
+          faixa_etaria: string | null
+          genero: string | null
+          grau_instrucao: string | null
+          id: string
+          identidade_genero: string | null
+          interprete_libras: string | null
+          municipio: string | null
+          pais: string | null
+          quantidade_eleitores: number
+          quilombola: string | null
+          regiao: string | null
+          uf: string
+        }
+        Insert: {
+          ano: number
+          cor_raca?: string | null
+          created_at?: string
+          data_carga?: string | null
+          estado_civil?: string | null
+          faixa_etaria?: string | null
+          genero?: string | null
+          grau_instrucao?: string | null
+          id?: string
+          identidade_genero?: string | null
+          interprete_libras?: string | null
+          municipio?: string | null
+          pais?: string | null
+          quantidade_eleitores?: number
+          quilombola?: string | null
+          regiao?: string | null
+          uf: string
+        }
+        Update: {
+          ano?: number
+          cor_raca?: string | null
+          created_at?: string
+          data_carga?: string | null
+          estado_civil?: string | null
+          faixa_etaria?: string | null
+          genero?: string | null
+          grau_instrucao?: string | null
+          id?: string
+          identidade_genero?: string | null
+          interprete_libras?: string | null
+          municipio?: string | null
+          pais?: string | null
+          quantidade_eleitores?: number
+          quilombola?: string | null
+          regiao?: string | null
+          uf?: string
+        }
+        Relationships: []
+      }
       tse_import_jobs: {
         Row: {
           ano: number
@@ -4556,6 +4616,84 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      tse_votacao_candidato_perfil: {
+        Row: {
+          ano: number
+          cargo: string
+          cod_municipio_tse: string | null
+          cor_raca: string | null
+          created_at: string
+          data_carga: string | null
+          estado_civil: string | null
+          faixa_etaria: string | null
+          genero: string | null
+          grau_instrucao: string | null
+          id: string
+          municipio: string | null
+          nome_candidato: string | null
+          numero_candidato: string | null
+          ocupacao: string | null
+          partido: string | null
+          regiao: string | null
+          situacao_totalizacao: string | null
+          turno: number
+          uf: string
+          votos_nominais: number | null
+          votos_validos: number | null
+          zona: number | null
+        }
+        Insert: {
+          ano: number
+          cargo: string
+          cod_municipio_tse?: string | null
+          cor_raca?: string | null
+          created_at?: string
+          data_carga?: string | null
+          estado_civil?: string | null
+          faixa_etaria?: string | null
+          genero?: string | null
+          grau_instrucao?: string | null
+          id?: string
+          municipio?: string | null
+          nome_candidato?: string | null
+          numero_candidato?: string | null
+          ocupacao?: string | null
+          partido?: string | null
+          regiao?: string | null
+          situacao_totalizacao?: string | null
+          turno?: number
+          uf: string
+          votos_nominais?: number | null
+          votos_validos?: number | null
+          zona?: number | null
+        }
+        Update: {
+          ano?: number
+          cargo?: string
+          cod_municipio_tse?: string | null
+          cor_raca?: string | null
+          created_at?: string
+          data_carga?: string | null
+          estado_civil?: string | null
+          faixa_etaria?: string | null
+          genero?: string | null
+          grau_instrucao?: string | null
+          id?: string
+          municipio?: string | null
+          nome_candidato?: string | null
+          numero_candidato?: string | null
+          ocupacao?: string | null
+          partido?: string | null
+          regiao?: string | null
+          situacao_totalizacao?: string | null
+          turno?: number
+          uf?: string
+          votos_nominais?: number | null
+          votos_validos?: number | null
+          zona?: number | null
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {

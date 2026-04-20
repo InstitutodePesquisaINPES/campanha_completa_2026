@@ -14,7 +14,9 @@ type Tabela =
   | "tse_locais_votacao"
   | "tse_candidatos"
   | "tse_resultados_secao"
-  | "tse_prestacao_contas";
+  | "tse_prestacao_contas"
+  | "tse_eleitorado_perfil"
+  | "tse_votacao_candidato_perfil";
 
 const ALLOWED: Tabela[] = [
   "tse_eleitorado",
@@ -22,6 +24,8 @@ const ALLOWED: Tabela[] = [
   "tse_candidatos",
   "tse_resultados_secao",
   "tse_prestacao_contas",
+  "tse_eleitorado_perfil",
+  "tse_votacao_candidato_perfil",
 ];
 
 interface Payload {
@@ -78,6 +82,8 @@ Deno.serve(async (req) => {
       tse_resultados_secao: "ano,turno,uf,cod_municipio_tse,zona,secao,cargo,numero_votavel",
       tse_candidatos: undefined,
       tse_prestacao_contas: undefined,
+      tse_eleitorado_perfil: undefined,
+      tse_votacao_candidato_perfil: undefined,
     };
 
     const SUBLOTE = 250;
