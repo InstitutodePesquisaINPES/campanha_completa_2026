@@ -107,8 +107,8 @@ export function IBGEImportPanel() {
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-xs text-muted-foreground">
-              Roda em background. Processa os 417 municípios com paralelismo controlado (3 simultâneos).
-              Tempo estimado: 8-15 min. Acompanhe pelo histórico.
+              Roda em background e continua apenas os municípios pendentes. Processa os 417 municípios com paralelismo controlado (3 simultâneos).
+              Tempo estimado: 8-15 min na primeira carga; nas próximas execuções, retoma sem reiniciar do zero.
             </p>
             <Button
               size="sm"
@@ -117,7 +117,7 @@ export function IBGEImportPanel() {
               className="w-full"
             >
               {trigger.isPending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Database className="h-4 w-4 mr-1" />}
-              Importar BA inteira (background)
+              Continuar importação BA (background)
             </Button>
           </CardContent>
         </Card>
@@ -130,17 +130,17 @@ export function IBGEImportPanel() {
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-xs text-muted-foreground">
-              Background. Rate limit 1.5s/município (Overpass). Tempo: ~12-20 min. Classifica urbano/rural.
+              Background. Rate limit 1.5s/município (Overpass). Tempo: ~12-20 min na primeira carga. Execuções futuras retomam só os municípios pendentes.
             </p>
             <Button
               size="sm"
-              onClick={() => trigger.mutate({ fonte: "osm" })}
+              onClick={() => trigger.mutate({ fonte: "osm", uf: "BA" })}
               disabled={trigger.isPending}
               className="w-full"
               variant="outline"
             >
               {trigger.isPending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <MapPin className="h-4 w-4 mr-1" />}
-              Bairros BA inteira (background)
+              Continuar bairros BA (background)
             </Button>
           </CardContent>
         </Card>
