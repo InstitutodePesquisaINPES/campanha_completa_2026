@@ -150,7 +150,7 @@ export function AppSidebar() {
             <div className="min-w-0">
               <h2 className="text-sm font-extrabold text-sidebar-foreground leading-tight" style={{ fontFamily: "'Sora', sans-serif" }}>KIRIBAMBA</h2>
               <p className="text-[10px] uppercase tracking-wider text-sidebar-foreground/70 font-semibold">
-                Avante · Dep. Estadual
+                Avante · Dep. Federal
               </p>
             </div>
           )}
