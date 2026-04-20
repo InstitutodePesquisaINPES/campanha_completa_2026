@@ -12,6 +12,7 @@ import { CandidatosTab } from "@/components/eleitoral/CandidatosTab";
 import { PerfilEleitoradoTab } from "@/components/eleitoral/PerfilEleitoradoTab";
 import { OrigemVotosTab } from "@/components/eleitoral/OrigemVotosTab";
 import { LocaisVotacaoTab } from "@/components/eleitoral/LocaisVotacaoTab";
+import { ComparativoTab } from "@/components/eleitoral/ComparativoTab";
 
 export default function EleitoralPage() {
   const [modo, setModo] = useState<Modo>("territorio");
@@ -56,6 +57,7 @@ export default function EleitoralPage() {
               <TabsTrigger value="visao">Visão Geral</TabsTrigger>
               <TabsTrigger value="candidatos">Candidatos</TabsTrigger>
               <TabsTrigger value="eleitorado">Perfil do Eleitorado</TabsTrigger>
+              <TabsTrigger value="comparativo">Comparativo entre Eleições</TabsTrigger>
               <TabsTrigger value="origem">Origem de Votos (Zona/Seção)</TabsTrigger>
               <TabsTrigger value="locais">Locais de Votação</TabsTrigger>
             </TabsList>
@@ -68,6 +70,9 @@ export default function EleitoralPage() {
             </TabsContent>
             <TabsContent value="eleitorado" className="mt-4">
               <PerfilEleitoradoTab uf={uf} ano={ano} municipio={municipioPick?.nome} />
+            </TabsContent>
+            <TabsContent value="comparativo" className="mt-4">
+              <ComparativoTab uf={uf} municipio={municipioPick?.nome} cargo={cargo} />
             </TabsContent>
             <TabsContent value="origem" className="mt-4">
               <OrigemVotosTab uf={uf} ano={ano} cargo={cargo} codMunicipio={municipioPick?.cod} />
