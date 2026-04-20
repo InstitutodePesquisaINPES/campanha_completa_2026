@@ -229,6 +229,13 @@ export function TSECsvUpload() {
           toast.warning("Não detectei o tipo. Selecione manualmente.");
           setAutoDetect(false);
         }
+        // Auto-detecta ano/UF a partir da primeira linha
+        const row = (res.data?.[0] ?? {}) as any;
+        const anoRaw = row["Ano de eleição"] ?? row["Ano de eleicao"] ?? row["ANO_ELEICAO"];
+        const ufRaw = row["UF"] ?? row["SG_UF"] ?? row["SG_UF_NASCIMENTO"];
+        const anoNum = Number(String(anoRaw ?? "").trim());
+        if (Number.isFinite(anoNum) && anoNum >= 1990 && anoNum <= 2100) setAno(anoNum);
+        if (typeof ufRaw === "string" && /^[A-Z]{2}$/.test(ufRaw.trim())) setUf(ufRaw.trim());
       },
     });
   };
