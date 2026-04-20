@@ -114,7 +114,55 @@ export function useCandidatoHistorico(nomeCompleto: string | null, cpf: string |
       else q = q.eq("nome_completo", nomeCompleto!);
       const { data, error } = await q.order("ano", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as any[];
+
+      if ((data ?? []).length > 0) {
+        return (data ?? []) as any[];
+      }
+
+      if (!nomeCompleto) {
+        return [] as any[];
+      }
+
+      const { data: rows, error: fallbackError } = await supabase
+        .from("tse_votacao_candidato_perfil")
+        .select("ano,uf,municipio,cod_municipio_tse,cargo,nome_candidato,numero_candidato,partido,situacao_totalizacao,genero,ocupacao,votos_nominais")
+        .ilike("nome_candidato", nomeCompleto)
+        .limit(50000);
+
+      if (fallbackError) throw fallbackError;
+
+      const agg = new Map<string, any>();
+      for (const r of (rows ?? []) as any[]) {
+        const key = `${r.ano}|${r.uf}|${r.cod_municipio_tse}|${r.cargo}|${r.numero_candidato}`;
+        const cur = agg.get(key);
+        if (cur) {
+          cur.votos_recebidos += Number(r.votos_nominais ?? 0);
+          continue;
+        }
+
+        agg.set(key, {
+          id: key,
+          ano: r.ano,
+          uf: r.uf,
+          cargo: r.cargo,
+          cod_municipio_tse: r.cod_municipio_tse,
+          cpf: null,
+          data_nascimento: null,
+          eleito: /eleito/i.test(r.situacao_totalizacao ?? "") && !/n[aã]o/i.test(r.situacao_totalizacao ?? ""),
+          genero: r.genero,
+          municipio_id: null,
+          municipio_nome: r.municipio,
+          nome_completo: r.nome_candidato,
+          nome_urna: r.nome_candidato,
+          numero_urna: r.numero_candidato,
+          ocupacao: r.ocupacao,
+          partido_sigla: r.partido,
+          situacao_eleicao: r.situacao_totalizacao,
+          votos_recebidos: Number(r.votos_nominais ?? 0),
+        });
+      }
+
+      return Array.from(agg.values()).sort((a, b) => (b.ano ?? 0) - (a.ano ?? 0));
     },
   });
 }

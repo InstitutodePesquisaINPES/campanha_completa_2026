@@ -14,10 +14,15 @@ export function CandidatoDrawer360({ candidato, onClose }: { candidato: any | nu
 
   if (!candidato) return null;
 
-  const trend = [...historico].reverse().map((h: any) => ({ ano: h.ano, votos: h.votos_recebidos, eleito: h.eleito }));
-  const totalVotos = historico.reduce((s: number, h: any) => s + (h.votos_recebidos ?? 0), 0);
-  const eleicoes = historico.length;
-  const vitorias = historico.filter((h: any) => h.eleito).length;
+  const historicoExibicao = historico.length > 0 ? historico : [{
+    ...candidato,
+    municipio_nome: candidato.municipio_nome ?? candidato.cod_municipio_tse,
+  }];
+
+  const trend = [...historicoExibicao].reverse().map((h: any) => ({ ano: h.ano, votos: h.votos_recebidos, eleito: h.eleito }));
+  const totalVotos = historicoExibicao.reduce((s: number, h: any) => s + (h.votos_recebidos ?? 0), 0);
+  const eleicoes = historicoExibicao.length;
+  const vitorias = historicoExibicao.filter((h: any) => h.eleito).length;
 
   return (
     <Sheet open={!!candidato} onOpenChange={(o) => !o && onClose()}>
@@ -94,7 +99,7 @@ export function CandidatoDrawer360({ candidato, onClose }: { candidato: any | nu
           <Card>
             <CardHeader className="pb-2"><CardTitle className="text-sm">Histórico completo de candidaturas</CardTitle></CardHeader>
             <CardContent className="space-y-1.5">
-              {historico.map((h: any) => (
+              {historicoExibicao.map((h: any) => (
                 <div key={`${h.ano}-${h.cod_municipio_tse}-${h.cargo}`} className="flex items-center justify-between gap-2 text-xs p-2 rounded hover:bg-muted/50">
                   <div>
                     <span className="font-bold">{h.ano}</span> · {h.cargo} · {h.municipio_nome ?? h.cod_municipio_tse}
@@ -106,7 +111,7 @@ export function CandidatoDrawer360({ candidato, onClose }: { candidato: any | nu
                   </div>
                 </div>
               ))}
-              {historico.length === 0 && <p className="text-xs text-muted-foreground text-center py-4">Sem histórico adicional.</p>}
+              {historico.length === 0 && <p className="text-xs text-muted-foreground text-center py-4">Mostrando os dados disponíveis desta candidatura.</p>}
             </CardContent>
           </Card>
         </div>
