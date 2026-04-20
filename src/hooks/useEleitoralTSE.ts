@@ -111,18 +111,22 @@ export function useCandidatoMatchPessoa(nomeCompleto: string | null, cpf: string
 
 export function useEleitoradoPerfil(uf: string, ano: number, municipio?: string) {
   return useQuery({
-    queryKey: ["eleitorado-perfil", uf, ano, municipio],
+    queryKey: ["eleitorado-perfil-agg", uf, ano, municipio ?? null],
     queryFn: async () => {
-      let q = supabase
-        .from("tse_eleitorado_perfil")
-        .select("genero,faixa_etaria,grau_instrucao,cor_raca,estado_civil,quantidade_eleitores,municipio")
-        .eq("uf", uf)
-        .eq("ano", ano)
-        .limit(10000);
-      if (municipio) q = q.eq("municipio", municipio);
-      const { data, error } = await q;
+      const { data, error } = await supabase.rpc("tse_eleitorado_agregado" as any, {
+        _uf: uf,
+        _ano: ano,
+        _municipio: municipio ?? null,
+      });
       if (error) throw error;
-      return (data ?? []) as any[];
+      return (data ?? { total: 0, genero: [], faixa_etaria: [], grau_instrucao: [], cor_raca: [], estado_civil: [] }) as {
+        total: number;
+        genero: { name: string; value: number }[];
+        faixa_etaria: { name: string; value: number }[];
+        grau_instrucao: { name: string; value: number }[];
+        cor_raca: { name: string; value: number }[];
+        estado_civil: { name: string; value: number }[];
+      };
     },
   });
 }
