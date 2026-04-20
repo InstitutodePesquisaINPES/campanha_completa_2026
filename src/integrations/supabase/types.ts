@@ -111,6 +111,20 @@ export type Database = {
             referencedRelation: "municipios"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "agenda_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_candidato_historico"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "agenda_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_municipio_resumo"
+            referencedColumns: ["municipio_id"]
+          },
         ]
       }
       agenda_checkins: {
@@ -237,6 +251,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "pessoas"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agenda_participantes_pessoa_id_fkey"
+            columns: ["pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "v_pessoa_match_tse"
+            referencedColumns: ["pessoa_id"]
           },
         ]
       }
@@ -644,6 +665,20 @@ export type Database = {
             referencedRelation: "municipios"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "areas_atuacao_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_candidato_historico"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "areas_atuacao_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_municipio_resumo"
+            referencedColumns: ["municipio_id"]
+          },
         ]
       }
       audit_logs: {
@@ -761,6 +796,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "municipios"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bairros_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_candidato_historico"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "bairros_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_municipio_resumo"
+            referencedColumns: ["municipio_id"]
           },
         ]
       }
@@ -1331,6 +1380,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "campanhas_candidato_pessoa_id_fkey"
+            columns: ["candidato_pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "v_pessoa_match_tse"
+            referencedColumns: ["pessoa_id"]
+          },
+          {
             foreignKeyName: "campanhas_estado_id_fkey"
             columns: ["estado_id"]
             isOneToOne: false
@@ -1350,6 +1406,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "municipios"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campanhas_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_candidato_historico"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "campanhas_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_municipio_resumo"
+            referencedColumns: ["municipio_id"]
           },
         ]
       }
@@ -1435,6 +1505,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "pessoas"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "captacao_doadores_pessoa_id_fkey"
+            columns: ["pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "v_pessoa_match_tse"
+            referencedColumns: ["pessoa_id"]
           },
         ]
       }
@@ -1911,6 +1988,13 @@ export type Database = {
             referencedRelation: "pessoas"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "contratos_fornecedor_pessoa_id_fkey"
+            columns: ["fornecedor_pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "v_pessoa_match_tse"
+            referencedColumns: ["pessoa_id"]
+          },
         ]
       }
       dados_externos_jobs: {
@@ -1979,6 +2063,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "municipios"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dados_externos_jobs_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_candidato_historico"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "dados_externos_jobs_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_municipio_resumo"
+            referencedColumns: ["municipio_id"]
           },
         ]
       }
@@ -2089,11 +2187,32 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "demandas_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_candidato_historico"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "demandas_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_municipio_resumo"
+            referencedColumns: ["municipio_id"]
+          },
+          {
             foreignKeyName: "demandas_pessoa_id_fkey"
             columns: ["pessoa_id"]
             isOneToOne: false
             referencedRelation: "pessoas"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandas_pessoa_id_fkey"
+            columns: ["pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "v_pessoa_match_tse"
+            referencedColumns: ["pessoa_id"]
           },
         ]
       }
@@ -2237,6 +2356,13 @@ export type Database = {
             referencedRelation: "pessoas"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "despesas_fornecedor_pessoa_id_fkey"
+            columns: ["fornecedor_pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "v_pessoa_match_tse"
+            referencedColumns: ["pessoa_id"]
+          },
         ]
       }
       distritos: {
@@ -2278,6 +2404,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "municipios"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distritos_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_candidato_historico"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "distritos_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_municipio_resumo"
+            referencedColumns: ["municipio_id"]
           },
         ]
       }
@@ -2366,6 +2506,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "municipios"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estoques_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_candidato_historico"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "estoques_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_municipio_resumo"
+            referencedColumns: ["municipio_id"]
           },
         ]
       }
@@ -2689,11 +2843,32 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "liderancas_locais_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_candidato_historico"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "liderancas_locais_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_municipio_resumo"
+            referencedColumns: ["municipio_id"]
+          },
+          {
             foreignKeyName: "liderancas_locais_pessoa_id_fkey"
             columns: ["pessoa_id"]
             isOneToOne: false
             referencedRelation: "pessoas"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "liderancas_locais_pessoa_id_fkey"
+            columns: ["pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "v_pessoa_match_tse"
+            referencedColumns: ["pessoa_id"]
           },
         ]
       }
@@ -2832,6 +3007,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "municipios"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "municipio_demografia_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_candidato_historico"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "municipio_demografia_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_municipio_resumo"
+            referencedColumns: ["municipio_id"]
           },
         ]
       }
@@ -2989,6 +3178,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "municipios"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "municipios_estrategicos_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_candidato_historico"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "municipios_estrategicos_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_municipio_resumo"
+            referencedColumns: ["municipio_id"]
           },
         ]
       }
@@ -3180,6 +3383,20 @@ export type Database = {
             referencedRelation: "municipios"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "pesquisas_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_candidato_historico"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "pesquisas_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_municipio_resumo"
+            referencedColumns: ["municipio_id"]
+          },
         ]
       }
       pessoas: {
@@ -3299,6 +3516,13 @@ export type Database = {
             referencedRelation: "pessoas"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "pessoas_anexos_pessoa_id_fkey"
+            columns: ["pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "v_pessoa_match_tse"
+            referencedColumns: ["pessoa_id"]
+          },
         ]
       }
       pessoas_consentimentos: {
@@ -3346,6 +3570,13 @@ export type Database = {
             referencedRelation: "pessoas"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "pessoas_consentimentos_pessoa_id_fkey"
+            columns: ["pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "v_pessoa_match_tse"
+            referencedColumns: ["pessoa_id"]
+          },
         ]
       }
       pessoas_contatos: {
@@ -3383,6 +3614,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "pessoas"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pessoas_contatos_pessoa_id_fkey"
+            columns: ["pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "v_pessoa_match_tse"
+            referencedColumns: ["pessoa_id"]
           },
         ]
       }
@@ -3466,11 +3704,32 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "pessoas_enderecos_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_candidato_historico"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "pessoas_enderecos_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_municipio_resumo"
+            referencedColumns: ["municipio_id"]
+          },
+          {
             foreignKeyName: "pessoas_enderecos_pessoa_id_fkey"
             columns: ["pessoa_id"]
             isOneToOne: false
             referencedRelation: "pessoas"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pessoas_enderecos_pessoa_id_fkey"
+            columns: ["pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "v_pessoa_match_tse"
+            referencedColumns: ["pessoa_id"]
           },
         ]
       }
@@ -3516,6 +3775,13 @@ export type Database = {
             referencedRelation: "pessoas"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "pessoas_historico_contatos_pessoa_id_fkey"
+            columns: ["pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "v_pessoa_match_tse"
+            referencedColumns: ["pessoa_id"]
+          },
         ]
       }
       pessoas_papeis: {
@@ -3557,6 +3823,13 @@ export type Database = {
             referencedRelation: "pessoas"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "pessoas_papeis_pessoa_id_fkey"
+            columns: ["pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "v_pessoa_match_tse"
+            referencedColumns: ["pessoa_id"]
+          },
         ]
       }
       pessoas_tags: {
@@ -3585,6 +3858,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "pessoas"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pessoas_tags_pessoa_id_fkey"
+            columns: ["pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "v_pessoa_match_tse"
+            referencedColumns: ["pessoa_id"]
           },
           {
             foreignKeyName: "pessoas_tags_tag_id_fkey"
@@ -3629,11 +3909,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "pessoas_vinculos_pessoa_id_fkey"
+            columns: ["pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "v_pessoa_match_tse"
+            referencedColumns: ["pessoa_id"]
+          },
+          {
             foreignKeyName: "pessoas_vinculos_pessoa_vinculada_id_fkey"
             columns: ["pessoa_vinculada_id"]
             isOneToOne: false
             referencedRelation: "pessoas"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pessoas_vinculos_pessoa_vinculada_id_fkey"
+            columns: ["pessoa_vinculada_id"]
+            isOneToOne: false
+            referencedRelation: "v_pessoa_match_tse"
+            referencedColumns: ["pessoa_id"]
           },
         ]
       }
@@ -3721,6 +4015,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "pessoas"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receitas_origem_pessoa_id_fkey"
+            columns: ["origem_pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "v_pessoa_match_tse"
+            referencedColumns: ["pessoa_id"]
           },
         ]
       }
@@ -3955,6 +4256,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "roteiros_paradas_pessoa_id_fkey"
+            columns: ["pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "v_pessoa_match_tse"
+            referencedColumns: ["pessoa_id"]
+          },
+          {
             foreignKeyName: "roteiros_paradas_roteiro_id_fkey"
             columns: ["roteiro_id"]
             isOneToOne: false
@@ -4011,6 +4319,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "municipios"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roteiros_visita_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_candidato_historico"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "roteiros_visita_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_municipio_resumo"
+            referencedColumns: ["municipio_id"]
           },
         ]
       }
@@ -4206,6 +4528,20 @@ export type Database = {
             referencedRelation: "municipios"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "tse_candidatos_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_candidato_historico"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "tse_candidatos_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_municipio_resumo"
+            referencedColumns: ["municipio_id"]
+          },
         ]
       }
       tse_eleitorado: {
@@ -4268,6 +4604,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "municipios"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tse_eleitorado_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_candidato_historico"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "tse_eleitorado_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_municipio_resumo"
+            referencedColumns: ["municipio_id"]
           },
         ]
       }
@@ -4487,6 +4837,20 @@ export type Database = {
             referencedRelation: "municipios"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "tse_locais_votacao_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_candidato_historico"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "tse_locais_votacao_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_municipio_resumo"
+            referencedColumns: ["municipio_id"]
+          },
         ]
       }
       tse_prestacao_contas: {
@@ -4552,6 +4916,20 @@ export type Database = {
             referencedRelation: "tse_candidatos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "tse_prestacao_contas_candidato_id_fkey"
+            columns: ["candidato_id"]
+            isOneToOne: false
+            referencedRelation: "v_pessoa_match_tse"
+            referencedColumns: ["candidato_id"]
+          },
+          {
+            foreignKeyName: "tse_prestacao_contas_candidato_id_fkey"
+            columns: ["candidato_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_candidato_historico"
+            referencedColumns: ["id"]
+          },
         ]
       }
       tse_resultados_secao: {
@@ -4614,6 +4992,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "municipios"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tse_resultados_secao_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_candidato_historico"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "tse_resultados_secao_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_municipio_resumo"
+            referencedColumns: ["municipio_id"]
           },
         ]
       }
@@ -4780,6 +5172,20 @@ export type Database = {
             referencedRelation: "municipios"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "user_scopes_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_candidato_historico"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "user_scopes_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_municipio_resumo"
+            referencedColumns: ["municipio_id"]
+          },
         ]
       }
       vereador_bairro_forca: {
@@ -4936,11 +5342,32 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "vereadores_historicos_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_candidato_historico"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "vereadores_historicos_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_municipio_resumo"
+            referencedColumns: ["municipio_id"]
+          },
+          {
             foreignKeyName: "vereadores_historicos_pessoa_id_fkey"
             columns: ["pessoa_id"]
             isOneToOne: false
             referencedRelation: "pessoas"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vereadores_historicos_pessoa_id_fkey"
+            columns: ["pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "v_pessoa_match_tse"
+            referencedColumns: ["pessoa_id"]
           },
         ]
       }
@@ -4983,6 +5410,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "municipios"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "zonas_eleitorais_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_candidato_historico"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "zonas_eleitorais_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_municipio_resumo"
+            referencedColumns: ["municipio_id"]
           },
         ]
       }
@@ -5160,6 +5601,13 @@ export type Database = {
             referencedRelation: "pessoas"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "contratos_fornecedor_pessoa_id_fkey"
+            columns: ["fornecedor_pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "v_pessoa_match_tse"
+            referencedColumns: ["pessoa_id"]
+          },
         ]
       }
       v_indicadores_campanha: {
@@ -5250,6 +5698,20 @@ export type Database = {
             referencedRelation: "municipios"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "bairros_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_candidato_historico"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "bairros_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_municipio_resumo"
+            referencedColumns: ["municipio_id"]
+          },
         ]
       }
       v_minhas_aprovacoes_pendentes: {
@@ -5289,7 +5751,83 @@ export type Database = {
             referencedRelation: "pessoas"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "contratos_fornecedor_pessoa_id_fkey"
+            columns: ["fornecedor_pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "v_pessoa_match_tse"
+            referencedColumns: ["pessoa_id"]
+          },
         ]
+      }
+      v_pessoa_match_tse: {
+        Row: {
+          ano: number | null
+          candidato_id: string | null
+          cargo: string | null
+          cod_municipio_tse: string | null
+          eleito: boolean | null
+          nome_completo: string | null
+          nome_urna: string | null
+          numero_urna: string | null
+          partido_sigla: string | null
+          pessoa_id: string | null
+          pessoa_nome: string | null
+          uf: string | null
+          votos_recebidos: number | null
+        }
+        Relationships: []
+      }
+      v_tse_candidato_historico: {
+        Row: {
+          ano: number | null
+          cargo: string | null
+          cod_municipio_tse: string | null
+          cpf: string | null
+          data_nascimento: string | null
+          eleito: boolean | null
+          genero: string | null
+          id: string | null
+          municipio_id: string | null
+          municipio_nome: string | null
+          nome_completo: string | null
+          nome_urna: string | null
+          numero_urna: string | null
+          ocupacao: string | null
+          partido_sigla: string | null
+          situacao_eleicao: string | null
+          uf: string | null
+          votos_recebidos: number | null
+        }
+        Relationships: []
+      }
+      v_tse_eleitorado_comparativo: {
+        Row: {
+          ano: number | null
+          cor_raca: string | null
+          estado_civil: string | null
+          faixa_etaria: string | null
+          genero: string | null
+          grau_instrucao: string | null
+          municipio: string | null
+          total: number | null
+          uf: string | null
+        }
+        Relationships: []
+      }
+      v_tse_municipio_resumo: {
+        Row: {
+          ano: number | null
+          cod_municipio_tse: string | null
+          municipio: string | null
+          municipio_id: string | null
+          total_candidatos: number | null
+          total_eleitores: number | null
+          total_eleitos: number | null
+          total_votos_nominais: number | null
+          uf: string | null
+        }
+        Relationships: []
       }
       v_warroom_kpis: {
         Row: {
@@ -5360,6 +5898,10 @@ export type Database = {
         Args: { _ano?: number; _uf?: string; _votos_min?: number }
         Returns: number
       }
+      tse_dashboard_kpis: {
+        Args: { _ano?: number; _uf?: string }
+        Returns: Json
+      }
       tse_resumo_municipios: {
         Args: { _ano: number; _uf: string }
         Returns: {
@@ -5367,6 +5909,28 @@ export type Database = {
           eleitores: number
           municipio: string
           registros_perfil: number
+        }[]
+      }
+      tse_votos_por_secao: {
+        Args: {
+          _ano: number
+          _cargo?: string
+          _cod_municipio_tse: string
+          _numero_votavel?: string
+          _uf: string
+        }
+        Returns: {
+          bairro: string
+          cargo: string
+          endereco: string
+          latitude: number
+          local_nome: string
+          longitude: number
+          numero_votavel: string
+          partido_sigla: string
+          secao: number
+          votos: number
+          zona: number
         }[]
       }
       unaccent: { Args: { "": string }; Returns: string }
