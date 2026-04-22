@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTarefas, useUpdateTarefa, useCreateTarefa, useDeleteTarefa, type Tarefa } from "@/hooks/useCampanhas";
+import { useCanManage } from "@/hooks/useUserRoles";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -32,7 +33,7 @@ const prioColors: Record<string, string> = {
 const AREAS = ["organizacao","campo","digital","financeiro","juridico","comunicacao","logistica","dados"] as const;
 const PRIORIDADES = ["urgente","alta","media","baixa"] as const;
 
-function NovaTarefaDialog({ campanhaId }: { campanhaId: string }) {
+function NovaTarefaDialog({ campanhaId, canManage }: { campanhaId: string; canManage: boolean }) {
   const [open, setOpen] = useState(false);
   const create = useCreateTarefa();
   const [form, setForm] = useState({
@@ -42,7 +43,7 @@ function NovaTarefaDialog({ campanhaId }: { campanhaId: string }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline" className="h-8 gap-1"><Plus className="h-3.5 w-3.5" />Nova tarefa</Button>
+        <Button size="sm" variant="outline" className="h-8 gap-1" disabled={!canManage}><Plus className="h-3.5 w-3.5" />Nova tarefa</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader><DialogTitle>Adicionar tarefa</DialogTitle></DialogHeader>
@@ -100,6 +101,7 @@ function NovaTarefaDialog({ campanhaId }: { campanhaId: string }) {
 
 export function CronogramaTarefas({ campanhaId }: { campanhaId: string }) {
   const { data: tarefas = [], isLoading } = useTarefas(campanhaId);
+  const canManage = useCanManage();
   const update = useUpdateTarefa();
   const remove = useDeleteTarefa();
   const [filtro, setFiltro] = useState("");
@@ -141,7 +143,7 @@ export function CronogramaTarefas({ campanhaId }: { campanhaId: string }) {
           <Badge variant="outline" className="bg-success/10 text-success border-success/30">{stats.pct}% concluído</Badge>
         </div>
         <div className="flex flex-wrap gap-2">
-          <NovaTarefaDialog campanhaId={campanhaId} />
+          <NovaTarefaDialog campanhaId={campanhaId} canManage={canManage} />
           <div className="relative">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input value={filtro} onChange={(e) => setFiltro(e.target.value)} placeholder="Buscar tarefa..." className="pl-7 h-8 w-48" />
@@ -183,6 +185,7 @@ export function CronogramaTarefas({ campanhaId }: { campanhaId: string }) {
                       <CardContent className="p-3 flex items-start gap-3">
                         <Checkbox
                           checked={concluida}
+                          disabled={!canManage}
                           onCheckedChange={(checked) => {
                             update.mutate({
                               id: t.id,
@@ -205,8 +208,9 @@ export function CronogramaTarefas({ campanhaId }: { campanhaId: string }) {
                             <Badge variant="outline" className={`text-[10px] capitalize ${areaColors[t.area]}`}>{t.area}</Badge>
                             <Badge variant="outline" className={`text-[10px] capitalize ${prioColors[t.prioridade]}`}>{t.prioridade}</Badge>
                             <button
-                              onClick={() => confirm(`Remover "${t.titulo}"?`) && remove.mutate(t.id)}
-                              className="ml-auto text-muted-foreground hover:text-destructive p-0.5"
+                              onClick={() => canManage && confirm(`Remover "${t.titulo}"?`) && remove.mutate(t.id)}
+                              disabled={!canManage}
+                              className="ml-auto text-muted-foreground hover:text-destructive p-0.5 disabled:opacity-40 disabled:cursor-not-allowed"
                               title="Remover tarefa"
                             >
                               <Trash2 className="h-3 w-3" />
