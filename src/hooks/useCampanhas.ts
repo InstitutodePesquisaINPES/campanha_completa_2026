@@ -10,6 +10,14 @@ export type Fase = Database["public"]["Tables"]["campanha_fases"]["Row"];
 export type Meta = Database["public"]["Tables"]["campanha_metas"]["Row"];
 export type Semana = Database["public"]["Tables"]["campanha_semanas"]["Row"];
 
+const normalizarTexto = (value?: string | null) =>
+  (value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/_/g, " ")
+    .toLowerCase()
+    .trim();
+
 export function useCampanhas() {
   return useQuery({
     queryKey: ["campanhas"],
@@ -36,6 +44,39 @@ export function useCampanha(id?: string) {
         .maybeSingle();
       if (error) throw error;
       return data;
+    },
+  });
+}
+
+export function useCampanhaRelacionadaAoCandidato(input?: {
+  nome?: string | null;
+  numeroUrna?: string | null;
+  cargo?: string | null;
+  ano?: number | null;
+}) {
+  return useQuery({
+    queryKey: ["campanha-relacionada-candidato", input?.nome, input?.numeroUrna, input?.cargo, input?.ano],
+    enabled: !!(input?.nome || input?.numeroUrna),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("campanhas")
+        .select("*, municipios(nome), estados(sigla, nome)")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+
+      const nome = normalizarTexto(input?.nome);
+      const cargo = normalizarTexto(input?.cargo);
+
+      return (data ?? []).find((campanha) => {
+        const campanhaAno = campanha.data_eleicao ? new Date(campanha.data_eleicao).getFullYear() : null;
+        const matchNumero = input?.numeroUrna ? campanha.numero_urna === input.numeroUrna : false;
+        const nomeCampanha = normalizarTexto(campanha.nome);
+        const matchNome = nome ? nomeCampanha.includes(nome) || nome.includes(nomeCampanha) : false;
+        const cargoCampanha = normalizarTexto(campanha.cargo);
+        const matchCargo = cargo ? cargoCampanha.includes(cargo) || cargo.includes(cargoCampanha) : true;
+        const matchAno = input?.ano ? campanhaAno === input.ano : true;
+        return (matchNumero || matchNome) && matchCargo && matchAno;
+      }) ?? null;
     },
   });
 }
@@ -141,7 +182,33 @@ export function useCreateCampanha() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["campanhas"] });
       qc.invalidateQueries({ queryKey: ["campanha-ativa"] });
+      qc.invalidateQueries({ queryKey: ["tse-candidatos"] });
       toast.success("Campanha criada com plano 90 dias gerado!");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+}
+
+export function useUpdateCampanha() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: Partial<Campanha> & { id: string }) => {
+      const { data, error } = await supabase
+        .from("campanhas")
+        .update(updates)
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: ["campanhas"] });
+      qc.invalidateQueries({ queryKey: ["campanha", vars.id] });
+      qc.invalidateQueries({ queryKey: ["campanha-ativa"] });
+      qc.invalidateQueries({ queryKey: ["campanha-relacionada-candidato"] });
+      qc.invalidateQueries({ queryKey: ["tse-candidatos"] });
+      toast.success("Candidato atualizado");
     },
     onError: (e: Error) => toast.error(e.message),
   });
