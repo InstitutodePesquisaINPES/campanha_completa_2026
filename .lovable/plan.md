@@ -1,38 +1,65 @@
-# 🎯 Plano de Conclusão SIGT — 7 Frentes
 
-Cada frente entregue **completa, real, com UI rica, filtros e integração end-to-end**. Sem mocks.
 
-## Frente 1 — Limpeza: PlaceholderPage órfão (trivial)
-- Remover import em `src/App.tsx` (linha 26) e deletar `src/pages/PlaceholderPage.tsx`.
+## Plano de campanha juridicamente correto, expansível e integrado
 
-## Frente 2 — Realtime no Comando + Notificações (médio)
-- `useNotificacoes` JÁ tem subscription ✅. Falta no Comando/Demandas.
-- Subscriptions em `demandas`, `agenda`, `campanha_tarefas`, `despesas` invalidando `indicadores-campanha`.
-- Indicador "🟢 Ao vivo" no header, badge animado nos KPIs que mudam, toast discreto na atualização, reconexão automática.
+Hoje o módulo tem 3 problemas: (1) cabeçalho diz "90 dias" mas a campanha tem 167; (2) tarefas pré-campanha pedem coisas ilegais antes do registro TSE (abrir conta de campanha, captar doadores); (3) cada tarefa é "plana" — sem subtarefas, sem respaldo legal, sem o-que-é/o-que-faz, sem expandir.
 
-## Frente 3 — Workflow de Aprovação de Contratos (alto)
-Migration: tabelas `contrato_aprovacoes`, `contrato_workflow_template`, enum `contrato_aprovacao_status`. Trigger exige todas etapas aprovadas para vigência. Função `criar_aprovacoes_contrato`.
-Regras por valor: <5k → 1 etapa; 5k–50k → 2; >50k → 3 com observação obrigatória.
-UI `ContratoAprovacaoPanel`: stepper visual, cards por etapa com aprovador/papel, botões Aprovar/Rejeitar/Revisão, timeline, RLS por papel, notificações automáticas, dashboard "Pendentes minhas aprovações".
+### O que muda
 
-## Frente 4 — Mapas Avançados (alto)
-Deps: `leaflet.markercluster`, `leaflet.heat`.
-Camadas (toggle + opacidade): cluster pessoas, heatmap demandas, choropleth densidade eleitoral, isócronas OSRM, polígonos áreas atuação, eventos futuros, urbano vs rural.
-Painel lateral colapsável, filtros (município/bairro/classificação/período), legenda dinâmica, exportar PNG, mini-mapa.
+**1. Schema (uma migração)**
+- `campanha_tarefas` ganha: `fase_legal` (pre_campanha_legal | campanha_oficial | pos_eleicao), `respaldo_legal`, `o_que_e`, `o_que_faz`, `entregaveis`, `is_marco`, `responsavel_papel`, `permitido_antes_registro`.
+- Nova tabela `campanha_subtarefas` (checklist dentro de cada tarefa) com RLS por escopo de campanha.
 
-## Frente 5 — Exportação BI PDF/PNG (médio)
-Deps: `html2canvas`, `jspdf`. Hook `useExportBI(ref)`. Dropdown PNG | PDF | PDF c/ filtros. PDF com capa+sumário+gráficos A4. Salva em Storage `relatorios-bi/` com link assinado 7d.
+**2. Conteúdo da Kiribamba corrigido pela Lei 9.504/97**
+- "Abrir conta bancária de campanha" (D1) → **"Definir conta PESSOAL do pré-candidato"** + nota: CNPJ eleitoral só após registro (art. 22-A).
+- "Captar 50 doadores prioritários" → **"Mapear potenciais doadores (sem solicitar contribuição)"** — art. 23 veda arrecadação antes do registro.
+- "Reuniões 1:1 com doadores" → **"Reuniões institucionais sem pedido de voto/recurso"** — art. 36-A.
+- Reunião de fundação, contratos da equipe, registro TSE, propaganda, HGPE e prestação de contas viram **MARCOS** com respaldo legal completo (artigos da Lei 9.504/97 + Resoluções TSE 23.607, 23.609, 23.610/2019).
+- Cada uma dessas tarefas recebe `o_que_e`, `o_que_faz`, `entregaveis` e `responsavel_papel` populados.
 
-## Frente 6 — Dados IBGE Bahia + OSM (muito alto)
-Schema: campos demográficos em `municipios` (populacao_2022, idh, urbano_pct, área), tabela `municipio_demografia` (faixa etária × sexo × ano), enriquecimento `bairros` (zona urbana/rural/mista, populacao_estimada, geometria, osm_id).
-3 edge functions:
-- `ibge-import-municipios-ba`: API IBGE Localidades + SIDRA tabelas 4709/9514/1378. Idempotente.
-- `osm-import-bairros-ba`: Overpass API por município, classifica zona pela tag `place=`, estima população por área. Rate limit 1req/2s.
-- `ibge-orchestrator`: cron mensal via pg_cron.
-UI: `IBGEImportPanel` em Admin (status, botão importar, log) + `DemografiaTab` em Territórios (pirâmide etária Recharts, choropleth densidade, comparador de municípios, top 10, donut urbano/rural).
+**3. UI do plano**
 
-## Frente 7 — Testes Essenciais (médio)
-15 testes: 8 hooks, 4 edge functions, 3 componentes. Helpers em `src/test/factories.ts`.
+```text
+┌─ Cabeçalho dinâmico ──────────────────────────────┐
+│ Plano de Campanha · 167 dias                      │  ← usa duração real
+│ Início 19/04/2026 · Eleição 04/10/2026 · D-165    │
+└───────────────────────────────────────────────────┘
 
-## Ordem de execução
-1. Limpeza placeholder → 2. Realtime Comando → 3. Migrations (IBGE/OSM/contratos) → 4. Workflow contratos UI → 5. Edge functions IBGE/OSM → 6. Mapas avançados → 7. Exportação BI → 8. Painel IBGE + Demografia → 9. Testes.
+┌─ Tabs ────────────────────────────────────────────┐
+│ Cronograma | Marcos | Fases & Metas | Semanas     │  ← nova aba "Marcos"
+└───────────────────────────────────────────────────┘
+
+┌─ Card de tarefa no cronograma ────────────────────┐
+│ ☐ 🏁 REUNIÃO DE FUNDAÇÃO · D1 · 19/04             │
+│   [marco] [pre-campanha] [organização] [urgente]  │
+│   👤 Pré-candidato + Coord. Geral · 📎 2 anexos   │
+└───────────────────────────────────────────────────┘
+   ↓ clique abre Drawer
+```
+
+**Drawer rico (clicar em qualquer tarefa)** — abas dentro do drawer:
+- **Visão geral**: status, "O que é", "O que faz", "Entregáveis", responsável, observações (auto-save).
+- **Subtarefas**: checklist editável (adicionar / marcar / remover), barra de progresso.
+- **Respaldo legal**: card destacado com artigos da Lei 9.504/97 e Resoluções TSE aplicáveis. Badge verde "Permitido antes do registro" ou vermelho "Apenas após registro TSE".
+- **Documentos**: anexos (já existe, mantém).
+
+**Cronograma agrupa por bloco legal** com banner no topo de cada bloco:
+- 🟦 **PRÉ-CAMPANHA** (até registro TSE) — "Permitido: filiação, debate, redes sociais. Vedado: pedir voto, captar recursos, propaganda paga."
+- 🟧 **CAMPANHA OFICIAL** (a partir do registro) — "Liberado: propaganda, captação, HGPE."
+
+**Nova aba "Marcos"**: timeline vertical só com `is_marco=true` — visão executiva do que é decisão crítica vs. atividade tática.
+
+### Arquivos a criar/editar
+
+- `supabase/migrations/...` (via tool de migração) — schema + atualização das tarefas Kiribamba.
+- `src/hooks/useSubtarefas.ts` — CRUD de subtarefas.
+- `src/components/plano/TarefaDetailDrawer.tsx` — reescrito com tabs (Visão / Subtarefas / Legal / Anexos).
+- `src/components/plano/CronogramaTarefas.tsx` — agrupamento por fase legal, ícone de marco, contador de subtarefas.
+- `src/components/plano/MarcosTimeline.tsx` (novo) — timeline de marcos.
+- `src/pages/plano/PlanoCampanhaPage.tsx` — cabeçalho dinâmico (`duracaoTotal` calculado), nova aba "Marcos".
+- `src/integrations/supabase/types.ts` — regenerado automaticamente pela migração.
+
+### Fora de escopo (decidir depois se quiser)
+- Bloqueio automático ao tentar mover tarefa "campanha_oficial" para data anterior ao registro.
+- Geração automática de subtarefas-modelo por marco (ex: marco "Constituição da equipe" já vem com 6 subtarefas pré-prontas).
+
