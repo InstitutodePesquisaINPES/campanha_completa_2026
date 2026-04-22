@@ -172,31 +172,32 @@ export function TarefaDetailDrawer({
     },
   });
 
-  if (!tarefa) return null;
-  const tx = tarefa as TarefaExt;
-
-  // Salva campo com indicador + validação + tracking
+  // Salva campo com indicador + validação + tracking (antes do early return p/ Hook order)
   const saveField = useCallback(
-    async (field: keyof TarefaExt, value: unknown, opts?: { validate?: () => string | null }) => {
+    async (field: string, value: unknown, opts?: { validate?: () => string | null }) => {
+      if (!tarefa) return;
       const err = opts?.validate?.();
       if (err) {
-        setStatus(field as string, "error");
+        setStatus(field, "error");
         toast.error(err);
         return;
       }
-      setStatus(field as string, "saving");
-      setDirtyFields((prev) => new Set(prev).add(field as string));
+      setStatus(field, "saving");
+      setDirtyFields((prev) => new Set(prev).add(field));
       try {
         await update.mutateAsync({ id: tarefa.id, [field]: value } as never);
-        setStatus(field as string, "saved");
-        if (TRACKED_FIELDS[field as string]) refetchHistorico();
+        setStatus(field, "saved");
+        if (TRACKED_FIELDS[field]) refetchHistorico();
       } catch (e) {
-        setStatus(field as string, "error");
-        toast.error(`Falha ao salvar ${TRACKED_FIELDS[field as string] ?? field as string}: ${(e as Error).message}`);
+        setStatus(field, "error");
+        toast.error(`Falha ao salvar ${TRACKED_FIELDS[field] ?? field}: ${(e as Error).message}`);
       }
     },
-    [tarefa.id, update, setStatus, refetchHistorico],
+    [tarefa, update, setStatus, refetchHistorico],
   );
+
+  if (!tarefa) return null;
+  const tx = tarefa as TarefaExt;
 
   const handleDownload = async (a: TarefaAnexo) => {
     try {
