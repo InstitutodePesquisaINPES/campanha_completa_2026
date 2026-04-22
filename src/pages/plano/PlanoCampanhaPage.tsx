@@ -5,11 +5,16 @@ import { CronogramaTarefas } from "@/components/plano/CronogramaTarefas";
 import { MetasFases, PlanejamentoSemanal } from "@/components/plano/MetasESemanas";
 import { ParametrosGerador } from "@/components/plano/ParametrosGerador";
 import { MarcosTimeline } from "@/components/plano/MarcosTimeline";
-import { useCampanha, useCampanhaAtiva } from "@/hooks/useCampanhas";
+import { useCampanha, useCampanhaAtiva, useUpdateCampanha } from "@/hooks/useCampanhas";
+import { useCanManage } from "@/hooks/useUserRoles";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Vote, Calendar, Target, Trophy, Flame, Settings2, Flag } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Vote, Calendar, Target, Trophy, Flame, Settings2, Flag, Pencil, Save } from "lucide-react";
 
 export default function PlanoCampanhaPage() {
   const { data: ativa } = useCampanhaAtiva();
