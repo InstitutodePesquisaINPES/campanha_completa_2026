@@ -1377,6 +1377,68 @@ export type Database = {
           },
         ]
       }
+      campanha_subtarefas: {
+        Row: {
+          campanha_id: string
+          concluida: boolean
+          created_at: string
+          id: string
+          ordem: number | null
+          tarefa_id: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          campanha_id: string
+          concluida?: boolean
+          created_at?: string
+          id?: string
+          ordem?: number | null
+          tarefa_id: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          campanha_id?: string
+          concluida?: boolean
+          created_at?: string
+          id?: string
+          ordem?: number | null
+          tarefa_id?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campanha_subtarefas_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campanha_subtarefas_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+          {
+            foreignKeyName: "campanha_subtarefas_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_indicadores_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+          {
+            foreignKeyName: "campanha_subtarefas_tarefa_id_fkey"
+            columns: ["tarefa_id"]
+            isOneToOne: false
+            referencedRelation: "campanha_tarefas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campanha_tarefa_anexos: {
         Row: {
           arquivo_nome: string | null
@@ -1466,12 +1528,20 @@ export type Database = {
           data_prevista: string
           descricao: string | null
           dia: number
+          entregaveis: string | null
           fase_id: string | null
+          fase_legal: Database["public"]["Enums"]["fase_legal_campanha"] | null
           id: string
+          is_marco: boolean
+          o_que_e: string | null
+          o_que_faz: string | null
           observacoes: string | null
           ordem: number
+          permitido_antes_registro: boolean
           prioridade: Database["public"]["Enums"]["prioridade_demanda"]
+          respaldo_legal: string | null
           responsavel_id: string | null
+          responsavel_papel: string | null
           semana: number
           status: Database["public"]["Enums"]["status_tarefa"]
           titulo: string
@@ -1485,12 +1555,20 @@ export type Database = {
           data_prevista: string
           descricao?: string | null
           dia: number
+          entregaveis?: string | null
           fase_id?: string | null
+          fase_legal?: Database["public"]["Enums"]["fase_legal_campanha"] | null
           id?: string
+          is_marco?: boolean
+          o_que_e?: string | null
+          o_que_faz?: string | null
           observacoes?: string | null
           ordem?: number
+          permitido_antes_registro?: boolean
           prioridade?: Database["public"]["Enums"]["prioridade_demanda"]
+          respaldo_legal?: string | null
           responsavel_id?: string | null
+          responsavel_papel?: string | null
           semana: number
           status?: Database["public"]["Enums"]["status_tarefa"]
           titulo: string
@@ -1504,12 +1582,20 @@ export type Database = {
           data_prevista?: string
           descricao?: string | null
           dia?: number
+          entregaveis?: string | null
           fase_id?: string | null
+          fase_legal?: Database["public"]["Enums"]["fase_legal_campanha"] | null
           id?: string
+          is_marco?: boolean
+          o_que_e?: string | null
+          o_que_faz?: string | null
           observacoes?: string | null
           ordem?: number
+          permitido_antes_registro?: boolean
           prioridade?: Database["public"]["Enums"]["prioridade_demanda"]
+          respaldo_legal?: string | null
           responsavel_id?: string | null
+          responsavel_papel?: string | null
           semana?: number
           status?: Database["public"]["Enums"]["status_tarefa"]
           titulo?: string
@@ -6567,6 +6653,10 @@ export type Database = {
         | "lancamento"
         | "consolidacao"
         | "reta_final"
+      fase_legal_campanha:
+        | "pre_campanha_legal"
+        | "campanha_oficial"
+        | "pos_eleicao"
       finalidade_lgpd:
         | "comunicacao_politica"
         | "pesquisa"
@@ -7052,6 +7142,11 @@ export const Constants = {
         "lancamento",
         "consolidacao",
         "reta_final",
+      ],
+      fase_legal_campanha: [
+        "pre_campanha_legal",
+        "campanha_oficial",
+        "pos_eleicao",
       ],
       finalidade_lgpd: [
         "comunicacao_politica",

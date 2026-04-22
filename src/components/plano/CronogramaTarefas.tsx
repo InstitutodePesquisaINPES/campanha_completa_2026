@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Search, Calendar as CalIcon, Plus, Trash2, Paperclip, LayoutGrid, List } from "lucide-react";
+import { Search, Calendar as CalIcon, Plus, Trash2, Paperclip, LayoutGrid, List, Flag, ShieldCheck, ShieldAlert } from "lucide-react";
 import { TarefaDetailDrawer } from "./TarefaDetailDrawer";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -128,6 +128,12 @@ function NovaTarefaDialog({ campanhaId, canManage }: { campanhaId: string; canMa
   );
 }
 
+type TarefaExt = Tarefa & {
+  is_marco?: boolean | null;
+  fase_legal?: string | null;
+  permitido_antes_registro?: boolean | null;
+};
+
 function TarefaCard({
   t, anexos, onOpen, onToggle, canManage, onRemove,
 }: {
@@ -135,9 +141,11 @@ function TarefaCard({
   onToggle: (concluida: boolean) => void; canManage: boolean;
   onRemove: () => void;
 }) {
+  const tx = t as TarefaExt;
   const concluida = t.status === "concluida";
+  const isMarco = !!tx.is_marco;
   return (
-    <Card className={`cursor-pointer hover:shadow-sm transition ${concluida ? "bg-muted/30" : ""}`}>
+    <Card className={`cursor-pointer hover:shadow-sm transition ${concluida ? "bg-muted/30" : ""} ${isMarco ? "border-l-4 border-l-warning" : ""}`}>
       <CardContent className="p-3 flex items-start gap-3">
         <Checkbox
           checked={concluida}
@@ -148,7 +156,8 @@ function TarefaCard({
         />
         <div className="flex-1 min-w-0" onClick={onOpen}>
           <div className="flex items-start justify-between gap-2">
-            <p className={`text-sm font-medium ${concluida ? "line-through text-muted-foreground" : ""}`}>
+            <p className={`text-sm font-medium flex items-center gap-1.5 ${concluida ? "line-through text-muted-foreground" : ""}`}>
+              {isMarco && <Flag className="h-3.5 w-3.5 text-warning shrink-0" />}
               {t.titulo}
             </p>
             <span className="text-[10px] text-muted-foreground whitespace-nowrap">
@@ -158,6 +167,15 @@ function TarefaCard({
           <div className="flex flex-wrap gap-1 mt-1.5 items-center">
             <Badge variant="outline" className={`text-[10px] capitalize ${areaColors[t.area]}`}>{t.area}</Badge>
             <Badge variant="outline" className={`text-[10px] capitalize ${prioColors[t.prioridade]}`}>{t.prioridade}</Badge>
+            {tx.fase_legal === "campanha_oficial" ? (
+              <Badge variant="outline" className="text-[10px] gap-0.5 bg-warning/10 text-warning border-warning/30" title="Apenas após registro TSE">
+                <ShieldAlert className="h-2.5 w-2.5" />pós-registro
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-[10px] gap-0.5 bg-info/10 text-info border-info/30" title="Legal na pré-campanha">
+                <ShieldCheck className="h-2.5 w-2.5" />pré
+              </Badge>
+            )}
             {anexos > 0 && (
               <Badge variant="outline" className="text-[10px] gap-0.5"><Paperclip className="h-2.5 w-2.5" />{anexos}</Badge>
             )}
