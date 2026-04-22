@@ -79,65 +79,246 @@ function useAnexosCount(campanhaId: string) {
   });
 }
 
+const RESPONSAVEIS_SUGERIDOS = [
+  "Pré-candidato", "Coordenador Geral", "Coordenador de Campanha", "Coordenador de Marketing",
+  "Coordenador Jurídico", "Coordenador Financeiro", "Tesoureiro", "Secretaria",
+  "Assessoria de Imprensa", "Coordenador de Mobilização", "Coordenador Digital", "Equipe de Dados",
+];
+
 function NovaTarefaDialog({ campanhaId, canManage }: { campanhaId: string; canManage: boolean }) {
   const [open, setOpen] = useState(false);
   const create = useCreateTarefa();
-  const [form, setForm] = useState({
-    titulo: "", descricao: "", area: "campo", prioridade: "media",
-    dia: 1, semana: 1, data_prevista: new Date().toISOString().slice(0, 10),
-  });
+  const { data: campanha } = useCampanha(campanhaId);
+  const dataInicio = campanha?.data_inicio_plano ? new Date(campanha.data_inicio_plano) : new Date();
+
+  const todayISO = new Date().toISOString().slice(0, 10);
+  const calcDiaSemana = (dataISO: string) => {
+    const d = Math.max(1, Math.ceil((new Date(dataISO).getTime() - dataInicio.getTime()) / 86400000) + 1);
+    const s = Math.max(1, Math.ceil(d / 7));
+    return { dia: d, semana: s };
+  };
+
+  const initialForm = () => {
+    const { dia, semana } = calcDiaSemana(todayISO);
+    return {
+      titulo: "", descricao: "",
+      area: "organizacao" as string, prioridade: "media" as string,
+      data_prevista: todayISO, dia, semana,
+      fase_legal: "pre_campanha_legal" as "pre_campanha_legal" | "campanha_oficial" | "pos_eleicao",
+      is_marco: false,
+      permitido_antes_registro: true,
+      responsavel_papel: "",
+      o_que_e: "",
+      o_que_faz: "",
+      entregaveis: "",
+      respaldo_legal: "",
+      subtarefas: "",
+    };
+  };
+  const [form, setForm] = useState(initialForm);
+
+  const setData = (data_prevista: string) => {
+    const { dia, semana } = calcDiaSemana(data_prevista);
+    setForm((f) => ({ ...f, data_prevista, dia, semana }));
+  };
+
+  const setFase = (v: string) => {
+    setForm((f) => ({
+      ...f,
+      fase_legal: v as never,
+      permitido_antes_registro: v === "pre_campanha_legal",
+    }));
+  };
+
+  const reset = () => setForm(initialForm());
+
+  const submit = async () => {
+    const subs = form.subtarefas.split("\n").map((s) => s.trim()).filter(Boolean);
+    const created = await create.mutateAsync({
+      campanha_id: campanhaId,
+      titulo: form.titulo,
+      descricao: form.descricao || null,
+      area: form.area as never,
+      prioridade: form.prioridade as never,
+      dia: form.dia,
+      semana: form.semana,
+      data_prevista: form.data_prevista,
+      fase_legal: form.fase_legal,
+      is_marco: form.is_marco,
+      permitido_antes_registro: form.permitido_antes_registro,
+      responsavel_papel: form.responsavel_papel || null,
+      o_que_e: form.o_que_e || null,
+      o_que_faz: form.o_que_faz || null,
+      entregaveis: form.entregaveis || null,
+      respaldo_legal: form.respaldo_legal || null,
+    } as never);
+    if (subs.length > 0 && (created as { id?: string })?.id) {
+      await Promise.all(
+        subs.map((titulo, idx) =>
+          supabase.from("campanha_subtarefas" as never).insert({
+            tarefa_id: (created as { id: string }).id,
+            campanha_id: campanhaId,
+            titulo,
+            ordem: idx,
+          } as never)
+        )
+      );
+    }
+    reset();
+    setOpen(false);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline" className="h-8 gap-1" disabled={!canManage}><Plus className="h-3.5 w-3.5" />Nova tarefa</Button>
+        <Button size="sm" variant="outline" className="h-8 gap-1" disabled={!canManage}>
+          <Plus className="h-3.5 w-3.5" />Nova tarefa
+        </Button>
       </DialogTrigger>
-      <DialogContent>
-        <DialogHeader><DialogTitle>Adicionar tarefa</DialogTitle></DialogHeader>
-        <div className="grid gap-3">
-          <div><Label>Título *</Label><Input value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} /></div>
-          <div className="grid grid-cols-2 gap-3">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            {form.is_marco && <Flag className="h-4 w-4 text-warning" />}
+            Nova {form.is_marco ? "tarefa-marco" : "tarefa"} no plano
+          </DialogTitle>
+          <DialogDescription>
+            Mesmos campos que as tarefas geradas pelo sistema. Tudo permanece editável depois no drawer.
+          </DialogDescription>
+        </DialogHeader>
+
+        <Tabs defaultValue="basico" className="mt-2">
+          <TabsList className="grid grid-cols-4 w-full">
+            <TabsTrigger value="basico" className="gap-1 text-xs"><Info className="h-3 w-3" />Básico</TabsTrigger>
+            <TabsTrigger value="contexto" className="gap-1 text-xs"><Sparkles className="h-3 w-3" />Contexto</TabsTrigger>
+            <TabsTrigger value="legal" className="gap-1 text-xs"><ScrollText className="h-3 w-3" />Legal</TabsTrigger>
+            <TabsTrigger value="checklist" className="gap-1 text-xs"><ListChecks className="h-3 w-3" />Checklist</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="basico" className="space-y-3 mt-4">
             <div>
-              <Label>Área</Label>
-              <Select value={form.area} onValueChange={(v) => setForm({ ...form, area: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{AREAS.map(a => <SelectItem key={a} value={a} className="capitalize">{a}</SelectItem>)}</SelectContent>
-              </Select>
+              <Label className="text-xs">Título *</Label>
+              <Input value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} placeholder="Ex: Reunião geral de fundação da campanha" />
             </div>
             <div>
-              <Label>Prioridade</Label>
-              <Select value={form.prioridade} onValueChange={(v) => setForm({ ...form, prioridade: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{PRIORIDADES.map(p => <SelectItem key={p} value={p} className="capitalize">{p}</SelectItem>)}</SelectContent>
+              <Label className="text-xs">Descrição curta</Label>
+              <Textarea rows={2} value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} placeholder="Resumo objetivo do que precisa ser feito" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">Área</Label>
+                <Select value={form.area} onValueChange={(v) => setForm({ ...form, area: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{AREAS.map(a => <SelectItem key={a} value={a} className="capitalize">{a}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Prioridade</Label>
+                <Select value={form.prioridade} onValueChange={(v) => setForm({ ...form, prioridade: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{PRIORIDADES.map(p => <SelectItem key={p} value={p} className="capitalize">{p}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <Label className="text-xs">Data prevista</Label>
+                <Input type="date" value={form.data_prevista} onChange={(e) => setData(e.target.value)} />
+              </div>
+              <div>
+                <Label className="text-xs">Dia (auto)</Label>
+                <Input type="number" min={1} value={form.dia} onChange={(e) => setForm({ ...form, dia: +e.target.value })} />
+              </div>
+              <div>
+                <Label className="text-xs">Semana (auto)</Label>
+                <Input type="number" min={1} value={form.semana} onChange={(e) => setForm({ ...form, semana: +e.target.value })} />
+              </div>
+            </div>
+            <Separator />
+            <div className="flex items-center justify-between rounded-md border p-3 bg-warning/5">
+              <div className="flex items-start gap-2">
+                <Flag className={`h-4 w-4 mt-0.5 ${form.is_marco ? "text-warning" : "text-muted-foreground"}`} />
+                <div>
+                  <Label className="text-sm font-medium">Marcar como MARCO</Label>
+                  <p className="text-[11px] text-muted-foreground">Decisão executiva crítica. Aparecerá na timeline de Marcos.</p>
+                </div>
+              </div>
+              <Switch checked={form.is_marco} onCheckedChange={(c) => setForm({ ...form, is_marco: c })} />
+            </div>
+            <div>
+              <Label className="text-xs flex items-center gap-1"><UserIcon className="h-3 w-3" />Responsável (papel)</Label>
+              <Select value={form.responsavel_papel || "_none"} onValueChange={(v) => setForm({ ...form, responsavel_papel: v === "_none" ? "" : v })}>
+                <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none">— Sem responsável definido —</SelectItem>
+                  {RESPONSAVEIS_SUGERIDOS.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                </SelectContent>
               </Select>
             </div>
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            <div><Label>Dia</Label><Input type="number" min={1} value={form.dia} onChange={(e) => setForm({ ...form, dia: +e.target.value })} /></div>
-            <div><Label>Semana</Label><Input type="number" min={1} value={form.semana} onChange={(e) => setForm({ ...form, semana: +e.target.value })} /></div>
-            <div><Label>Data prevista</Label><Input type="date" value={form.data_prevista} onChange={(e) => setForm({ ...form, data_prevista: e.target.value })} /></div>
-          </div>
-          <div><Label>Descrição</Label><Input value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} /></div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-          <Button
-            disabled={!form.titulo || create.isPending}
-            onClick={async () => {
-              await create.mutateAsync({
-                campanha_id: campanhaId,
-                titulo: form.titulo,
-                descricao: form.descricao || null,
-                area: form.area as never,
-                prioridade: form.prioridade as never,
-                dia: form.dia,
-                semana: form.semana,
-                data_prevista: form.data_prevista,
-              });
-              setForm({ titulo: "", descricao: "", area: "campo", prioridade: "media", dia: 1, semana: 1, data_prevista: new Date().toISOString().slice(0, 10) });
-              setOpen(false);
-            }}
-          >
-            {create.isPending ? "Salvando..." : "Adicionar"}
+          </TabsContent>
+
+          <TabsContent value="contexto" className="space-y-3 mt-4">
+            <div>
+              <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">O que é</Label>
+              <Textarea rows={3} value={form.o_que_e} onChange={(e) => setForm({ ...form, o_que_e: e.target.value })} placeholder="Definição clara: o que essa tarefa representa no plano de campanha" />
+            </div>
+            <div>
+              <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">O que faz / como executar</Label>
+              <Textarea rows={4} value={form.o_que_faz} onChange={(e) => setForm({ ...form, o_que_faz: e.target.value })} placeholder="Passos concretos, método de execução, envolvidos" />
+            </div>
+            <div>
+              <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Entregáveis</Label>
+              <Textarea rows={3} value={form.entregaveis} onChange={(e) => setForm({ ...form, entregaveis: e.target.value })} placeholder="Ex: Ata assinada, contrato registrado, planilha publicada..." />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="legal" className="space-y-3 mt-4">
+            <div>
+              <Label className="text-xs">Fase legal</Label>
+              <Select value={form.fase_legal} onValueChange={setFase}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pre_campanha_legal">Pré-campanha (até registro 15/08)</SelectItem>
+                  <SelectItem value="campanha_oficial">Campanha oficial (pós-registro TSE)</SelectItem>
+                  <SelectItem value="pos_eleicao">Pós-eleição</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center justify-between rounded-md border p-3">
+              <div className="flex items-start gap-2">
+                {form.permitido_antes_registro
+                  ? <ShieldCheck className="h-4 w-4 text-success mt-0.5" />
+                  : <ShieldAlert className="h-4 w-4 text-destructive mt-0.5" />}
+                <div>
+                  <Label className="text-sm font-medium">Permitido antes do registro TSE</Label>
+                  <p className="text-[11px] text-muted-foreground">Desmarque se a ação só puder ocorrer após o pedido de registro de candidatura.</p>
+                </div>
+              </div>
+              <Switch checked={form.permitido_antes_registro} onCheckedChange={(c) => setForm({ ...form, permitido_antes_registro: c })} />
+            </div>
+            <div>
+              <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Respaldo legal</Label>
+              <Textarea rows={5} value={form.respaldo_legal} onChange={(e) => setForm({ ...form, respaldo_legal: e.target.value })} placeholder="Ex: Lei 9.504/97 art. 36-A — atos preparatórios permitidos antes do registro; Resolução TSE 23.610/2019..." />
+              <p className="text-[10px] text-muted-foreground mt-1">Referências comuns: Lei 9.504/97 · Resoluções TSE 23.607, 23.609, 23.610/2019 · LC 64/90.</p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="checklist" className="space-y-2 mt-4">
+            <Label className="text-xs">Subtarefas (uma por linha)</Label>
+            <Textarea
+              rows={8}
+              value={form.subtarefas}
+              onChange={(e) => setForm({ ...form, subtarefas: e.target.value })}
+              placeholder={"Ex:\nDefinir Coordenador de Campanha\nDefinir Coordenador de Marketing\nDefinir Jurídico\nAssinar contratos da equipe"}
+              className="font-mono text-xs"
+            />
+            <p className="text-[11px] text-muted-foreground">Cada linha vira um item de checklist da tarefa.</p>
+          </TabsContent>
+        </Tabs>
+
+        <DialogFooter className="mt-4">
+          <Button variant="outline" onClick={() => { reset(); setOpen(false); }}>Cancelar</Button>
+          <Button disabled={!form.titulo || create.isPending} onClick={submit}>
+            {create.isPending ? "Salvando..." : (form.is_marco ? "Adicionar marco" : "Adicionar tarefa")}
           </Button>
         </DialogFooter>
       </DialogContent>
