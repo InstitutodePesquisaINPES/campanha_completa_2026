@@ -34,10 +34,12 @@ export default function PlanoCampanhaPage() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
               <Vote className="h-7 w-7 text-primary" />
-              Plano de Campanha 90 dias
+              Plano de Campanha {duracaoTotal ? `· ${duracaoTotal} dias` : ""}
             </h1>
             <p className="text-muted-foreground mt-1">
-              Cronograma · Fases · Metas · Acompanhamento semanal
+              {campanha
+                ? `Início ${new Date(campanha.data_inicio_plano).toLocaleDateString("pt-BR")} · Eleição ${new Date(campanha.data_eleicao).toLocaleDateString("pt-BR")} · Cronograma · Marcos · Fases · Metas`
+                : "Cronograma · Marcos · Fases · Metas · Acompanhamento semanal"}
             </p>
           </div>
           <CampanhaSelector value={currentId} onChange={setSelectedId} />
@@ -48,7 +50,7 @@ export default function PlanoCampanhaPage() {
             <CardContent className="py-16 text-center">
               <Vote className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
               <h2 className="text-lg font-semibold mb-1">Nenhuma campanha selecionada</h2>
-              <p className="text-sm text-muted-foreground">Crie uma nova campanha para gerar automaticamente o plano de 90 dias com 56 tarefas, 4 fases, 13 semanas e 11 metas.</p>
+              <p className="text-sm text-muted-foreground">Crie uma nova campanha para gerar automaticamente o plano completo (cronograma, fases, semanas, metas e marcos legais).</p>
             </CardContent>
           </Card>
         ) : (
@@ -78,7 +80,7 @@ export default function PlanoCampanhaPage() {
               <Card>
                 <CardContent className="p-4">
                   <Calendar className="h-4 w-4 text-info mb-1" />
-                  <div className="text-2xl font-bold">{diasDecorridos}<span className="text-sm text-muted-foreground">/90</span></div>
+                  <div className="text-2xl font-bold">{diasDecorridos}<span className="text-sm text-muted-foreground">/{duracaoTotal ?? "—"}</span></div>
                   <p className="text-xs text-muted-foreground">Dias do plano decorridos</p>
                 </CardContent>
               </Card>
@@ -95,13 +97,17 @@ export default function PlanoCampanhaPage() {
 
             <Tabs defaultValue="cronograma">
               <TabsList>
-                <TabsTrigger value="cronograma">Cronograma 90d</TabsTrigger>
+                <TabsTrigger value="cronograma">Cronograma</TabsTrigger>
+                <TabsTrigger value="marcos" className="gap-1"><Flag className="h-3.5 w-3.5" />Marcos</TabsTrigger>
                 <TabsTrigger value="metas">Fases & Metas</TabsTrigger>
                 <TabsTrigger value="semanas">Semana a semana</TabsTrigger>
                 <TabsTrigger value="parametros" className="gap-1"><Settings2 className="h-3.5 w-3.5" /> Parâmetros</TabsTrigger>
               </TabsList>
               <TabsContent value="cronograma" className="mt-4">
                 <CronogramaTarefas campanhaId={campanha.id} />
+              </TabsContent>
+              <TabsContent value="marcos" className="mt-4">
+                <MarcosTimeline campanhaId={campanha.id} />
               </TabsContent>
               <TabsContent value="metas" className="mt-4">
                 <MetasFases campanhaId={campanha.id} />
