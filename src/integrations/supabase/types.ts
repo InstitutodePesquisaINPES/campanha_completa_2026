@@ -115,6 +115,13 @@ export type Database = {
             foreignKeyName: "agenda_municipio_id_fkey"
             columns: ["municipio_id"]
             isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "agenda_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
             referencedRelation: "v_tse_candidato_historico"
             referencedColumns: ["municipio_id"]
           },
@@ -669,6 +676,13 @@ export type Database = {
             foreignKeyName: "areas_atuacao_municipio_id_fkey"
             columns: ["municipio_id"]
             isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "areas_atuacao_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
             referencedRelation: "v_tse_candidato_historico"
             referencedColumns: ["municipio_id"]
           },
@@ -801,6 +815,13 @@ export type Database = {
             foreignKeyName: "bairros_municipio_id_fkey"
             columns: ["municipio_id"]
             isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "bairros_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
             referencedRelation: "v_tse_candidato_historico"
             referencedColumns: ["municipio_id"]
           },
@@ -901,6 +922,13 @@ export type Database = {
             foreignKeyName: "bairros_estrategicos_campanha_id_fkey"
             columns: ["campanha_id"]
             isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+          {
+            foreignKeyName: "bairros_estrategicos_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
             referencedRelation: "v_indicadores_campanha"
             referencedColumns: ["campanha_id"]
           },
@@ -954,6 +982,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "campanhas"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campanha_fases_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["campanha_id"]
           },
           {
             foreignKeyName: "campanha_fases_campanha_id_fkey"
@@ -1019,8 +1054,108 @@ export type Database = {
             foreignKeyName: "campanha_metas_campanha_id_fkey"
             columns: ["campanha_id"]
             isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+          {
+            foreignKeyName: "campanha_metas_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
             referencedRelation: "v_indicadores_campanha"
             referencedColumns: ["campanha_id"]
+          },
+        ]
+      }
+      campanha_metas_municipio: {
+        Row: {
+          campanha_id: string
+          created_at: string
+          id: string
+          meta_cadastros: number
+          meta_votos: number
+          municipio_id: string
+          observacoes: string | null
+          prioridade: string
+          updated_at: string
+        }
+        Insert: {
+          campanha_id: string
+          created_at?: string
+          id?: string
+          meta_cadastros?: number
+          meta_votos?: number
+          municipio_id: string
+          observacoes?: string | null
+          prioridade?: string
+          updated_at?: string
+        }
+        Update: {
+          campanha_id?: string
+          created_at?: string
+          id?: string
+          meta_cadastros?: number
+          meta_votos?: number
+          municipio_id?: string
+          observacoes?: string | null
+          prioridade?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campanha_metas_municipio_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campanha_metas_municipio_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+          {
+            foreignKeyName: "campanha_metas_municipio_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_indicadores_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+          {
+            foreignKeyName: "campanha_metas_municipio_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "mapa_estrategico_bairros"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "campanha_metas_municipio_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campanha_metas_municipio_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "campanha_metas_municipio_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_candidato_historico"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "campanha_metas_municipio_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_municipio_resumo"
+            referencedColumns: ["municipio_id"]
           },
         ]
       }
@@ -1163,6 +1298,13 @@ export type Database = {
             foreignKeyName: "campanha_parametros_campanha_id_fkey"
             columns: ["campanha_id"]
             isOneToOne: true
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+          {
+            foreignKeyName: "campanha_parametros_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: true
             referencedRelation: "v_indicadores_campanha"
             referencedColumns: ["campanha_id"]
           },
@@ -1218,6 +1360,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "campanhas"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campanha_semanas_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["campanha_id"]
           },
           {
             foreignKeyName: "campanha_semanas_campanha_id_fkey"
@@ -1293,6 +1442,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "campanhas"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campanha_tarefas_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["campanha_id"]
           },
           {
             foreignKeyName: "campanha_tarefas_campanha_id_fkey"
@@ -1411,6 +1567,13 @@ export type Database = {
             foreignKeyName: "campanhas_municipio_id_fkey"
             columns: ["municipio_id"]
             isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "campanhas_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
             referencedRelation: "v_tse_candidato_historico"
             referencedColumns: ["municipio_id"]
           },
@@ -1491,6 +1654,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "campanhas"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "captacao_doadores_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["campanha_id"]
           },
           {
             foreignKeyName: "captacao_doadores_campanha_id_fkey"
@@ -1609,6 +1779,13 @@ export type Database = {
             foreignKeyName: "comunicacao_mencoes_campanha_id_fkey"
             columns: ["campanha_id"]
             isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+          {
+            foreignKeyName: "comunicacao_mencoes_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
             referencedRelation: "v_indicadores_campanha"
             referencedColumns: ["campanha_id"]
           },
@@ -1667,6 +1844,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "campanhas"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comunicacao_pautas_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["campanha_id"]
           },
           {
             foreignKeyName: "comunicacao_pautas_campanha_id_fkey"
@@ -1739,6 +1923,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "campanhas"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comunicacao_pecas_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["campanha_id"]
           },
           {
             foreignKeyName: "comunicacao_pecas_campanha_id_fkey"
@@ -1971,6 +2162,13 @@ export type Database = {
             foreignKeyName: "contratos_campanha_id_fkey"
             columns: ["campanha_id"]
             isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+          {
+            foreignKeyName: "contratos_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
             referencedRelation: "v_indicadores_campanha"
             referencedColumns: ["campanha_id"]
           },
@@ -2063,6 +2261,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "municipios"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dados_externos_jobs_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["municipio_id"]
           },
           {
             foreignKeyName: "dados_externos_jobs_municipio_id_fkey"
@@ -2185,6 +2390,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "municipios"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demandas_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["municipio_id"]
           },
           {
             foreignKeyName: "demandas_municipio_id_fkey"
@@ -2409,6 +2621,13 @@ export type Database = {
             foreignKeyName: "distritos_municipio_id_fkey"
             columns: ["municipio_id"]
             isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "distritos_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
             referencedRelation: "v_tse_candidato_historico"
             referencedColumns: ["municipio_id"]
           },
@@ -2506,6 +2725,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "municipios"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estoques_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["municipio_id"]
           },
           {
             foreignKeyName: "estoques_municipio_id_fkey"
@@ -2624,6 +2850,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "campanhas"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incidentes_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["campanha_id"]
           },
           {
             foreignKeyName: "incidentes_campanha_id_fkey"
@@ -2825,6 +3058,13 @@ export type Database = {
             foreignKeyName: "liderancas_locais_campanha_id_fkey"
             columns: ["campanha_id"]
             isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+          {
+            foreignKeyName: "liderancas_locais_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
             referencedRelation: "v_indicadores_campanha"
             referencedColumns: ["campanha_id"]
           },
@@ -2841,6 +3081,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "municipios"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "liderancas_locais_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["municipio_id"]
           },
           {
             foreignKeyName: "liderancas_locais_municipio_id_fkey"
@@ -3012,6 +3259,13 @@ export type Database = {
             foreignKeyName: "municipio_demografia_municipio_id_fkey"
             columns: ["municipio_id"]
             isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "municipio_demografia_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
             referencedRelation: "v_tse_candidato_historico"
             referencedColumns: ["municipio_id"]
           },
@@ -3162,6 +3416,13 @@ export type Database = {
             foreignKeyName: "municipios_estrategicos_campanha_id_fkey"
             columns: ["campanha_id"]
             isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+          {
+            foreignKeyName: "municipios_estrategicos_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
             referencedRelation: "v_indicadores_campanha"
             referencedColumns: ["campanha_id"]
           },
@@ -3178,6 +3439,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "municipios"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "municipios_estrategicos_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["municipio_id"]
           },
           {
             foreignKeyName: "municipios_estrategicos_municipio_id_fkey"
@@ -3366,6 +3634,13 @@ export type Database = {
             foreignKeyName: "pesquisas_campanha_id_fkey"
             columns: ["campanha_id"]
             isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+          {
+            foreignKeyName: "pesquisas_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
             referencedRelation: "v_indicadores_campanha"
             referencedColumns: ["campanha_id"]
           },
@@ -3382,6 +3657,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "municipios"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pesquisas_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["municipio_id"]
           },
           {
             foreignKeyName: "pesquisas_municipio_id_fkey"
@@ -3702,6 +3984,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "municipios"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pessoas_enderecos_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["municipio_id"]
           },
           {
             foreignKeyName: "pessoas_enderecos_municipio_id_fkey"
@@ -4127,6 +4416,13 @@ export type Database = {
             foreignKeyName: "reunioes_campanha_id_fkey"
             columns: ["campanha_id"]
             isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+          {
+            foreignKeyName: "reunioes_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
             referencedRelation: "v_indicadores_campanha"
             referencedColumns: ["campanha_id"]
           },
@@ -4191,6 +4487,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "campanhas"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "riscos_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["campanha_id"]
           },
           {
             foreignKeyName: "riscos_campanha_id_fkey"
@@ -4319,6 +4622,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "municipios"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roteiros_visita_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["municipio_id"]
           },
           {
             foreignKeyName: "roteiros_visita_municipio_id_fkey"
@@ -4532,6 +4842,13 @@ export type Database = {
             foreignKeyName: "tse_candidatos_municipio_id_fkey"
             columns: ["municipio_id"]
             isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "tse_candidatos_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
             referencedRelation: "v_tse_candidato_historico"
             referencedColumns: ["municipio_id"]
           },
@@ -4604,6 +4921,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "municipios"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tse_eleitorado_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["municipio_id"]
           },
           {
             foreignKeyName: "tse_eleitorado_municipio_id_fkey"
@@ -4841,6 +5165,13 @@ export type Database = {
             foreignKeyName: "tse_locais_votacao_municipio_id_fkey"
             columns: ["municipio_id"]
             isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "tse_locais_votacao_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
             referencedRelation: "v_tse_candidato_historico"
             referencedColumns: ["municipio_id"]
           },
@@ -4997,6 +5328,13 @@ export type Database = {
             foreignKeyName: "tse_resultados_secao_municipio_id_fkey"
             columns: ["municipio_id"]
             isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "tse_resultados_secao_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
             referencedRelation: "v_tse_candidato_historico"
             referencedColumns: ["municipio_id"]
           },
@@ -5148,6 +5486,13 @@ export type Database = {
             foreignKeyName: "user_scopes_campanha_id_fkey"
             columns: ["campanha_id"]
             isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+          {
+            foreignKeyName: "user_scopes_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
             referencedRelation: "v_indicadores_campanha"
             referencedColumns: ["campanha_id"]
           },
@@ -5171,6 +5516,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "municipios"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_scopes_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["municipio_id"]
           },
           {
             foreignKeyName: "user_scopes_municipio_id_fkey"
@@ -5345,6 +5697,13 @@ export type Database = {
             foreignKeyName: "vereadores_historicos_municipio_id_fkey"
             columns: ["municipio_id"]
             isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "vereadores_historicos_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
             referencedRelation: "v_tse_candidato_historico"
             referencedColumns: ["municipio_id"]
           },
@@ -5410,6 +5769,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "municipios"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "zonas_eleitorais_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["municipio_id"]
           },
           {
             foreignKeyName: "zonas_eleitorais_municipio_id_fkey"
@@ -5498,6 +5864,13 @@ export type Database = {
             foreignKeyName: "campanha_tarefas_campanha_id_fkey"
             columns: ["campanha_id"]
             isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+          {
+            foreignKeyName: "campanha_tarefas_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
             referencedRelation: "v_indicadores_campanha"
             referencedColumns: ["campanha_id"]
           },
@@ -5511,6 +5884,21 @@ export type Database = {
           subtitulo: string | null
           tipo: string | null
           titulo: string | null
+        }
+        Relationships: []
+      }
+      v_cobertura_territorial_campanha: {
+        Row: {
+          bairros_count: number | null
+          cadastrados: number | null
+          campanha_id: string | null
+          eleitorado_tse: number | null
+          geocodigo_ibge: string | null
+          meta_cadastros: number | null
+          meta_votos: number | null
+          municipio_id: string | null
+          municipio_nome: string | null
+          prioridade: string | null
         }
         Relationships: []
       }
@@ -5579,6 +5967,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "campanhas"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contratos_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["campanha_id"]
           },
           {
             foreignKeyName: "contratos_campanha_id_fkey"
@@ -5697,6 +6092,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "municipios"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bairros_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["municipio_id"]
           },
           {
             foreignKeyName: "bairros_municipio_id_fkey"
