@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useFases, useMetas, useSemanas, useUpdateMeta, useCreateMeta, useDeleteMeta } from "@/hooks/useCampanhas";
+import { useCanManage } from "@/hooks/useUserRoles";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -22,14 +23,14 @@ const faseColors: Record<string, string> = {
 const AREAS = ["organizacao","campo","digital","financeiro","juridico","comunicacao","logistica","dados"] as const;
 const FASES = ["pre_campanha","lancamento","consolidacao","reta_final"] as const;
 
-function NovaMetaDialog({ campanhaId }: { campanhaId: string }) {
+function NovaMetaDialog({ campanhaId, canManage }: { campanhaId: string; canManage: boolean }) {
   const [open, setOpen] = useState(false);
   const create = useCreateMeta();
   const [form, setForm] = useState({ meta: "", indicador: "", area: "campo", fase: "pre_campanha", valor_meta: 100 });
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline" className="h-8 gap-1"><Plus className="h-3.5 w-3.5" />Nova meta</Button>
+        <Button size="sm" variant="outline" className="h-8 gap-1" disabled={!canManage}><Plus className="h-3.5 w-3.5" />Nova meta</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader><DialogTitle>Adicionar meta</DialogTitle></DialogHeader>
@@ -82,6 +83,7 @@ function NovaMetaDialog({ campanhaId }: { campanhaId: string }) {
 export function MetasFases({ campanhaId }: { campanhaId: string }) {
   const { data: fases = [] } = useFases(campanhaId);
   const { data: metas = [] } = useMetas(campanhaId);
+  const canManage = useCanManage();
   const update = useUpdateMeta();
   const remove = useDeleteMeta();
 
@@ -89,8 +91,12 @@ export function MetasFases({ campanhaId }: { campanhaId: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <NovaMetaDialog campanhaId={campanhaId} />
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-xs text-muted-foreground">
+          Edite título, indicador, fase, área, meta e realizado diretamente nos cards.
+          {!canManage && " Seu perfil está em modo somente leitura."}
+        </p>
+        <NovaMetaDialog campanhaId={campanhaId} canManage={canManage} />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {fases.map((f) => {
@@ -125,35 +131,74 @@ export function MetasFases({ campanhaId }: { campanhaId: string }) {
                   {ms.map((m) => {
                     const p = Number(m.valor_meta) > 0 ? Math.min(100, Math.round((Number(m.valor_realizado) / Number(m.valor_meta)) * 100)) : 0;
                     return (
-                      <div key={m.id} className="border border-border rounded-md p-2.5">
+                      <div key={m.id} className="border border-border rounded-md p-2.5 space-y-2">
                         <div className="flex items-start justify-between gap-2 mb-1.5">
                           <div className="min-w-0">
-                            <p className="text-sm font-medium truncate">{m.meta}</p>
-                            <p className="text-[10px] text-muted-foreground">{m.indicador} · área {m.area}</p>
+                            <p className="text-[10px] text-muted-foreground">Meta editável</p>
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
                             <Badge variant="outline" className="text-[10px]">{p}%</Badge>
                             <button
-                              onClick={() => confirm(`Remover meta "${m.meta}"?`) && remove.mutate(m.id)}
-                              className="text-muted-foreground hover:text-destructive p-0.5"
+                              onClick={() => canManage && confirm(`Remover meta "${m.meta}"?`) && remove.mutate(m.id)}
+                              disabled={!canManage}
+                              className="text-muted-foreground hover:text-destructive p-0.5 disabled:opacity-40 disabled:cursor-not-allowed"
                               title="Remover meta"
                             >
                               <Trash2 className="h-3 w-3" />
                             </button>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="grid gap-2 md:grid-cols-2">
+                          <Input
+                            className="h-8 text-xs"
+                            defaultValue={m.meta}
+                            disabled={!canManage}
+                            onBlur={(e) => {
+                              const v = e.target.value.trim();
+                              if (v && v !== m.meta) update.mutate({ id: m.id, meta: v });
+                            }}
+                          />
+                          <Input
+                            className="h-8 text-xs"
+                            defaultValue={m.indicador}
+                            disabled={!canManage}
+                            onBlur={(e) => {
+                              const v = e.target.value.trim();
+                              if (v && v !== m.indicador) update.mutate({ id: m.id, indicador: v });
+                            }}
+                          />
+                        </div>
+                        <div className="grid gap-2 md:grid-cols-4">
+                          <Select value={m.fase} onValueChange={(v) => canManage && update.mutate({ id: m.id, fase: v as never })} disabled={!canManage}>
+                            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                            <SelectContent>{FASES.map(f => <SelectItem key={f} value={f}>{faseLabels[f]}</SelectItem>)}</SelectContent>
+                          </Select>
+                          <Select value={m.area} onValueChange={(v) => canManage && update.mutate({ id: m.id, area: v as never })} disabled={!canManage}>
+                            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                            <SelectContent>{AREAS.map(a => <SelectItem key={a} value={a} className="capitalize">{a}</SelectItem>)}</SelectContent>
+                          </Select>
                           <Input
                             type="number"
-                            className="h-7 text-xs w-24"
+                            className="h-8 text-xs"
+                            defaultValue={Number(m.valor_meta)}
+                            disabled={!canManage}
+                            onBlur={(e) => {
+                              const v = Number(e.target.value);
+                              if (v !== Number(m.valor_meta)) update.mutate({ id: m.id, valor_meta: v });
+                            }}
+                          />
+                          <Input
+                            type="number"
+                            className="h-8 text-xs"
                             defaultValue={Number(m.valor_realizado)}
+                            disabled={!canManage}
                             onBlur={(e) => {
                               const v = Number(e.target.value);
                               if (v !== Number(m.valor_realizado)) update.mutate({ id: m.id, valor_realizado: v });
                             }}
                           />
-                          <span className="text-xs text-muted-foreground">/ meta {Number(m.valor_meta).toLocaleString("pt-BR")}</span>
                         </div>
+                        <p className="text-[10px] text-muted-foreground">Meta: {Number(m.valor_meta).toLocaleString("pt-BR")} · Realizado: {Number(m.valor_realizado).toLocaleString("pt-BR")}</p>
                       </div>
                     );
                   })}
