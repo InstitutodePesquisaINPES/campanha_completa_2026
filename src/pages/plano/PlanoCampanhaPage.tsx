@@ -4,11 +4,12 @@ import { CampanhaSelector } from "@/components/plano/CampanhaSelector";
 import { CronogramaTarefas } from "@/components/plano/CronogramaTarefas";
 import { MetasFases, PlanejamentoSemanal } from "@/components/plano/MetasESemanas";
 import { ParametrosGerador } from "@/components/plano/ParametrosGerador";
+import { MarcosTimeline } from "@/components/plano/MarcosTimeline";
 import { useCampanha, useCampanhaAtiva } from "@/hooks/useCampanhas";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Vote, Calendar, Target, Trophy, Flame, Settings2 } from "lucide-react";
+import { Vote, Calendar, Target, Trophy, Flame, Settings2, Flag } from "lucide-react";
 
 export default function PlanoCampanhaPage() {
   const { data: ativa } = useCampanhaAtiva();
@@ -16,6 +17,9 @@ export default function PlanoCampanhaPage() {
   const currentId = selectedId ?? ativa?.id;
   const { data: campanha } = useCampanha(currentId);
 
+  const duracaoTotal = campanha
+    ? Math.max(1, Math.ceil((new Date(campanha.data_eleicao).getTime() - new Date(campanha.data_inicio_plano).getTime()) / 86400000))
+    : null;
   const diasParaEleicao = campanha
     ? Math.ceil((new Date(campanha.data_eleicao).getTime() - Date.now()) / 86400000)
     : null;
