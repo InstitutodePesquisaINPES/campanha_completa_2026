@@ -154,12 +154,47 @@ export function TarefaDetailDrawer({
                 </SelectContent>
               </Select>
             </div>
-            {tx.responsavel_papel && (
-              <div className="space-y-1.5">
-                <Label className="text-xs flex items-center gap-1"><User className="h-3 w-3" />Responsável</Label>
-                <div className="text-sm border rounded-md px-3 h-10 flex items-center bg-muted/30">{tx.responsavel_papel}</div>
-              </div>
-            )}
+            <div className="space-y-1.5">
+              <Label className="text-xs flex items-center gap-1"><User className="h-3 w-3" />Responsável</Label>
+              <Input
+                defaultValue={tx.responsavel_papel ?? ""}
+                placeholder="Ex: Coordenador de campo"
+                disabled={!canManage}
+                className="h-10"
+                onBlur={(e) => {
+                  const val = e.target.value.trim();
+                  if (val !== (tx.responsavel_papel ?? "")) {
+                    update.mutate({ id: tarefa.id, responsavel_papel: val || null } as never);
+                  }
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Linha 2: fase legal + marco */}
+          <div className="grid grid-cols-[1fr_auto] gap-3 items-end">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Fase legal</Label>
+              <Select
+                value={tx.fase_legal ?? "pre_campanha_legal"}
+                disabled={!canManage}
+                onValueChange={(v) => update.mutate({ id: tarefa.id, fase_legal: v } as never)}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {FASE_LEGAL_OPTS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2 border rounded-md px-3 h-10 bg-muted/20">
+              <Flag className={`h-4 w-4 ${tx.is_marco ? "text-warning" : "text-muted-foreground"}`} />
+              <Label className="text-xs cursor-pointer">Marco</Label>
+              <Switch
+                checked={!!tx.is_marco}
+                disabled={!canManage}
+                onCheckedChange={(c) => update.mutate({ id: tarefa.id, is_marco: c } as never)}
+              />
+            </div>
           </div>
 
           <Tabs defaultValue="visao">
