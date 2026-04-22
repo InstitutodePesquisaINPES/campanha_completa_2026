@@ -29,6 +29,14 @@ import {
   ScrollText, ListChecks, Info, ShieldCheck, ShieldAlert, User, Plus,
 } from "lucide-react";
 import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
+import { RespaldoLegalPicker } from "./RespaldoLegalPicker";
+
+const FASE_LEGAL_OPTS = [
+  { value: "pre_campanha_legal", label: "Pré-campanha (até registro TSE)" },
+  { value: "campanha_oficial", label: "Campanha oficial (pós-registro)" },
+  { value: "pos_eleicao", label: "Pós-eleição" },
+];
 
 const STATUS_OPTS = [
   { value: "pendente", label: "A fazer" },
