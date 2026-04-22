@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { useCampanhaAtiva } from "@/hooks/useCampanhas";
@@ -19,10 +19,16 @@ export default function EleitoralPage() {
   const { data: campanhaAtiva } = useCampanhaAtiva();
   const [modo, setModo] = useState<Modo>("territorio");
   const [uf, setUf] = useState("BA");
-  const [ano, setAno] = useState(() => campanhaAtiva?.data_eleicao ? new Date(campanhaAtiva.data_eleicao).getFullYear() : 2024);
+  const [ano, setAno] = useState(2024);
   const [cargo, setCargo] = useState<string | undefined>();
   const [aba, setAba] = useState("visao");
   const [municipioPick, setMunicipioPick] = useState<{ cod: string; nome: string } | null>(null);
+
+  useEffect(() => {
+    if (campanhaAtiva?.data_eleicao) {
+      setAno(new Date(campanhaAtiva.data_eleicao).getFullYear());
+    }
+  }, [campanhaAtiva?.data_eleicao]);
 
   return (
     <ProtectedRoute>
