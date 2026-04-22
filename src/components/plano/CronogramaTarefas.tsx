@@ -9,8 +9,12 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Search, Calendar as CalIcon, Plus, Trash2 } from "lucide-react";
+import { Search, Calendar as CalIcon, Plus, Trash2, Paperclip, LayoutGrid, List } from "lucide-react";
+import { TarefaDetailDrawer } from "./TarefaDetailDrawer";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const areaColors: Record<string, string> = {
   organizacao: "bg-primary/10 text-primary border-primary/30",
@@ -32,6 +36,31 @@ const prioColors: Record<string, string> = {
 
 const AREAS = ["organizacao","campo","digital","financeiro","juridico","comunicacao","logistica","dados"] as const;
 const PRIORIDADES = ["urgente","alta","media","baixa"] as const;
+
+const KANBAN_COLS: { key: string; label: string; tone: string }[] = [
+  { key: "pendente", label: "A fazer", tone: "border-muted" },
+  { key: "em_andamento", label: "Em andamento", tone: "border-info/40" },
+  { key: "concluida", label: "Concluída", tone: "border-success/40" },
+  { key: "atrasada", label: "Atrasada", tone: "border-destructive/40" },
+];
+
+function useAnexosCount(campanhaId: string) {
+  return useQuery({
+    queryKey: ["tarefa-anexos-count", campanhaId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("campanha_tarefa_anexos" as never)
+        .select("tarefa_id")
+        .eq("campanha_id", campanhaId);
+      if (error) throw error;
+      const map = new Map<string, number>();
+      (data ?? []).forEach((r: { tarefa_id: string }) => {
+        map.set(r.tarefa_id, (map.get(r.tarefa_id) ?? 0) + 1);
+      });
+      return map;
+    },
+  });
+}
 
 function NovaTarefaDialog({ campanhaId, canManage }: { campanhaId: string; canManage: boolean }) {
   const [open, setOpen] = useState(false);
@@ -66,8 +95,8 @@ function NovaTarefaDialog({ campanhaId, canManage }: { campanhaId: string; canMa
             </div>
           </div>
           <div className="grid grid-cols-3 gap-3">
-            <div><Label>Dia (1-90)</Label><Input type="number" min={1} max={90} value={form.dia} onChange={(e) => setForm({ ...form, dia: +e.target.value })} /></div>
-            <div><Label>Semana (1-13)</Label><Input type="number" min={1} max={13} value={form.semana} onChange={(e) => setForm({ ...form, semana: +e.target.value })} /></div>
+            <div><Label>Dia</Label><Input type="number" min={1} value={form.dia} onChange={(e) => setForm({ ...form, dia: +e.target.value })} /></div>
+            <div><Label>Semana</Label><Input type="number" min={1} value={form.semana} onChange={(e) => setForm({ ...form, semana: +e.target.value })} /></div>
             <div><Label>Data prevista</Label><Input type="date" value={form.data_prevista} onChange={(e) => setForm({ ...form, data_prevista: e.target.value })} /></div>
           </div>
           <div><Label>Descrição</Label><Input value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} /></div>
@@ -99,14 +128,64 @@ function NovaTarefaDialog({ campanhaId, canManage }: { campanhaId: string; canMa
   );
 }
 
+function TarefaCard({
+  t, anexos, onOpen, onToggle, canManage, onRemove,
+}: {
+  t: Tarefa; anexos: number; onOpen: () => void;
+  onToggle: (concluida: boolean) => void; canManage: boolean;
+  onRemove: () => void;
+}) {
+  const concluida = t.status === "concluida";
+  return (
+    <Card className={`cursor-pointer hover:shadow-sm transition ${concluida ? "bg-muted/30" : ""}`}>
+      <CardContent className="p-3 flex items-start gap-3">
+        <Checkbox
+          checked={concluida}
+          disabled={!canManage}
+          onClick={(e) => e.stopPropagation()}
+          onCheckedChange={(c) => onToggle(!!c)}
+          className="mt-0.5"
+        />
+        <div className="flex-1 min-w-0" onClick={onOpen}>
+          <div className="flex items-start justify-between gap-2">
+            <p className={`text-sm font-medium ${concluida ? "line-through text-muted-foreground" : ""}`}>
+              {t.titulo}
+            </p>
+            <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+              D{t.dia} · {new Date(t.data_prevista).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-1 mt-1.5 items-center">
+            <Badge variant="outline" className={`text-[10px] capitalize ${areaColors[t.area]}`}>{t.area}</Badge>
+            <Badge variant="outline" className={`text-[10px] capitalize ${prioColors[t.prioridade]}`}>{t.prioridade}</Badge>
+            {anexos > 0 && (
+              <Badge variant="outline" className="text-[10px] gap-0.5"><Paperclip className="h-2.5 w-2.5" />{anexos}</Badge>
+            )}
+            <button
+              onClick={(e) => { e.stopPropagation(); if (canManage && confirm(`Remover "${t.titulo}"?`)) onRemove(); }}
+              disabled={!canManage}
+              className="ml-auto text-muted-foreground hover:text-destructive p-0.5 disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Remover tarefa"
+            >
+              <Trash2 className="h-3 w-3" />
+            </button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function CronogramaTarefas({ campanhaId }: { campanhaId: string }) {
   const { data: tarefas = [], isLoading } = useTarefas(campanhaId);
+  const { data: anexosMap } = useAnexosCount(campanhaId);
   const canManage = useCanManage();
   const update = useUpdateTarefa();
-  const remove = useDeleteTarefa();
+  const remove = useDeleteTarefaTarefa();
   const [filtro, setFiltro] = useState("");
   const [areaFiltro, setAreaFiltro] = useState<string>("todas");
   const [statusFiltro, setStatusFiltro] = useState<string>("todas");
+  const [selected, setSelected] = useState<Tarefa | null>(null);
 
   const filtradas = useMemo(() => {
     return tarefas.filter((t) => {
@@ -132,6 +211,14 @@ export function CronogramaTarefas({ campanhaId }: { campanhaId: string }) {
     const concluidas = tarefas.filter((t) => t.status === "concluida").length;
     return { total, concluidas, pct: total ? Math.round((concluidas / total) * 100) : 0 };
   }, [tarefas]);
+
+  const toggle = (t: Tarefa, concluida: boolean) => {
+    update.mutate({
+      id: t.id,
+      status: concluida ? "concluida" : "pendente",
+      data_conclusao: concluida ? new Date().toISOString() : null,
+    });
+  };
 
   if (isLoading) return <div className="text-sm text-muted-foreground">Carregando cronograma...</div>;
 
@@ -159,7 +246,7 @@ export function CronogramaTarefas({ campanhaId }: { campanhaId: string }) {
             <SelectTrigger className="h-8 w-36"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="todas">Todos status</SelectItem>
-              <SelectItem value="pendente">Pendente</SelectItem>
+              <SelectItem value="pendente">A fazer</SelectItem>
               <SelectItem value="em_andamento">Em andamento</SelectItem>
               <SelectItem value="concluida">Concluída</SelectItem>
               <SelectItem value="atrasada">Atrasada</SelectItem>
@@ -168,67 +255,85 @@ export function CronogramaTarefas({ campanhaId }: { campanhaId: string }) {
         </div>
       </div>
 
-      <ScrollArea className="h-[600px] pr-3">
-        <div className="space-y-4">
-          {grupos.map(([semana, ts]) => (
-            <div key={semana}>
-              <div className="flex items-center gap-2 mb-2">
-                <CalIcon className="h-4 w-4 text-primary" />
-                <h3 className="text-sm font-semibold">Semana {semana}</h3>
-                <span className="text-xs text-muted-foreground">({ts.length} tarefas)</span>
-              </div>
-              <div className="space-y-1.5">
-                {ts.map((t) => {
-                  const concluida = t.status === "concluida";
-                  return (
-                    <Card key={t.id} className={concluida ? "bg-muted/30" : ""}>
-                      <CardContent className="p-3 flex items-start gap-3">
-                        <Checkbox
-                          checked={concluida}
-                          disabled={!canManage}
-                          onCheckedChange={(checked) => {
-                            update.mutate({
-                              id: t.id,
-                              status: checked ? "concluida" : "pendente",
-                              data_conclusao: checked ? new Date().toISOString() : null,
-                            });
-                          }}
-                          className="mt-0.5"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2">
-                            <p className={`text-sm font-medium ${concluida ? "line-through text-muted-foreground" : ""}`}>
-                              {t.titulo}
-                            </p>
-                            <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                              Dia {t.dia} · {new Date(t.data_prevista).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap gap-1 mt-1.5 items-center">
-                            <Badge variant="outline" className={`text-[10px] capitalize ${areaColors[t.area]}`}>{t.area}</Badge>
-                            <Badge variant="outline" className={`text-[10px] capitalize ${prioColors[t.prioridade]}`}>{t.prioridade}</Badge>
-                            <button
-                              onClick={() => canManage && confirm(`Remover "${t.titulo}"?`) && remove.mutate(t.id)}
-                              disabled={!canManage}
-                              className="ml-auto text-muted-foreground hover:text-destructive p-0.5 disabled:opacity-40 disabled:cursor-not-allowed"
-                              title="Remover tarefa"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
+      <Tabs defaultValue="lista">
+        <TabsList>
+          <TabsTrigger value="lista" className="gap-1"><List className="h-3.5 w-3.5" />Lista por semana</TabsTrigger>
+          <TabsTrigger value="kanban" className="gap-1"><LayoutGrid className="h-3.5 w-3.5" />Kanban</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="lista" className="mt-4">
+          <ScrollArea className="h-[600px] pr-3">
+            <div className="space-y-4">
+              {grupos.map(([semana, ts]) => (
+                <div key={semana}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <CalIcon className="h-4 w-4 text-primary" />
+                    <h3 className="text-sm font-semibold">Semana {semana}</h3>
+                    <span className="text-xs text-muted-foreground">({ts.length} tarefas)</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    {ts.map((t) => (
+                      <TarefaCard
+                        key={t.id}
+                        t={t}
+                        anexos={anexosMap?.get(t.id) ?? 0}
+                        canManage={canManage}
+                        onOpen={() => setSelected(t)}
+                        onToggle={(c) => toggle(t, c)}
+                        onRemove={() => remove.mutate(t.id)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))}
+              {grupos.length === 0 && (
+                <div className="text-center text-sm text-muted-foreground py-12">Nenhuma tarefa encontrada com os filtros atuais.</div>
+              )}
             </div>
-          ))}
-          {grupos.length === 0 && (
-            <div className="text-center text-sm text-muted-foreground py-12">Nenhuma tarefa encontrada com os filtros atuais.</div>
-          )}
-        </div>
-      </ScrollArea>
+          </ScrollArea>
+        </TabsContent>
+
+        <TabsContent value="kanban" className="mt-4">
+          <ScrollArea className="h-[600px]">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 min-w-[900px]">
+              {KANBAN_COLS.map((col) => {
+                const items = filtradas.filter((t) => t.status === col.key);
+                return (
+                  <div key={col.key} className={`rounded-md border-2 ${col.tone} bg-muted/20 p-2 flex flex-col`}>
+                    <div className="flex items-center justify-between mb-2 px-1">
+                      <h4 className="text-sm font-semibold">{col.label}</h4>
+                      <Badge variant="outline" className="text-[10px]">{items.length}</Badge>
+                    </div>
+                    <div className="space-y-1.5">
+                      {items.map((t) => (
+                        <TarefaCard
+                          key={t.id}
+                          t={t}
+                          anexos={anexosMap?.get(t.id) ?? 0}
+                          canManage={canManage}
+                          onOpen={() => setSelected(t)}
+                          onToggle={(c) => toggle(t, c)}
+                          onRemove={() => remove.mutate(t.id)}
+                        />
+                      ))}
+                      {items.length === 0 && (
+                        <p className="text-[11px] text-muted-foreground text-center py-4">Vazio</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </ScrollArea>
+        </TabsContent>
+      </Tabs>
+
+      <TarefaDetailDrawer
+        tarefa={selected}
+        open={!!selected}
+        onOpenChange={(v) => { if (!v) setSelected(null); }}
+        canManage={canManage}
+      />
     </div>
   );
 }
