@@ -79,7 +79,7 @@ export default function PlanoCampanhaPage() {
         ) : (
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <Card>
+              <Card className="group relative">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-1">
                     <Trophy className="h-4 w-4 text-warning" />
@@ -91,6 +91,14 @@ export default function PlanoCampanhaPage() {
                     {(campanha as any).municipios_foco_ids?.length > 0 && ` · +${(campanha as any).municipios_foco_ids.length} foco`}
                   </p>
                   <p className="text-xs text-muted-foreground">{campanha.numero_urna ? `Nº ${campanha.numero_urna}` : "Sem nº urna"}{campanha.partido_sigla ? ` · ${campanha.partido_sigla}` : ""}</p>
+                  {canManage && (
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
+                      <EditarCampanhaDialog
+                        campanha={campanha as never}
+                        trigger={<Button size="icon" variant="ghost" className="h-6 w-6"><Pencil className="h-3 w-3" /></Button>}
+                      />
+                    </div>
+                  )}
                 </CardContent>
               </Card>
               <Popover open={metaOpen} onOpenChange={(o) => { setMetaOpen(o); if (o) setMetaInput(String(campanha.meta_votos ?? "")); }}>
