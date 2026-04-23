@@ -12,8 +12,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Trash2, Edit, Users, Crown, Search, Heart, Building2, Briefcase, Vote } from "lucide-react";
+import { Plus, Trash2, Edit, Users, Crown, Search, Heart, Building2, Briefcase, Vote, UserPlus, ExternalLink } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { usePromoverLiderancaParaCRM } from "@/hooks/useInteligenciaAcoes";
+import { Link } from "react-router-dom";
 
 const CLASS_COLOR: Record<LiderancaClassificacao, string> = {
   A: "bg-success/15 text-success border-success/40",
@@ -52,6 +54,7 @@ export function LiderancasTab({ campanhaId }: { campanhaId: string }) {
   const { data: stats } = useLiderancaStats(campanhaId);
   const upsert = useUpsertLideranca();
   const del = useDeleteLideranca();
+  const promover = usePromoverLiderancaParaCRM();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
 
@@ -189,8 +192,17 @@ export function LiderancasTab({ campanhaId }: { campanhaId: string }) {
                     <TableCell><Badge variant="outline" className="text-[10px]">{STATUS_LABEL[l.status as LiderancaStatus]}</Badge></TableCell>
                     <TableCell>
                       <div className="flex gap-1">
-                        <Button size="icon" variant="ghost" onClick={() => startEdit(l)}><Edit className="h-3.5 w-3.5" /></Button>
-                        <Button size="icon" variant="ghost" onClick={() => del.mutate(l.id)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+                        {l.pessoa_id ? (
+                          <Button size="icon" variant="ghost" asChild title="Ver no CRM">
+                            <Link to={`/pessoas?id=${l.pessoa_id}`}><ExternalLink className="h-3.5 w-3.5 text-info" /></Link>
+                          </Button>
+                        ) : (
+                          <Button size="icon" variant="ghost" onClick={() => promover.mutate(l)} disabled={promover.isPending} title="Promover ao CRM">
+                            <UserPlus className="h-3.5 w-3.5 text-success" />
+                          </Button>
+                        )}
+                        <Button size="icon" variant="ghost" onClick={() => startEdit(l)} title="Editar"><Edit className="h-3.5 w-3.5" /></Button>
+                        <Button size="icon" variant="ghost" onClick={() => del.mutate(l.id)} title="Remover"><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
                       </div>
                     </TableCell>
                   </TableRow>
