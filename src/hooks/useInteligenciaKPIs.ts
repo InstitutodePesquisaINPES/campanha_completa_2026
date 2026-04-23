@@ -26,7 +26,7 @@ export function useInteligenciaKPIs(campanhaId?: string, uf = "BA", ano = 2024) 
           .eq("campanha_id", campanhaId!),
         supabase.from("demandas")
           .select("id, status, bairro_id")
-          .neq("status", "concluida")
+          .in("status", ["aberta", "em_andamento", "triagem", "encaminhada"])
           .limit(1000),
       ]);
 
