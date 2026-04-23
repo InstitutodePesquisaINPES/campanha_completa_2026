@@ -7,9 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Target, Flag, Plus, Trash2 } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Target, Flag, Plus, Trash2, MessageSquare, AlertTriangle, CheckCircle2, TrendingUp } from "lucide-react";
 
 const faseLabels: Record<string, string> = {
   pre_campanha: "Pré-campanha", lancamento: "Lançamento", consolidacao: "Consolidação", reta_final: "Reta Final",
