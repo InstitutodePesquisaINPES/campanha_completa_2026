@@ -5,6 +5,8 @@ import { CronogramaTarefas } from "@/components/plano/CronogramaTarefas";
 import { MetasFases, PlanejamentoSemanal } from "@/components/plano/MetasESemanas";
 import { ParametrosGerador } from "@/components/plano/ParametrosGerador";
 import { MarcosTimeline } from "@/components/plano/MarcosTimeline";
+import { PlanoResumoExecutivo } from "@/components/plano/PlanoResumoExecutivo";
+import { PlanoIntegracoesBar } from "@/components/plano/PlanoIntegracoesBar";
 import { useCampanha, useCampanhaAtiva, useUpdateCampanha } from "@/hooks/useCampanhas";
 import { useCanManage } from "@/hooks/useUserRoles";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,7 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Vote, Calendar, Target, Trophy, Flame, Settings2, Flag, Pencil, Save } from "lucide-react";
+import { Vote, Calendar, Target, Trophy, Flame, Settings2, Flag, Pencil, Save, Activity } from "lucide-react";
 
 export default function PlanoCampanhaPage() {
   const { data: ativa } = useCampanhaAtiva();
@@ -148,14 +150,20 @@ export default function PlanoCampanhaPage() {
               </Card>
             </div>
 
-            <Tabs defaultValue="cronograma">
+            <PlanoIntegracoesBar campanhaId={campanha.id} />
+
+            <Tabs defaultValue="resumo">
               <TabsList>
+                <TabsTrigger value="resumo" className="gap-1"><Activity className="h-3.5 w-3.5" />Resumo</TabsTrigger>
                 <TabsTrigger value="cronograma">Cronograma</TabsTrigger>
                 <TabsTrigger value="marcos" className="gap-1"><Flag className="h-3.5 w-3.5" />Marcos</TabsTrigger>
                 <TabsTrigger value="metas">Fases & Metas</TabsTrigger>
                 <TabsTrigger value="semanas">Semana a semana</TabsTrigger>
                 <TabsTrigger value="parametros" className="gap-1"><Settings2 className="h-3.5 w-3.5" /> Parâmetros</TabsTrigger>
               </TabsList>
+              <TabsContent value="resumo" className="mt-4">
+                <PlanoResumoExecutivo campanhaId={campanha.id} />
+              </TabsContent>
               <TabsContent value="cronograma" className="mt-4">
                 <CronogramaTarefas campanhaId={campanha.id} />
               </TabsContent>
