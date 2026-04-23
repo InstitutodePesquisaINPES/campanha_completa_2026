@@ -54,7 +54,10 @@ export default function PlanoCampanhaPage() {
                 : "Cronograma · Marcos · Fases · Metas · Acompanhamento semanal"}
             </p>
           </div>
-          <CampanhaSelector value={currentId} onChange={setSelectedId} />
+          <div className="flex items-center gap-2">
+            <CampanhaSelector value={currentId} onChange={setSelectedId} />
+            {campanha && canManage && <EditarCampanhaDialog campanha={campanha as never} />}
+          </div>
         </div>
 
         {!campanha ? (
@@ -62,7 +65,15 @@ export default function PlanoCampanhaPage() {
             <CardContent className="py-16 text-center">
               <Vote className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
               <h2 className="text-lg font-semibold mb-1">Nenhuma campanha selecionada</h2>
-              <p className="text-sm text-muted-foreground">Crie uma nova campanha para gerar automaticamente o plano completo (cronograma, fases, semanas, metas e marcos legais).</p>
+              <p className="text-sm text-muted-foreground mb-4">
+                Crie uma nova campanha para gerar automaticamente o plano completo (cronograma, fases, semanas, metas e marcos legais TSE).
+              </p>
+              <div className="flex items-center justify-center gap-2">
+                <CampanhaSelector value={currentId} onChange={setSelectedId} />
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-3">
+                Use o botão <strong>“Nova”</strong> ao lado do seletor para criar a primeira campanha.
+              </p>
             </CardContent>
           </Card>
         ) : (
