@@ -79,10 +79,7 @@ function CandidatoPicker({ value, onChange }: { value: string | null; onChange: 
               {pessoas.map((p) => (
                 <CommandItem key={p.id} onSelect={() => { onChange(p.id); setOpen(false); }}>
                   <Check className={cn("mr-2 h-4 w-4", value === p.id ? "opacity-100" : "opacity-0")} />
-                  <div className="flex-1">
-                    <div className="text-sm">{p.full_name}</div>
-                    {p.telefone && <div className="text-[10px] text-muted-foreground">{p.telefone}</div>}
-                  </div>
+                  <div className="flex-1 text-sm">{p.full_name}</div>
                 </CommandItem>
               ))}
             </CommandGroup>
