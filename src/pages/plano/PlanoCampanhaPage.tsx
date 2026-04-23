@@ -16,7 +16,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Vote, Calendar, Target, Trophy, Flame, Settings2, Flag, Pencil, Save, Activity } from "lucide-react";
+import { Vote, Calendar, Target, Trophy, Flame, Settings2, Flag, Pencil, Save, Activity, Plus } from "lucide-react";
+import { EditarCampanhaDialog } from "@/components/plano/EditarCampanhaDialog";
 
 export default function PlanoCampanhaPage() {
   const { data: ativa } = useCampanhaAtiva();
