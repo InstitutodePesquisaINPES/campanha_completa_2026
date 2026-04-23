@@ -40,11 +40,11 @@ function CandidatoPicker({ value, onChange }: { value: string | null; onChange: 
   const { data: pessoas = [] } = useQuery({
     queryKey: ["pessoas-picker", search],
     queryFn: async () => {
-      let q = supabase.from("pessoas").select("id, full_name, telefone").order("full_name").limit(20);
+      let q = supabase.from("pessoas").select("id, full_name").order("full_name").limit(20);
       if (search.trim()) q = q.ilike("full_name", `%${search.trim()}%`);
       const { data, error } = await q;
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as { id: string; full_name: string }[];
     },
   });
 
