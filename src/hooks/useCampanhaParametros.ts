@@ -23,11 +23,18 @@ export const DEFAULTS_PARAMETROS = {
   votos_por_fiscal: 250, custo_por_voto_reais: 4.0,
   min_cadastro: 50, min_visitas: 100, min_visitas_semana: 20,
   min_fiscais: 5, min_orcamento_reais: 10000,
-  tse_registro_dias: 50, tse_registro_ativo: true,
-  tse_propaganda_dias: 45, tse_propaganda_ativo: true,
-  tse_hgpe_dias: 35, tse_hgpe_ativo: true,
-  tse_prestacao_dias: 30, tse_prestacao_ativo: true,
-  tse_debates_dias: 20, tse_debates_ativo: true,
+  // Marcos legais conforme Lei 9.504/97 + Res. TSE 23.610/2019 (atualizada por 23.735/2024)
+  // Aplicável às eleições gerais e municipais. Datas em dias antes da eleição (D-x).
+  tse_registro_dias: 50,    // Art. 11 Lei 9.504 — registro até 15/ago (eleições gerais) / 15/ago (municipais)
+  tse_registro_ativo: true,
+  tse_propaganda_dias: 49,  // Art. 36 — propaganda eleitoral permitida a partir de 16/ago (D-49 nas gerais)
+  tse_propaganda_ativo: true,
+  tse_hgpe_dias: 35,        // Art. 47 — HGPE rádio e TV nos 35 dias antes do 1º turno
+  tse_hgpe_ativo: true,
+  tse_prestacao_dias: 21,   // Art. 28 §4º — prestação parcial divulgada até 9 dias antes; lançamento ~D-21
+  tse_prestacao_ativo: true,
+  tse_debates_dias: 48,     // Art. 46 — debates a partir de 16/ago (após registro)
+  tse_debates_ativo: true,
   preservar_concluidas: true,
 };
 
