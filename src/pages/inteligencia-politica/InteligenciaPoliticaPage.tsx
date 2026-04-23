@@ -43,6 +43,8 @@ export default function InteligenciaPoliticaPage() {
             </Select>
           </div>
 
+          <InteligenciaNavBar campanhaId={campanhaId} />
+
           {!campanhaId ? (
             <Card className="p-8 text-center">
               <p className="text-muted-foreground">Selecione uma campanha para começar.</p>

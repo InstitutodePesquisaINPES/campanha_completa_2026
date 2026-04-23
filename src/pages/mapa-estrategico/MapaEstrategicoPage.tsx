@@ -67,6 +67,8 @@ export default function MapaEstrategicoPage() {
           <p className="text-muted-foreground mt-1">Cobertura por bairro · Situação · Ação recomendada</p>
         </div>
 
+        <InteligenciaNavBar campanhaId={campanhaId} />
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Card><CardContent className="p-4"><div className="text-2xl font-bold">{stats.total}</div><p className="text-xs text-muted-foreground">Bairros mapeados</p></CardContent></Card>
           <Card><CardContent className="p-4"><CheckCircle2 className="h-4 w-4 text-success mb-1" /><div className="text-2xl font-bold">{stats.forte}</div><p className="text-xs text-muted-foreground">Bairros fortes</p></CardContent></Card>
