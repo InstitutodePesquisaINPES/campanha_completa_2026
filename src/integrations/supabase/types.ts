@@ -3285,6 +3285,172 @@ export type Database = {
           },
         ]
       }
+      mapa_cenarios: {
+        Row: {
+          campanha_id: string | null
+          config: Json
+          created_at: string
+          created_by: string
+          descricao: string | null
+          id: string
+          nome: string
+          publico: boolean
+          updated_at: string
+        }
+        Insert: {
+          campanha_id?: string | null
+          config?: Json
+          created_at?: string
+          created_by: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          publico?: boolean
+          updated_at?: string
+        }
+        Update: {
+          campanha_id?: string | null
+          config?: Json
+          created_at?: string
+          created_by?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          publico?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mapa_cenarios_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mapa_cenarios_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+          {
+            foreignKeyName: "mapa_cenarios_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_indicadores_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+        ]
+      }
+      mapa_setores: {
+        Row: {
+          area_km2: number | null
+          campanha_id: string | null
+          cor: string
+          created_at: string
+          created_by: string
+          geometria: Json
+          id: string
+          municipio_id: string | null
+          nome: string
+          observacoes: string | null
+          perimetro_km: number | null
+          responsavel_id: string | null
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          area_km2?: number | null
+          campanha_id?: string | null
+          cor?: string
+          created_at?: string
+          created_by: string
+          geometria: Json
+          id?: string
+          municipio_id?: string | null
+          nome: string
+          observacoes?: string | null
+          perimetro_km?: number | null
+          responsavel_id?: string | null
+          tipo?: string
+          updated_at?: string
+        }
+        Update: {
+          area_km2?: number | null
+          campanha_id?: string | null
+          cor?: string
+          created_at?: string
+          created_by?: string
+          geometria?: Json
+          id?: string
+          municipio_id?: string | null
+          nome?: string
+          observacoes?: string | null
+          perimetro_km?: number | null
+          responsavel_id?: string | null
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mapa_setores_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mapa_setores_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+          {
+            foreignKeyName: "mapa_setores_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "v_indicadores_campanha"
+            referencedColumns: ["campanha_id"]
+          },
+          {
+            foreignKeyName: "mapa_setores_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "mapa_estrategico_bairros"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "mapa_setores_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "municipios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mapa_setores_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_cobertura_territorial_campanha"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "mapa_setores_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_candidato_historico"
+            referencedColumns: ["municipio_id"]
+          },
+          {
+            foreignKeyName: "mapa_setores_municipio_id_fkey"
+            columns: ["municipio_id"]
+            isOneToOne: false
+            referencedRelation: "v_tse_municipio_resumo"
+            referencedColumns: ["municipio_id"]
+          },
+        ]
+      }
       materiais: {
         Row: {
           ativo: boolean
