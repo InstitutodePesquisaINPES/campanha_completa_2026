@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -78,6 +78,7 @@ export function TSECsvArquivosList() {
 
   const [excluirAlvo, setExcluirAlvo] = useState<TseCsvArquivo | null>(null);
   const [reprocAlvo, setReprocAlvo] = useState<TseCsvArquivo | null>(null);
+  const autoRunningRef = useRef(false);
 
   const counts = {
     aguardando: arquivos.filter((a) => a.status === "aguardando").length,
@@ -86,6 +87,27 @@ export function TSECsvArquivosList() {
     concluido: arquivos.filter((a) => a.status === "concluido").length,
     erro: arquivos.filter((a) => a.status === "erro").length,
   };
+
+  useEffect(() => {
+    const hasFilaAtiva = counts.aguardando > 0 || counts.processando > 0;
+    if (!hasFilaAtiva) return;
+
+    const tick = async () => {
+      if (autoRunningRef.current) return;
+      autoRunningRef.current = true;
+      try {
+        await runWorker.mutateAsync();
+      } catch (_) {
+        // O status/erro real aparece na linha do arquivo; evita spam de toast no bombeamento automático.
+      } finally {
+        autoRunningRef.current = false;
+      }
+    };
+
+    tick();
+    const id = window.setInterval(tick, 2000);
+    return () => window.clearInterval(id);
+  }, [counts.aguardando, counts.processando, runWorker]);
 
   return (
     <Card>
