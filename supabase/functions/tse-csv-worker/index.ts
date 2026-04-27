@@ -357,11 +357,9 @@ Deno.serve(async (req) => {
       }
 
       // avança cursor pelos bytes consumidos do range (apenas a parte completa)
-      const consumedFromRange =
-        byteLengthLatin1(text) - byteLengthLatin1(leftover) - byteLengthLatin1(leftover === text ? "" : "");
       // Mais simples e correto: avançamos pela parte completa em bytes (sem o header que adicionamos manualmente)
       const advanceBytes = byteLengthLatin1(completePart) + 1; // +1 do \n final
-      cursor += Math.min(bytes.byteLength, advanceBytes + (text.length - completePart.length - leftover.length));
+      cursor += Math.min(bytes.byteLength, advanceBytes);
       // Garante progresso mínimo
       if (cursor <= arquivo.byte_cursor) cursor = arquivo.byte_cursor + bytes.byteLength;
 
