@@ -7,12 +7,14 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Upload, FileText, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { Upload, FileText, CheckCircle2, AlertCircle, Loader2, Archive, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { arquivarCsvParaProcessamento, type TseCsvTipo } from "@/hooks/useTSECsvArquivos";
 
 const UFS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 const ANOS = [2024, 2022, 2020, 2018, 2016];
@@ -205,6 +207,10 @@ export function TSECsvUpload() {
   const [autoDetect, setAutoDetect] = useState(true);
   const tipoEfetivo: TipoDado = autoDetect && tipoDetectado ? tipoDetectado : tipo;
   const tabela = TIPOS.find((t) => t.value === tipoEfetivo)!.tabela;
+
+  // Modo de processamento
+  const [modo, setModo] = useState<"background" | "inline">("background");
+  const [archiving, setArchiving] = useState(false);
 
   // Filtro por município (para CSVs imensos como votação por seção / locais)
   const [scanningMun, setScanningMun] = useState(false);
@@ -564,7 +570,36 @@ export function TSECsvUpload() {
           </div>
         )}
 
-        {(running || done || erro) && (
+        <div className="rounded-lg border p-3 bg-muted/30">
+          <Label className="text-sm font-medium mb-2 block">Modo de processamento</Label>
+          <RadioGroup value={modo} onValueChange={(v) => setModo(v as any)} disabled={running || archiving} className="grid gap-2 md:grid-cols-2">
+            <label className="flex items-start gap-3 rounded border bg-card p-3 cursor-pointer hover:border-primary/60 transition">
+              <RadioGroupItem value="background" id="modo-bg" className="mt-0.5" />
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-1.5 text-sm font-medium">
+                  <Archive className="h-3.5 w-3.5" /> Arquivar e processar em background
+                  <Badge variant="secondary" className="text-[10px] h-4">recomendado</Badge>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Sobe o CSV para o servidor e processa em background com retomada automática. Pode fechar a aba — ideal para arquivos grandes (&gt; 50 MB).
+                </p>
+              </div>
+            </label>
+            <label className="flex items-start gap-3 rounded border bg-card p-3 cursor-pointer hover:border-primary/60 transition">
+              <RadioGroupItem value="inline" id="modo-inline" className="mt-0.5" />
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-1.5 text-sm font-medium">
+                  <Zap className="h-3.5 w-3.5" /> Processar agora no navegador
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Mais rápido para arquivos pequenos. <strong>Não feche a aba</strong> durante o envio.
+                </p>
+              </div>
+            </label>
+          </RadioGroup>
+        </div>
+
+        {(running || done || erro || archiving) && (
           <div className="space-y-2">
             <Progress value={progress} />
             <div className="flex justify-between text-xs text-muted-foreground">
@@ -575,7 +610,7 @@ export function TSECsvUpload() {
           </div>
         )}
 
-        {done && !erro && (
+        {done && !erro && modo === "inline" && (
           <Alert>
             <CheckCircle2 className="h-4 w-4" />
             <AlertDescription>
@@ -591,10 +626,43 @@ export function TSECsvUpload() {
         )}
 
         <div className="flex gap-2">
-          <Button onClick={handleUpload} disabled={!file || running}>
-            {running ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
-            {running ? "Processando..." : "Processar e enviar"}
-          </Button>
+          {modo === "inline" ? (
+            <Button onClick={handleUpload} disabled={!file || running}>
+              {running ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+              {running ? "Processando..." : "Processar e enviar"}
+            </Button>
+          ) : (
+            <Button
+              onClick={async () => {
+                if (!file) { toast.error("Selecione um arquivo"); return; }
+                setArchiving(true);
+                setErro(null);
+                try {
+                  const arq = await arquivarCsvParaProcessamento({
+                    file,
+                    tipo: tipoEfetivo as TseCsvTipo,
+                    ano,
+                    uf,
+                    municipios_filtro: municipiosSelecionados.size > 0 ? Array.from(municipiosSelecionados) : null,
+                  });
+                  toast.success(`Arquivo enviado para a fila (${arq.id.slice(0, 8)}). Acompanhe abaixo.`);
+                  setFile(null);
+                  if (inputRef.current) inputRef.current.value = "";
+                  reset();
+                } catch (e: any) {
+                  const msg = e?.message ?? String(e);
+                  setErro(msg);
+                  toast.error("Falha ao arquivar: " + msg);
+                } finally {
+                  setArchiving(false);
+                }
+              }}
+              disabled={!file || archiving}
+            >
+              {archiving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Archive className="h-4 w-4 mr-2" />}
+              {archiving ? "Enviando..." : "Arquivar e enfileirar"}
+            </Button>
+          )}
           {(done || erro) && (
             <Button variant="ghost" onClick={() => { setFile(null); reset(); if (inputRef.current) inputRef.current.value = ""; }}>
               Novo upload
