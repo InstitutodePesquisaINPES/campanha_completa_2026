@@ -5193,6 +5193,87 @@ export type Database = {
           },
         ]
       }
+      tse_csv_arquivos: {
+        Row: {
+          ano: number
+          attempts: number
+          byte_cursor: number
+          chunk_size: number
+          created_at: string
+          created_by: string | null
+          error_msg: string | null
+          finished_at: string | null
+          header_line: string | null
+          id: string
+          linhas_processadas: number
+          municipios_filtro: string[] | null
+          nome_original: string
+          progress_pct: number
+          started_at: string | null
+          status: string
+          storage_path: string
+          tabela_destino: string
+          tamanho_bytes: number | null
+          tipo: string
+          total_linhas: number | null
+          uf: string
+          ultima_atividade_em: string | null
+          updated_at: string
+        }
+        Insert: {
+          ano: number
+          attempts?: number
+          byte_cursor?: number
+          chunk_size?: number
+          created_at?: string
+          created_by?: string | null
+          error_msg?: string | null
+          finished_at?: string | null
+          header_line?: string | null
+          id?: string
+          linhas_processadas?: number
+          municipios_filtro?: string[] | null
+          nome_original: string
+          progress_pct?: number
+          started_at?: string | null
+          status?: string
+          storage_path: string
+          tabela_destino: string
+          tamanho_bytes?: number | null
+          tipo: string
+          total_linhas?: number | null
+          uf: string
+          ultima_atividade_em?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ano?: number
+          attempts?: number
+          byte_cursor?: number
+          chunk_size?: number
+          created_at?: string
+          created_by?: string | null
+          error_msg?: string | null
+          finished_at?: string | null
+          header_line?: string | null
+          id?: string
+          linhas_processadas?: number
+          municipios_filtro?: string[] | null
+          nome_original?: string
+          progress_pct?: number
+          started_at?: string | null
+          status?: string
+          storage_path?: string
+          tabela_destino?: string
+          tamanho_bytes?: number | null
+          tipo?: string
+          total_linhas?: number | null
+          uf?: string
+          ultima_atividade_em?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tse_eleitorado: {
         Row: {
           ano: number
