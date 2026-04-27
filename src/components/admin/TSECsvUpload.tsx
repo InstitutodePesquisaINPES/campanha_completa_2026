@@ -27,15 +27,19 @@ type TipoDado =
   | "eleitorado_perfil"
   | "votacao_candidato_perfil";
 
-// Detecção automática do tipo de dado pelo cabeçalho do CSV
-function detectTipo(headers: string[]): TipoDado | null {
+// Detecção automática do tipo de dado pelo cabeçalho do CSV + nome do arquivo
+function detectTipo(headers: string[], filename = ""): TipoDado | null {
   const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
   const H = new Set(headers.map(norm));
   const has = (...ks: string[]) => ks.every((k) => H.has(norm(k)));
   const hasAny = (...ks: string[]) => ks.some((k) => H.has(norm(k)));
+  const file = norm(filename);
 
-  if (has("Nome candidato", "Votos nominais") && hasAny("Cor/raça", "Faixa etária", "Gênero", "Grau de instrução")) return "votacao_candidato_perfil";
-  if (has("Quantidade de eleitores") && hasAny("Cor / Raça", "Faixa etária", "Gênero", "Grau de instrução")) return "eleitorado_perfil";
+  if (file.includes("votacaocandidato") || (has("Nome candidato", "Votos nominais") && hasAny("Cor/raça", "Faixa etária", "Gênero", "Grau de instrução"))) return "votacao_candidato_perfil";
+  if (file.includes("perfileleitorado") || file.includes("eleitoradoeleicao") || (hasAny("Quantidade de eleitores", "QT_ELEITORES_PERFIL") && hasAny("Cor / Raça", "DS_COR_RACA", "Faixa etária", "DS_FAIXA_ETARIA", "Gênero", "DS_GENERO", "Grau de instrução", "DS_GRAU_ESCOLARIDADE"))) return "eleitorado_perfil";
+  if (file.includes("eleitoradolocalvotacao")) return "locais";
+  if (file.includes("consultacand")) return "candidatos";
+  if (file.includes("votacaosecao")) return "resultados";
   if (hasAny("NM_LOCAL_VOTACAO", "DS_LOCAL_VOTACAO")) return "locais";
   if (hasAny("NM_URNA_CANDIDATO", "NM_CANDIDATO") && hasAny("DS_CARGO", "CD_CARGO")) return "candidatos";
   if (hasAny("QT_VOTOS") && hasAny("NR_VOTAVEL")) return "resultados";
@@ -239,7 +243,7 @@ export function TSECsvUpload() {
       preview: 1,
       complete: (res) => {
         const headers = (res.meta.fields ?? []) as string[];
-        const det = detectTipo(headers);
+        const det = detectTipo(headers, f.name);
         if (det) {
           setTipoDetectado(det);
           setAutoDetect(true);
@@ -636,6 +640,7 @@ export function TSECsvUpload() {
               onClick={async () => {
                 if (!file) { toast.error("Selecione um arquivo"); return; }
                 setArchiving(true);
+                setProgress(0);
                 setErro(null);
                 try {
                   const arq = await arquivarCsvParaProcessamento({
@@ -644,6 +649,7 @@ export function TSECsvUpload() {
                     ano,
                     uf,
                     municipios_filtro: municipiosSelecionados.size > 0 ? Array.from(municipiosSelecionados) : null,
+                    onProgress: setProgress,
                   });
                   toast.success(`Arquivo enviado para a fila (${arq.id.slice(0, 8)}). Acompanhe abaixo.`);
                   setFile(null);

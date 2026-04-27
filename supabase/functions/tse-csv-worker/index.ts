@@ -39,9 +39,9 @@ const TABELA_DESTINO: Record<Tipo, string> = {
 
 const ON_CONFLICT: Record<string, string | undefined> = {
   tse_eleitorado: "ano,uf,cod_municipio_tse,zona,secao",
-  tse_locais_votacao: "ano,uf,zona,codigo_local",
+  tse_locais_votacao: "ano,uf,cod_municipio_tse,zona,codigo_local",
   tse_resultados_secao: "ano,turno,uf,cod_municipio_tse,zona,secao,cargo,numero_votavel",
-  tse_candidatos: undefined,
+  tse_candidatos: "ano,turno,uf,cod_municipio_tse,cargo,numero_urna",
   tse_eleitorado_perfil: undefined,
   tse_votacao_candidato_perfil: undefined,
 };
@@ -59,7 +59,7 @@ function detectTipoFromHeader(headerLine: string): Tipo | null {
 
   if (has("Nome candidato", "Votos nominais") && hasAny("Cor/raça", "Faixa etária", "Gênero", "Grau de instrução"))
     return "votacao_candidato_perfil";
-  if (hasAny("Quantidade de eleitores") && hasAny("Cor / Raça", "Faixa etária", "Gênero", "Grau de instrução"))
+  if (hasAny("Quantidade de eleitores", "QT_ELEITORES_PERFIL", "QT_ELEITORES") && hasAny("Cor / Raça", "DS_COR_RACA", "Faixa etária", "DS_FAIXA_ETARIA", "Gênero", "DS_GENERO", "Grau de instrução", "DS_GRAU_ESCOLARIDADE"))
     return "eleitorado_perfil";
   if (hasAny("NM_LOCAL_VOTACAO", "DS_LOCAL_VOTACAO", "NR_LOCAL_VOTACAO")) return "locais";
   if (hasAny("NM_URNA_CANDIDATO", "NM_CANDIDATO") && hasAny("DS_CARGO", "CD_CARGO")) return "candidatos";
@@ -80,6 +80,12 @@ function s(v: any): string | null {
   if (!t || t === "#NULO#" || t === "#NE#") return null;
   return t;
 }
+function dateText(v: any): string | null {
+  const t = s(v);
+  if (!t) return null;
+  const br = t.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  return br ? `${br[3]}-${br[2]}-${br[1]}` : t;
+}
 function pick(row: any, ...keys: string[]): any {
   for (const k of keys) if (row[k] !== undefined) return row[k];
   const norm = (x: string) =>
@@ -99,18 +105,18 @@ function mapRow(tipo: Tipo, ano: number, uf: string, row: any): Record<string, a
         ano: n(pick(row, "Ano de eleição", "Ano de eleicao", "ANO_ELEICAO")) ?? ano,
         uf: ufRow,
         regiao: s(pick(row, "Região", "Regiao")),
-        municipio: s(pick(row, "Município", "Municipio")),
+        municipio: s(pick(row, "Município", "Municipio", "NM_MUNICIPIO", "NM_UE")),
         pais: s(pick(row, "País", "Pais")),
-        cor_raca: s(pick(row, "Cor / Raça", "Cor/Raça", "Cor / Raca", "Cor/Raca")),
-        estado_civil: s(pick(row, "Estado civil")),
-        faixa_etaria: s(pick(row, "Faixa etária", "Faixa etaria")),
-        genero: s(pick(row, "Gênero", "Genero")),
-        grau_instrucao: s(pick(row, "Grau de instrução", "Grau de instrucao")),
-        identidade_genero: s(pick(row, "Identidade de gênero", "Identidade de genero")),
-        interprete_libras: s(pick(row, "Intérprete de libras", "Interprete de libras")),
-        quilombola: s(pick(row, "Quilombola")),
-        quantidade_eleitores: n(pick(row, "Quantidade de eleitores")) ?? 0,
-        data_carga: s(pick(row, "Data de carga")),
+        cor_raca: s(pick(row, "Cor / Raça", "Cor/Raça", "Cor / Raca", "Cor/Raca", "DS_COR_RACA")),
+        estado_civil: s(pick(row, "Estado civil", "DS_ESTADO_CIVIL")),
+        faixa_etaria: s(pick(row, "Faixa etária", "Faixa etaria", "DS_FAIXA_ETARIA")),
+        genero: s(pick(row, "Gênero", "Genero", "DS_GENERO")),
+        grau_instrucao: s(pick(row, "Grau de instrução", "Grau de instrucao", "DS_GRAU_ESCOLARIDADE")),
+        identidade_genero: s(pick(row, "Identidade de gênero", "Identidade de genero", "DS_IDENTIDADE_GENERO")),
+        interprete_libras: s(pick(row, "Intérprete de libras", "Interprete de libras", "DS_INTERPRETE_LIBRAS")),
+        quilombola: s(pick(row, "Quilombola", "DS_QUILOMBOLA")),
+        quantidade_eleitores: n(pick(row, "Quantidade de eleitores", "QT_ELEITORES_PERFIL", "QT_ELEITORES")) ?? 0,
+        data_carga: dateText(pick(row, "Data de carga", "DT_GERACAO", "DT_CARGA")),
       };
     case "votacao_candidato_perfil":
       return {
@@ -220,6 +226,7 @@ Deno.serve(async (req) => {
 
   const t0 = Date.now();
   const timeLeft = () => TIME_BUDGET_MS - (Date.now() - t0);
+  let arquivoAtual: any = null;
 
   try {
     // 1) Pega 1 arquivo pendente (FIFO)
@@ -232,6 +239,7 @@ Deno.serve(async (req) => {
     if (e1) throw e1;
 
     const arquivo = arquivos?.[0];
+    arquivoAtual = arquivo;
     if (!arquivo) {
       return json({ ok: true, picked: 0, msg: "sem arquivos pendentes" });
     }
@@ -295,7 +303,9 @@ Deno.serve(async (req) => {
       const end = cursor + RANGE_BYTES - 1;
       const bytes = await downloadRange(admin, arquivo.storage_path, cursor, end);
       if (bytes.byteLength === 0) break;
-      const text = leftover + decoder.decode(bytes);
+      // Mantém o cursor no início da linha incompleta e rebaixa essa linha no próximo range.
+      // Não concatenamos leftover para não duplicar pedaços de linhas entre chunks.
+      const text = decoder.decode(bytes);
 
       // separa em linhas; última pode estar incompleta -> guarda
       const lastNl = text.lastIndexOf("\n");
@@ -347,11 +357,9 @@ Deno.serve(async (req) => {
       }
 
       // avança cursor pelos bytes consumidos do range (apenas a parte completa)
-      const consumedFromRange =
-        byteLengthLatin1(text) - byteLengthLatin1(leftover) - byteLengthLatin1(leftover === text ? "" : "");
       // Mais simples e correto: avançamos pela parte completa em bytes (sem o header que adicionamos manualmente)
       const advanceBytes = byteLengthLatin1(completePart) + 1; // +1 do \n final
-      cursor += Math.min(bytes.byteLength, advanceBytes + (text.length - completePart.length - leftover.length));
+      cursor += Math.min(bytes.byteLength, advanceBytes);
       // Garante progresso mínimo
       if (cursor <= arquivo.byte_cursor) cursor = arquivo.byte_cursor + bytes.byteLength;
 
@@ -411,6 +419,14 @@ Deno.serve(async (req) => {
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("worker fatal:", msg);
+    if (arquivoAtual?.id) {
+      try {
+        await createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!)
+          .from("tse_csv_arquivos")
+          .update({ status: "erro", error_msg: msg, ultima_atividade_em: new Date().toISOString() })
+          .eq("id", arquivoAtual.id);
+      } catch (_) {}
+    }
     return json({ ok: false, error: msg }, 200);
   }
 });

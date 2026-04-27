@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import * as tus from "tus-js-client";
 
 export type TseCsvStatus =
   | "aguardando"
@@ -173,23 +174,49 @@ export async function arquivarCsvParaProcessamento(opts: {
   onProgress?: (pct: number) => void;
 }): Promise<TseCsvArquivo> {
   const { file, tipo, ano, uf } = opts;
+  const { data: sessionData } = await supabase.auth.getSession();
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData?.user?.id;
   if (!userId) throw new Error("Usuário não autenticado");
+  const token = sessionData.session?.access_token;
+  if (!token) throw new Error("Sessão expirada. Entre novamente para enviar arquivos grandes.");
 
   const ts = new Date().toISOString().replace(/[:.]/g, "-");
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
   const storage_path = `${userId}/${ts}_${safeName}`;
 
-  const { error: upErr } = await supabase.storage
-    .from("tse-csv-uploads")
-    .upload(storage_path, file, {
-      cacheControl: "3600",
-      upsert: false,
-      contentType: "text/csv",
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://lryjfthdzmrgudamuqiu.supabase.co";
+  const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "";
+
+  await new Promise<void>((resolve, reject) => {
+    const upload = new tus.Upload(file, {
+      endpoint: `${supabaseUrl}/storage/v1/upload/resumable`,
+      retryDelays: [0, 1000, 3000, 5000, 10000, 20000],
+      chunkSize: 6 * 1024 * 1024,
+      removeFingerprintOnSuccess: true,
+      headers: {
+        authorization: `Bearer ${token}`,
+        apikey: anonKey,
+        "x-upsert": "false",
+      },
+      metadata: {
+        bucketName: "tse-csv-uploads",
+        objectName: storage_path,
+        contentType: file.type || "text/csv",
+        cacheControl: "3600",
+      },
+      onError: (error) => reject(error),
+      onProgress: (sent, total) => opts.onProgress?.(Math.min(99, Math.round((sent / total) * 100))),
+      onSuccess: () => {
+        opts.onProgress?.(100);
+        resolve();
+      },
     });
-  if (upErr) throw upErr;
-  opts.onProgress?.(100);
+    upload.findPreviousUploads().then((previous) => {
+      if (previous.length) upload.resumeFromPreviousUpload(previous[0]);
+      upload.start();
+    }).catch(reject);
+  });
 
   const { data, error } = await supabase
     .from("tse_csv_arquivos")
