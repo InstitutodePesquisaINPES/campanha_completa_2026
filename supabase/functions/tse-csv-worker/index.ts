@@ -16,9 +16,16 @@ const corsHeaders = {
 };
 
 const BUCKET = "tse-csv-uploads";
-const RANGE_BYTES = 256 * 1024; // 256KB por execução — mantém CPU abaixo do limite do Edge Runtime
+const RANGE_BYTES = 64 * 1024; // 64KB por execução — evita 504 do Storage e estouro de CPU
 const STALE_PROCESSING_MS = 2 * 60_000;
-const SUBLOTE = 50;
+const SUBLOTE = 25;
+
+class TransientStorageError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "TransientStorageError";
+  }
+}
 
 type Tipo =
   | "eleitorado_perfil"
@@ -238,23 +245,32 @@ Deno.serve(async (req) => {
       .limit(1);
     if (e1) throw e1;
 
-    const arquivo = arquivos?.[0];
-    arquivoAtual = arquivo;
-    if (!arquivo) {
+    const candidato = arquivos?.[0];
+    arquivoAtual = candidato;
+    if (!candidato) {
       return json({ ok: true, picked: 0, msg: "sem arquivos pendentes" });
     }
 
-    // Marca como processando + incrementa attempts. Cada chamada processa só um slice curto e sai.
-    await admin
+    // Claim atômico: evita duas abas/intervalos processarem o mesmo cursor em paralelo.
+    const claimFilter = `status.eq.aguardando,and(status.eq.processando,ultima_atividade_em.lt.${staleIso})`;
+    const { data: arquivo, error: claimError } = await admin
       .from("tse_csv_arquivos")
       .update({
         status: "processando",
-        started_at: arquivo.started_at ?? new Date().toISOString(),
+        started_at: candidato.started_at ?? new Date().toISOString(),
         ultima_atividade_em: new Date().toISOString(),
-        attempts: (arquivo.attempts ?? 0) + 1,
+        attempts: (candidato.attempts ?? 0) + 1,
         error_msg: null,
       })
-      .eq("id", arquivo.id);
+      .eq("id", candidato.id)
+      .or(claimFilter)
+      .select("*")
+      .maybeSingle();
+    if (claimError) throw claimError;
+    if (!arquivo) {
+      return json({ ok: true, picked: 0, msg: "arquivo já está em processamento" });
+    }
+    arquivoAtual = arquivo;
 
     let tipo = arquivo.tipo as Tipo;
     let tabela = arquivo.tabela_destino as string;
@@ -300,8 +316,21 @@ Deno.serve(async (req) => {
 
     // 3) Processa apenas um slice curto por chamada. O cron/cliente chama de novo e retoma pelo cursor.
     if (cursor < totalBytes) {
-      const end = Math.min(totalBytes - 1, cursor + RANGE_BYTES - 1);
-      const bytes = await downloadRange(admin, partsInfo, cursor, end);
+      let bytes: Uint8Array<ArrayBufferLike> = new Uint8Array();
+      let requestedEnd = Math.min(totalBytes - 1, cursor + RANGE_BYTES - 1);
+
+      // Se um range específico do Storage der 504, reduzimos o range nesta mesma execução
+      // e tentamos novamente sem marcar o arquivo como erro definitivo.
+      for (let size = RANGE_BYTES; size >= 8 * 1024; size = Math.floor(size / 2)) {
+        requestedEnd = Math.min(totalBytes - 1, cursor + size - 1);
+        try {
+          bytes = await downloadRange(admin, partsInfo, cursor, requestedEnd);
+          break;
+        } catch (err) {
+          if (!(err instanceof TransientStorageError) || size <= 8 * 1024) throw err;
+          console.warn(`[storage transient] ${(err as Error).message}; retrying smaller range=${Math.floor(size / 2)}`);
+        }
+      }
 
       if (bytes.byteLength > 0) {
         const text = decoder.decode(bytes);
@@ -422,9 +451,14 @@ Deno.serve(async (req) => {
     console.error("worker fatal:", msg);
     if (arquivoAtual?.id) {
       try {
+        const isTransient = e instanceof TransientStorageError || /HTTP 5\d\d|timeout|temporarily|fetch/i.test(msg);
         await createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!)
           .from("tse_csv_arquivos")
-          .update({ status: "erro", error_msg: msg, ultima_atividade_em: new Date().toISOString() })
+          .update({
+            status: isTransient ? "aguardando" : "erro",
+            error_msg: isTransient ? `Falha temporária no Storage; tentando novamente. ${msg}` : msg,
+            ultima_atividade_em: new Date().toISOString(),
+          })
           .eq("id", arquivoAtual.id);
       } catch (_) {}
     }
@@ -494,6 +528,9 @@ async function downloadOneRange(
   const res = await fetch(data.signedUrl, {
     headers: { Range: `bytes=${start}-${end}` },
   });
+  if (res.status === 429 || res.status === 500 || res.status === 502 || res.status === 503 || res.status === 504) {
+    throw new TransientStorageError(`storage range ${start}-${end} (${path}): HTTP ${res.status}`);
+  }
   if (!res.ok && res.status !== 206 && res.status !== 200) {
     throw new Error(`storage range ${start}-${end} (${path}): HTTP ${res.status}`);
   }
