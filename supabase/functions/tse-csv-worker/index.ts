@@ -261,9 +261,10 @@ Deno.serve(async (req) => {
     let onConflict = ON_CONFLICT[tabela];
 
     // 2) Garante que temos o header (linha 1) salvo no registro
+    const partsInfo = getPartsInfo(arquivo);
     let header = arquivo.header_line as string | null;
     if (!header) {
-      const headBytes = await downloadRange(admin, arquivo.storage_path, 0, 64 * 1024 - 1);
+      const headBytes = await downloadRange(admin, partsInfo, 0, 64 * 1024 - 1);
       const headText = decoder.decode(headBytes);
       const idxNl = headText.indexOf("\n");
       if (idxNl < 0) throw new Error("CSV sem quebras de linha nos primeiros 64KB");
@@ -301,7 +302,7 @@ Deno.serve(async (req) => {
     while (timeLeft() > 5000) {
       if (cursor >= (arquivo.tamanho_bytes ?? Number.POSITIVE_INFINITY)) break;
       const end = cursor + RANGE_BYTES - 1;
-      const bytes = await downloadRange(admin, arquivo.storage_path, cursor, end);
+      const bytes = await downloadRange(admin, partsInfo, cursor, end);
       if (bytes.byteLength === 0) break;
       // Mantém o cursor no início da linha incompleta e rebaixa essa linha no próximo range.
       // Não concatenamos leftover para não duplicar pedaços de linhas entre chunks.
@@ -431,23 +432,72 @@ Deno.serve(async (req) => {
   }
 });
 
+// Lista de partes do arquivo lógico. Quando upload em partes está ativo,
+// o "arquivo" é a concatenação virtual de várias partes do storage.
+type PartsInfo = { paths: string[]; sizes: number[] };
+
+function getPartsInfo(arquivo: any): PartsInfo {
+  const paths = Array.isArray(arquivo.parts_paths) && arquivo.parts_paths.length > 0
+    ? (arquivo.parts_paths as string[])
+    : [arquivo.storage_path as string];
+  const sizes = Array.isArray(arquivo.parts_sizes) && arquivo.parts_sizes.length === paths.length
+    ? (arquivo.parts_sizes as number[])
+    : [arquivo.tamanho_bytes ?? 0];
+  return { paths, sizes };
+}
+
 async function downloadRange(
+  admin: any,
+  pathOrParts: string | PartsInfo,
+  start: number,
+  end: number,
+): Promise<Uint8Array> {
+  // Modo legado: 1 único objeto
+  if (typeof pathOrParts === "string") {
+    return await downloadOneRange(admin, pathOrParts, start, end);
+  }
+  const { paths, sizes } = pathOrParts;
+
+  // Mapeia [start..end] global em sub-ranges por parte
+  const chunks: Uint8Array[] = [];
+  let cursor = 0;
+  for (let i = 0; i < paths.length; i++) {
+    const partStart = cursor;
+    const partEnd = cursor + sizes[i] - 1;
+    cursor = partEnd + 1;
+    if (partEnd < start) continue; // ainda não chegamos
+    if (partStart > end) break;    // já passamos
+
+    const localStart = Math.max(0, start - partStart);
+    const localEnd = Math.min(sizes[i] - 1, end - partStart);
+    const buf = await downloadOneRange(admin, paths[i], localStart, localEnd);
+    chunks.push(buf);
+  }
+  if (chunks.length === 0) return new Uint8Array();
+  if (chunks.length === 1) return chunks[0];
+  // Concatena
+  const total = chunks.reduce((a, b) => a + b.byteLength, 0);
+  const out = new Uint8Array(total);
+  let off = 0;
+  for (const c of chunks) { out.set(c, off); off += c.byteLength; }
+  return out;
+}
+
+async function downloadOneRange(
   admin: any,
   path: string,
   start: number,
   end: number,
 ): Promise<Uint8Array> {
-  // supabase-js não expõe Range no .download — usamos createSignedUrl + fetch
   const { data, error } = await admin.storage.from(BUCKET).createSignedUrl(path, 120);
   if (error) throw error;
   const res = await fetch(data.signedUrl, {
     headers: { Range: `bytes=${start}-${end}` },
   });
   if (!res.ok && res.status !== 206 && res.status !== 200) {
-    throw new Error(`storage range ${start}-${end}: HTTP ${res.status}`);
+    throw new Error(`storage range ${start}-${end} (${path}): HTTP ${res.status}`);
   }
-  const buf = new Uint8Array(await res.arrayBuffer());
-  return buf;
+  return new Uint8Array(await res.arrayBuffer());
 }
 
 function byteLengthLatin1(s: string): number {
