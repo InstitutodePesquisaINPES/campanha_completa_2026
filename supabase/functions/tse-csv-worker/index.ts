@@ -39,9 +39,9 @@ const TABELA_DESTINO: Record<Tipo, string> = {
 
 const ON_CONFLICT: Record<string, string | undefined> = {
   tse_eleitorado: "ano,uf,cod_municipio_tse,zona,secao",
-  tse_locais_votacao: "ano,uf,zona,codigo_local",
+  tse_locais_votacao: "ano,uf,cod_municipio_tse,zona,codigo_local",
   tse_resultados_secao: "ano,turno,uf,cod_municipio_tse,zona,secao,cargo,numero_votavel",
-  tse_candidatos: undefined,
+  tse_candidatos: "ano,turno,uf,cod_municipio_tse,cargo,numero_urna",
   tse_eleitorado_perfil: undefined,
   tse_votacao_candidato_perfil: undefined,
 };
@@ -80,6 +80,12 @@ function s(v: any): string | null {
   if (!t || t === "#NULO#" || t === "#NE#") return null;
   return t;
 }
+function dateText(v: any): string | null {
+  const t = s(v);
+  if (!t) return null;
+  const br = t.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  return br ? `${br[3]}-${br[2]}-${br[1]}` : t;
+}
 function pick(row: any, ...keys: string[]): any {
   for (const k of keys) if (row[k] !== undefined) return row[k];
   const norm = (x: string) =>
@@ -99,18 +105,18 @@ function mapRow(tipo: Tipo, ano: number, uf: string, row: any): Record<string, a
         ano: n(pick(row, "Ano de eleição", "Ano de eleicao", "ANO_ELEICAO")) ?? ano,
         uf: ufRow,
         regiao: s(pick(row, "Região", "Regiao")),
-        municipio: s(pick(row, "Município", "Municipio")),
+        municipio: s(pick(row, "Município", "Municipio", "NM_MUNICIPIO", "NM_UE")),
         pais: s(pick(row, "País", "Pais")),
-        cor_raca: s(pick(row, "Cor / Raça", "Cor/Raça", "Cor / Raca", "Cor/Raca")),
-        estado_civil: s(pick(row, "Estado civil")),
-        faixa_etaria: s(pick(row, "Faixa etária", "Faixa etaria")),
-        genero: s(pick(row, "Gênero", "Genero")),
-        grau_instrucao: s(pick(row, "Grau de instrução", "Grau de instrucao")),
-        identidade_genero: s(pick(row, "Identidade de gênero", "Identidade de genero")),
-        interprete_libras: s(pick(row, "Intérprete de libras", "Interprete de libras")),
-        quilombola: s(pick(row, "Quilombola")),
-        quantidade_eleitores: n(pick(row, "Quantidade de eleitores")) ?? 0,
-        data_carga: s(pick(row, "Data de carga")),
+        cor_raca: s(pick(row, "Cor / Raça", "Cor/Raça", "Cor / Raca", "Cor/Raca", "DS_COR_RACA")),
+        estado_civil: s(pick(row, "Estado civil", "DS_ESTADO_CIVIL")),
+        faixa_etaria: s(pick(row, "Faixa etária", "Faixa etaria", "DS_FAIXA_ETARIA")),
+        genero: s(pick(row, "Gênero", "Genero", "DS_GENERO")),
+        grau_instrucao: s(pick(row, "Grau de instrução", "Grau de instrucao", "DS_GRAU_ESCOLARIDADE")),
+        identidade_genero: s(pick(row, "Identidade de gênero", "Identidade de genero", "DS_IDENTIDADE_GENERO")),
+        interprete_libras: s(pick(row, "Intérprete de libras", "Interprete de libras", "DS_INTERPRETE_LIBRAS")),
+        quilombola: s(pick(row, "Quilombola", "DS_QUILOMBOLA")),
+        quantidade_eleitores: n(pick(row, "Quantidade de eleitores", "QT_ELEITORES_PERFIL", "QT_ELEITORES")) ?? 0,
+        data_carga: dateText(pick(row, "Data de carga", "DT_GERACAO", "DT_CARGA")),
       };
     case "votacao_candidato_perfil":
       return {
