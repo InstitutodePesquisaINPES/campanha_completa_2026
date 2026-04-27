@@ -16,9 +16,9 @@ const corsHeaders = {
 };
 
 const BUCKET = "tse-csv-uploads";
-const RANGE_BYTES = 5 * 1024 * 1024; // 5MB por chunk de leitura
-const TIME_BUDGET_MS = 50_000;
-const SUBLOTE = 250;
+const RANGE_BYTES = 1 * 1024 * 1024; // 1MB por chunk — evita estouro de memória do worker
+const TIME_BUDGET_MS = 40_000;
+const SUBLOTE = 100;
 
 type Tipo =
   | "eleitorado_perfil"
@@ -356,7 +356,15 @@ Deno.serve(async (req) => {
           buffer = [];
         }
       }
-
+      // Flush imediato ao fim de cada range para não acumular memória entre iterações
+      if (buffer.length > 0) {
+        const ins = await flushBuffer(admin, tabela, buffer, onConflict);
+        totalInseridoSessao += ins;
+        linhasProcessadas += buffer.length;
+        buffer = [];
+      }
+      // libera referências grandes antes do próximo range
+      (rows as any).length = 0;
       // avança cursor pelos bytes consumidos do range (apenas a parte completa)
       // Mais simples e correto: avançamos pela parte completa em bytes (sem o header que adicionamos manualmente)
       const advanceBytes = byteLengthLatin1(completePart) + 1; // +1 do \n final
