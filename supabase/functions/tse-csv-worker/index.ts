@@ -316,7 +316,7 @@ Deno.serve(async (req) => {
 
     // 3) Processa apenas um slice curto por chamada. O cron/cliente chama de novo e retoma pelo cursor.
     if (cursor < totalBytes) {
-      let bytes = new Uint8Array();
+      let bytes: Uint8Array<ArrayBufferLike> = new Uint8Array();
       let requestedEnd = Math.min(totalBytes - 1, cursor + RANGE_BYTES - 1);
 
       // Se um range específico do Storage der 504, reduzimos o range nesta mesma execução
