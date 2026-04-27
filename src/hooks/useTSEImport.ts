@@ -59,19 +59,18 @@ export function useTSEStats() {
   return useQuery({
     queryKey: ["tse-stats"],
     queryFn: async () => {
-      const [el, ca, re, lo, pc] = await Promise.all([
-        supabase.from("tse_eleitorado").select("*", { count: "exact", head: true }),
-        supabase.from("tse_candidatos").select("*", { count: "exact", head: true }),
-        supabase.from("tse_resultados_secao").select("*", { count: "exact", head: true }),
-        supabase.from("tse_locais_votacao").select("*", { count: "exact", head: true }),
-        supabase.from("tse_prestacao_contas").select("*", { count: "exact", head: true }),
-      ]);
+      // RPC consolidada: soma real de eleitores e candidatos únicos,
+      // unificando tabelas agregadas (tse_eleitorado/tse_candidatos)
+      // e detalhadas (tse_eleitorado_perfil/tse_votacao_candidato_perfil).
+      const { data, error } = await supabase.rpc("tse_estatisticas_globais" as any);
+      if (error) throw error;
+      const row: any = Array.isArray(data) ? data[0] : data;
       return {
-        eleitorado: el.count ?? 0,
-        candidatos: ca.count ?? 0,
-        resultados: re.count ?? 0,
-        locais: lo.count ?? 0,
-        prestacao_contas: pc.count ?? 0,
+        eleitorado: Number(row?.eleitorado ?? 0),
+        candidatos: Number(row?.candidatos ?? 0),
+        resultados: Number(row?.resultados ?? 0),
+        locais: Number(row?.locais ?? 0),
+        prestacao_contas: Number(row?.prestacao_contas ?? 0),
       };
     },
     refetchInterval: 5000,
