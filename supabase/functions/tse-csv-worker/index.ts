@@ -365,6 +365,20 @@ Deno.serve(async (req) => {
       }
     }
 
+    const pctAtual = arquivo.tamanho_bytes
+      ? Math.min(99, Math.round((cursor / arquivo.tamanho_bytes) * 100))
+      : 0;
+    await admin
+      .from("tse_csv_arquivos")
+      .update({
+        status: cursor >= totalBytes ? "processando" : "aguardando",
+        byte_cursor: cursor,
+        linhas_processadas: linhasProcessadas,
+        progress_pct: pctAtual,
+        ultima_atividade_em: new Date().toISOString(),
+      })
+      .eq("id", arquivo.id);
+
     // Flush final defensivo
     if (buffer.length > 0) {
       const ins = await flushBuffer(admin, tabela, buffer, onConflict);
