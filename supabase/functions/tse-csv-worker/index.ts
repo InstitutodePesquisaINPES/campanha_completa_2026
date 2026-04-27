@@ -68,9 +68,11 @@ function detectTipoFromHeader(headerLine: string): Tipo | null {
     return "votacao_candidato_perfil";
   if (hasAny("Quantidade de eleitores", "QT_ELEITORES_PERFIL", "QT_ELEITORES") && hasAny("Cor / Raça", "DS_COR_RACA", "Faixa etária", "DS_FAIXA_ETARIA", "Gênero", "DS_GENERO", "Grau de instrução", "DS_GRAU_ESCOLARIDADE"))
     return "eleitorado_perfil";
-  if (hasAny("NM_LOCAL_VOTACAO", "DS_LOCAL_VOTACAO", "NR_LOCAL_VOTACAO")) return "locais";
-  if (hasAny("NM_URNA_CANDIDATO", "NM_CANDIDATO") && hasAny("DS_CARGO", "CD_CARGO")) return "candidatos";
+  // Resultados ANTES de locais: arquivos de votacao_secao têm NR_LOCAL_VOTACAO + QT_VOTOS, mas são resultados.
   if (hasAny("QT_VOTOS") && hasAny("NR_VOTAVEL")) return "resultados";
+  if (hasAny("NM_LOCAL_VOTACAO", "DS_LOCAL_VOTACAO") && !hasAny("QT_VOTOS")) return "locais";
+  if (hasAny("NR_LOCAL_VOTACAO") && !hasAny("QT_VOTOS", "NR_VOTAVEL")) return "locais";
+  if (hasAny("NM_URNA_CANDIDATO", "NM_CANDIDATO") && hasAny("DS_CARGO", "CD_CARGO") && !hasAny("QT_VOTOS")) return "candidatos";
   if (hasAny("QT_ELEITORES_PERFIL", "QT_ELEITORES")) return "eleitorado";
   return null;
 }
