@@ -6722,6 +6722,7 @@ export type Database = {
         Args: { _ano?: number; _uf?: string; _votos_min?: number }
         Returns: number
       }
+      tse_cint: { Args: { def: number; i: number }; Returns: number }
       tse_comparativo_eleicoes: {
         Args: { _cargo?: string; _municipio?: string; _uf?: string }
         Returns: {
@@ -6732,6 +6733,7 @@ export type Database = {
           total_votos_nominais: number
         }[]
       }
+      tse_cstr: { Args: { t: string }; Returns: string }
       tse_dashboard_kpis: {
         Args: { _ano?: number; _uf?: string }
         Returns: Json
