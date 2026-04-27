@@ -16,9 +16,9 @@ const corsHeaders = {
 };
 
 const BUCKET = "tse-csv-uploads";
-const RANGE_BYTES = 5 * 1024 * 1024; // 5MB por chunk de leitura
-const TIME_BUDGET_MS = 50_000;
-const SUBLOTE = 250;
+const RANGE_BYTES = 1 * 1024 * 1024; // 1MB por chunk — evita estouro de memória do worker
+const TIME_BUDGET_MS = 40_000;
+const SUBLOTE = 100;
 
 type Tipo =
   | "eleitorado_perfil"
