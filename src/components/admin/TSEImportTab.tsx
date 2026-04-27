@@ -13,6 +13,7 @@ import { Database, Play, RefreshCw, X, Activity, Loader2 } from "lucide-react";
 import { useEnqueueTSE, useTSEJobs, useTSEStats, useRunWorker, useCancelTSEJob, useTSEJobLogs, type TseJobTipo, type TseImportJob } from "@/hooks/useTSEImport";
 import { toast } from "sonner";
 import { TSECsvUpload } from "./TSECsvUpload";
+import { TSECsvArquivosList } from "./TSECsvArquivosList";
 import { TSEDadosResumo } from "./TSEDadosResumo";
 import { IBGEImportPanel } from "./IBGEImportPanel";
 
