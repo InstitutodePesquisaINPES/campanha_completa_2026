@@ -590,7 +590,9 @@ async function flushBuffer(
         break;
       }
       if (!/deadlock|timeout|connection|temporarily/i.test(msg) || attempt >= 3) {
-        throw new Error("ingest: " + msg);
+        // Nunca travar: registra e pula este sublote
+        console.warn(`[ingest skip ${tabela}] ${msg.slice(0, 200)}`);
+        break;
       }
       attempt++;
       await new Promise((r) => setTimeout(r, 300 * Math.pow(2, attempt)));
