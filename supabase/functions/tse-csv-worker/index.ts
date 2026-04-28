@@ -354,15 +354,20 @@ Deno.serve(async (req) => {
               trim: false,
             });
           } catch (err) {
+            // Nunca travar: anota o erro, avança o cursor para pular este bloco e continua
+            console.warn("[parse skip]", (err as Error).message);
+            const advance = lastNl >= 0 ? byteLengthLatin1(completePart) + 1 : bytes.byteLength;
+            cursor += Math.min(bytes.byteLength, advance);
             await admin
               .from("tse_csv_arquivos")
               .update({
-                status: "erro",
-                error_msg: "parse: " + (err as Error).message,
+                status: "aguardando",
+                byte_cursor: cursor,
+                error_msg: "parse pulado: " + (err as Error).message.slice(0, 200),
                 ultima_atividade_em: new Date().toISOString(),
               })
               .eq("id", arquivo.id);
-            return json({ ok: false, error: "parse error", arquivo: arquivo.id });
+            return json({ ok: true, skipped: true, arquivo: arquivo.id, cursor });
           }
 
           for (const row of rows) {
