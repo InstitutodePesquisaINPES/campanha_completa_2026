@@ -530,13 +530,25 @@ async function downloadOneRange(
   const res = await fetch(data.signedUrl, {
     headers: { Range: `bytes=${start}-${end}` },
   });
-  if (res.status === 429 || res.status === 500 || res.status === 502 || res.status === 503 || res.status === 504) {
+  const ct = res.headers.get("content-type") || "";
+  // Storage às vezes responde HTML em erros de gateway/CDN — tratar como transitório
+  if (ct.includes("text/html") || ct.includes("application/xml")) {
+    let snippet = "";
+    try { snippet = (await res.text()).slice(0, 120); } catch (_) {}
+    throw new TransientStorageError(`storage range ${start}-${end} (${path}): non-binary response (${ct}) ${snippet}`);
+  }
+  if (res.status === 429 || res.status >= 500) {
     throw new TransientStorageError(`storage range ${start}-${end} (${path}): HTTP ${res.status}`);
   }
   if (!res.ok && res.status !== 206 && res.status !== 200) {
-    throw new Error(`storage range ${start}-${end} (${path}): HTTP ${res.status}`);
+    // Em vez de marcar como erro fatal, tratar como transitório para nunca travar a fila
+    throw new TransientStorageError(`storage range ${start}-${end} (${path}): HTTP ${res.status}`);
   }
-  return new Uint8Array(await res.arrayBuffer());
+  try {
+    return new Uint8Array(await res.arrayBuffer());
+  } catch (err) {
+    throw new TransientStorageError(`storage range ${start}-${end} (${path}): body read failed: ${(err as Error).message}`);
+  }
 }
 
 function byteLengthLatin1(s: string): number {
