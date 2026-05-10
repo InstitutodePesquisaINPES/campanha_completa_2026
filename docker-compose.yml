@@ -10,12 +10,10 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-kiribamba_admin}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-Sistema@1@2@3}
       POSTGRES_DB: ${POSTGRES_DB:-kiribamba}
-    ports:
-      - "5432:5432"
     volumes:
       - kiribamba_pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U kiribamba_admin -d kiribamba"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -25,8 +23,6 @@ services:
     image: redis:7-alpine
     container_name: kiribamba_redis
     restart: always
-    ports:
-      - "6379:6379"
     volumes:
       - kiribamba_redisdata:/data
     command: redis-server --appendonly yes
@@ -48,8 +44,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    ports:
-      - "3001:3001"
+    expose:
+      - "3001"
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://${POSTGRES_USER:-kiribamba_admin}:${POSTGRES_PASSWORD:-Sistema@1@2@3}@postgres:5432/${POSTGRES_DB:-kiribamba}?schema=public
@@ -70,10 +66,8 @@ services:
     restart: always
     depends_on:
       - api
-    ports:
-      - "80:80"
-    environment:
-      - VITE_API_URL=http://localhost:3001
+    expose:
+      - "80"
 
 volumes:
   kiribamba_pgdata:
