@@ -602,10 +602,17 @@ model CampanhaEstrategia {
   orcamentoGlobal   Float?   @map("orcamento_global")
   dataEleicao       DateTime? @map("data_eleicao")
   status            String   @default("planejamento") // planejamento, ativa, concluida
+  abrangencia       String   @default("municipal") // nacional, estadual, municipal, zonal
+  estadoId          String?  @map("estado_id") @db.Uuid
+  municipioId       String?  @map("municipio_id") @db.Uuid
+  parentCampanhaId  String?  @map("parent_campanha_id") @db.Uuid
   createdBy         String?  @map("created_by") @db.Uuid
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
 
+  parentCampanha    CampanhaEstrategia?  @relation("SubCampanhas", fields: [parentCampanhaId], references: [id], onDelete: SetNull)
+  subCampanhas      CampanhaEstrategia[] @relation("SubCampanhas")
+  parcerias         CampanhaParceria[]
   eixos             EixoEstrategico[]
 
   @@map("campanhas_estrategias")
@@ -652,3 +659,20 @@ model PlanoAcao {
 
   @@map("planos_acao")
 }
+
+model CampanhaParceria {
+  id                    String   @id @default(uuid()) @db.Uuid
+  campanhaId            String   @map("campanha_id") @db.Uuid
+  candidatoParceiroNome String   @map("candidato_parceiro_nome")
+  cargoParceiro         String   @map("cargo_parceiro")
+  municipioId           String?  @map("municipio_id") @db.Uuid
+  pesoEstrategico       Int      @default(3) @map("peso_estrategico") // 1 a 5 estrelas
+  observacoes           String?
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  campanha              CampanhaEstrategia @relation(fields: [campanhaId], references: [id], onDelete: Cascade)
+
+  @@map("campanhas_parcerias")
+}
+

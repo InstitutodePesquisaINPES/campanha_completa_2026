@@ -17,9 +17,24 @@ export class StrategyService {
   }
 
   async getCampanhas() {
+    // Retorna a hierarquia (Apenas Campanhas Master com suas filhas)
     return this.prisma.campanhaEstrategia.findMany({
+      where: { parentCampanhaId: null },
       include: {
         eixos: true,
+        subCampanhas: {
+          include: { eixos: true, parcerias: true }
+        },
+        parcerias: true,
+      },
+    });
+  }
+
+  async createParceria(campanhaId: string, data: any) {
+    return this.prisma.campanhaParceria.create({
+      data: {
+        ...data,
+        campanhaId,
       },
     });
   }

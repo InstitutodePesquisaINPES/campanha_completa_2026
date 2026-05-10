@@ -22,6 +22,11 @@ export class StrategyController {
     return this.strategyService.createEixo(campanhaId, data);
   }
 
+  @Post('campanhas/:id/parcerias')
+  createParceria(@Param('id') campanhaId: string, @Body() data: any) {
+    return this.strategyService.createParceria(campanhaId, data);
+  }
+
   @Post('eixos/:eixoId/planos')
   createPlanoAcao(@Param('eixoId') eixoId: string, @Body() data: any) {
     return this.strategyService.createPlanoAcao(eixoId, data);
