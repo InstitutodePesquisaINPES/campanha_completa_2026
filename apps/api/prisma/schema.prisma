@@ -355,6 +355,8 @@ model Agenda {
   creator           User?    @relation("AgendaCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
   responsavel       User?    @relation("AgendaResponsavelId", fields: [responsavelId], references: [id], onDelete: SetNull)
   participantes     AgendaParticipante[]
+  checkins          AgendaCheckin[]
+  followups         AgendaFollowup[]
 
   @@map("agenda")
 }
@@ -372,6 +374,34 @@ model AgendaParticipante {
   pessoa      Pessoa   @relation(fields: [pessoaId], references: [id], onDelete: Cascade)
 
   @@map("agenda_participantes")
+}
+
+model AgendaCheckin {
+  id          String   @id @default(uuid()) @db.Uuid
+  agendaId    String   @map("agenda_id") @db.Uuid
+  usuarioId   String?  @map("usuario_id") @db.Uuid
+  tipo        String
+  latitude    Float?
+  longitude   Float?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  agenda      Agenda   @relation(fields: [agendaId], references: [id], onDelete: Cascade)
+
+  @@map("agenda_checkins")
+}
+
+model AgendaFollowup {
+  id            String   @id @default(uuid()) @db.Uuid
+  agendaId      String   @map("agenda_id") @db.Uuid
+  descricao     String
+  responsavelId String?  @map("responsavel_id") @db.Uuid
+  prazo         DateTime?
+  concluido     Boolean  @default(false)
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  agenda        Agenda   @relation(fields: [agendaId], references: [id], onDelete: Cascade)
+
+  @@map("agenda_followups")
 }
 
 // ─── FINANCEIRO ────────────────────────────────────────────

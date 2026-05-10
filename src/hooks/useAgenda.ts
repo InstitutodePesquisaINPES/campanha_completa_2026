@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { api } from "@/lib/apiClient";
 
 type TipoAgenda = "visita" | "evento" | "reuniao" | "comicio" | "carreata" | "porta_a_porta" | "audiencia" | "retorno";
 type StatusAgenda = "planejado" | "confirmado" | "em_andamento" | "realizado" | "cancelado";
@@ -29,15 +28,7 @@ export function useAgendaItems(month?: string) {
   return useQuery({
     queryKey: ["agenda", month],
     queryFn: async () => {
-      let q = supabase.from("agenda").select("*, municipios(nome), bairros(nome)").order("data_inicio").limit(300);
-      if (month) {
-        const start = `${month}-01T00:00:00`;
-        const end = new Date(parseInt(month.split("-")[0]), parseInt(month.split("-")[1]), 0);
-        q = q.gte("data_inicio", start).lte("data_inicio", `${month}-${end.getDate()}T23:59:59`);
-      }
-      const { data, error } = await q;
-      if (error) throw error;
-      return data || [];
+      return api.get<any[]>(`/agenda${month ? `?month=${month}` : ''}`);
     },
   });
 }
@@ -47,9 +38,7 @@ export function useAgendaItem(id?: string) {
     queryKey: ["agenda_item", id],
     queryFn: async () => {
       if (!id) return null;
-      const { data, error } = await supabase.from("agenda").select("*, municipios(nome), bairros(nome)").eq("id", id).single();
-      if (error) throw error;
-      return data;
+      return api.get<any>(`/agenda/${id}`);
     },
     enabled: !!id,
   });
@@ -57,16 +46,9 @@ export function useAgendaItem(id?: string) {
 
 export function useCreateAgenda() {
   const qc = useQueryClient();
-  const { user } = useAuth();
   return useMutation({
-    mutationFn: async (values: {
-      titulo: string; tipo: TipoAgenda; data_inicio: string; data_fim?: string;
-      local?: string; endereco?: string; municipio_id?: string; bairro_id?: string;
-      responsavel_id?: string; descricao?: string; observacoes?: string;
-    }) => {
-      const { data, error } = await supabase.from("agenda").insert({ ...values, created_by: user?.id }).select().single();
-      if (error) throw error;
-      return data;
+    mutationFn: async (values: any) => {
+      return api.post<any>('/agenda', values);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["agenda"] }),
   });
@@ -75,13 +57,8 @@ export function useCreateAgenda() {
 export function useUpdateAgenda() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...values }: {
-      id: string; titulo?: string; tipo?: TipoAgenda; status?: StatusAgenda;
-      data_inicio?: string; data_fim?: string; local?: string; descricao?: string;
-    }) => {
-      const { data, error } = await supabase.from("agenda").update(values).eq("id", id).select().single();
-      if (error) throw error;
-      return data;
+    mutationFn: async ({ id, ...values }: { id: string } & any) => {
+      return api.patch<any>(`/agenda/${id}`, values);
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["agenda"] });
@@ -94,8 +71,7 @@ export function useDeleteAgenda() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("agenda").delete().eq("id", id);
-      if (error) throw error;
+      return api.delete<void>(`/agenda/${id}`);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["agenda"] }),
   });
@@ -106,9 +82,7 @@ export function useParticipantes(agendaId?: string) {
   return useQuery({
     queryKey: ["agenda_participantes", agendaId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("agenda_participantes").select("*, pessoas(full_name)").eq("agenda_id", agendaId!).order("created_at");
-      if (error) throw error;
-      return data || [];
+      return api.get<any[]>(`/agenda/${agendaId}/participantes`);
     },
     enabled: !!agendaId,
   });
@@ -117,21 +91,19 @@ export function useParticipantes(agendaId?: string) {
 export function useCreateParticipante() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (values: { agenda_id: string; pessoa_id: string; papel?: PapelParticipante }) => {
-      const { data, error } = await supabase.from("agenda_participantes").insert(values).select().single();
-      if (error) throw error;
-      return data;
+    mutationFn: async (values: { agendaId: string; pessoaId: string; papel?: PapelParticipante }) => {
+      const { agendaId, ...data } = values;
+      return api.post<any>(`/agenda/${agendaId}/participantes`, data);
     },
-    onSuccess: (_, v) => qc.invalidateQueries({ queryKey: ["agenda_participantes", v.agenda_id] }),
+    onSuccess: (_, v) => qc.invalidateQueries({ queryKey: ["agenda_participantes", v.agendaId] }),
   });
 }
 
 export function useUpdateParticipante() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, agendaId, ...values }: { id: string; agendaId: string; confirmado?: boolean; presente?: boolean }) => {
-      const { error } = await supabase.from("agenda_participantes").update(values).eq("id", id);
-      if (error) throw error;
+    mutationFn: async ({ id, agendaId, ...values }: { id: string; agendaId: string; confirmado?: boolean; compareceu?: boolean }) => {
+      await api.patch<any>(`/agenda/participantes/${id}`, values);
       return agendaId;
     },
     onSuccess: (agendaId) => qc.invalidateQueries({ queryKey: ["agenda_participantes", agendaId] }),
@@ -142,8 +114,7 @@ export function useDeleteParticipante() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, agendaId }: { id: string; agendaId: string }) => {
-      const { error } = await supabase.from("agenda_participantes").delete().eq("id", id);
-      if (error) throw error;
+      await api.delete<void>(`/agenda/participantes/${id}`);
       return agendaId;
     },
     onSuccess: (agendaId) => qc.invalidateQueries({ queryKey: ["agenda_participantes", agendaId] }),
@@ -155,9 +126,7 @@ export function useCheckins(agendaId?: string) {
   return useQuery({
     queryKey: ["agenda_checkins", agendaId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("agenda_checkins").select("*").eq("agenda_id", agendaId!).order("created_at");
-      if (error) throw error;
-      return data || [];
+      return api.get<any[]>(`/agenda/${agendaId}/checkins`);
     },
     enabled: !!agendaId,
   });
@@ -165,14 +134,12 @@ export function useCheckins(agendaId?: string) {
 
 export function useCreateCheckin() {
   const qc = useQueryClient();
-  const { user } = useAuth();
   return useMutation({
-    mutationFn: async (values: { agenda_id: string; tipo: TipoCheckin; latitude?: number; longitude?: number }) => {
-      const { data, error } = await supabase.from("agenda_checkins").insert({ ...values, usuario_id: user?.id }).select().single();
-      if (error) throw error;
-      return data;
+    mutationFn: async (values: { agendaId: string; tipo: TipoCheckin; latitude?: number; longitude?: number }) => {
+      const { agendaId, ...data } = values;
+      return api.post<any>(`/agenda/${agendaId}/checkins`, data);
     },
-    onSuccess: (_, v) => qc.invalidateQueries({ queryKey: ["agenda_checkins", v.agenda_id] }),
+    onSuccess: (_, v) => qc.invalidateQueries({ queryKey: ["agenda_checkins", v.agendaId] }),
   });
 }
 
@@ -181,9 +148,7 @@ export function useFollowups(agendaId?: string) {
   return useQuery({
     queryKey: ["agenda_followups", agendaId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("agenda_followups").select("*").eq("agenda_id", agendaId!).order("prazo");
-      if (error) throw error;
-      return data || [];
+      return api.get<any[]>(`/agenda/${agendaId}/followups`);
     },
     enabled: !!agendaId,
   });
@@ -192,12 +157,11 @@ export function useFollowups(agendaId?: string) {
 export function useCreateFollowup() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (values: { agenda_id: string; descricao: string; responsavel_id?: string; prazo?: string }) => {
-      const { data, error } = await supabase.from("agenda_followups").insert(values).select().single();
-      if (error) throw error;
-      return data;
+    mutationFn: async (values: { agendaId: string; descricao: string; responsavelId?: string; prazo?: string }) => {
+      const { agendaId, ...data } = values;
+      return api.post<any>(`/agenda/${agendaId}/followups`, data);
     },
-    onSuccess: (_, v) => qc.invalidateQueries({ queryKey: ["agenda_followups", v.agenda_id] }),
+    onSuccess: (_, v) => qc.invalidateQueries({ queryKey: ["agenda_followups", v.agendaId] }),
   });
 }
 
@@ -205,8 +169,7 @@ export function useUpdateFollowup() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, agendaId, ...values }: { id: string; agendaId: string; concluido?: boolean }) => {
-      const { error } = await supabase.from("agenda_followups").update(values).eq("id", id);
-      if (error) throw error;
+      await api.patch<any>(`/agenda/followups/${id}`, values);
       return agendaId;
     },
     onSuccess: (agendaId) => qc.invalidateQueries({ queryKey: ["agenda_followups", agendaId] }),
