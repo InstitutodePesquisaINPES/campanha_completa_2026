@@ -38,7 +38,7 @@ import PesquisasPage from "./pages/pesquisas/PesquisasPage";
 import EleitoralPage from "./pages/eleitoral/EleitoralPage";
 
 import WarRoomDashboard from "./pages/WarRoom/WarRoomDashboard";
-import DisparoEmMassa from "./pages/Comunicacao/DisparoEmMassa";
+import DisparoEmMassa from "./pages/comunicacao/DisparoEmMassa";
 import RankingLideres from "./pages/Gamificacao/RankingLideres";
 
 const queryClient = new QueryClient();
