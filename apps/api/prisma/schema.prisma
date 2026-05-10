@@ -314,12 +314,16 @@ model Demanda {
   status            String   @default("aberta")
   categoria         String?
   prioridade        String   @default("media")
+  origem            String?
+  protocolo         String?
+  satisfacaoCidadao Float?   @map("satisfacao_cidadao")
+  resolucaoDescricao String? @map("resolucao_descricao")
   municipioId       String?  @map("municipio_id") @db.Uuid
   bairroId          String?  @map("bairro_id") @db.Uuid
   createdBy         String?  @map("created_by") @db.Uuid
   atribuidoA        String?  @map("atribuido_a") @db.Uuid
   dataAbertura      DateTime @default(now()) @map("data_abertura")
-  dataVencimento    DateTime? @map("data_vencimento")
+  dataPrazo         DateTime? @map("data_prazo")
   dataResolucao     DateTime? @map("data_resolucao")
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
@@ -327,8 +331,36 @@ model Demanda {
   pessoa            Pessoa?   @relation("DemandaPessoa", fields: [pessoaId], references: [id], onDelete: SetNull)
   creator           User?     @relation("DemandaCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
   atribuido         User?     @relation("DemandaAtribuidaA", fields: [atribuidoA], references: [id], onDelete: SetNull)
+  encaminhamentos   DemandaEncaminhamento[]
+  anexos            DemandaAnexo[]
 
   @@map("demandas")
+}
+
+model DemandaEncaminhamento {
+  id              String   @id @default(uuid()) @db.Uuid
+  demandaId       String   @map("demanda_id") @db.Uuid
+  deUsuarioId     String?  @map("de_usuario_id") @db.Uuid
+  paraUsuarioId   String?  @map("para_usuario_id") @db.Uuid
+  observacao      String?
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  demanda         Demanda  @relation(fields: [demandaId], references: [id], onDelete: Cascade)
+
+  @@map("demandas_encaminhamentos")
+}
+
+model DemandaAnexo {
+  id          String   @id @default(uuid()) @db.Uuid
+  demandaId   String   @map("demanda_id") @db.Uuid
+  arquivoUrl  String   @map("arquivo_url")
+  descricao   String?
+  tipo        String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  demanda     Demanda  @relation(fields: [demandaId], references: [id], onDelete: Cascade)
+
+  @@map("demandas_anexos")
 }
 
 // ─── AGENDA ────────────────────────────────────────────────

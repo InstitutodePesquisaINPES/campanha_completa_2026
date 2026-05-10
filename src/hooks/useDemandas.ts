@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { api } from "@/lib/apiClient";
 
 export type CategoriaDemanda = "saude" | "educacao" | "infraestrutura" | "seguranca" | "social" | "emprego" | "moradia" | "transporte" | "outros";
 export type PrioridadeDemanda = "baixa" | "media" | "alta" | "urgente";
@@ -19,7 +18,6 @@ export const prioridadeColors: Record<string, string> = {
   alta: "bg-warning/15 text-warning",
   urgente: "bg-destructive/15 text-destructive",
 };
-// Default SLA in days per priority
 export const prioridadeSLA: Record<string, number> = { urgente: 2, alta: 7, media: 15, baixa: 30 };
 
 export const statusLabels: Record<string, string> = {
@@ -55,29 +53,18 @@ export function useDemandas(filters: DemandasFilters = {}) {
   return useQuery({
     queryKey: ["demandas", filters],
     queryFn: async () => {
-      let q = supabase
-        .from("demandas")
-        .select("*, pessoas(full_name), municipios(nome), bairros(nome)")
-        .order("data_abertura", { ascending: false })
-        .limit(500);
-      if (filters.status && filters.status !== "all") q = q.eq("status", filters.status as StatusDemanda);
-      if (filters.prioridade && filters.prioridade !== "all") q = q.eq("prioridade", filters.prioridade as PrioridadeDemanda);
-      if (filters.categoria && filters.categoria !== "all") q = q.eq("categoria", filters.categoria as CategoriaDemanda);
-      if (filters.origem && filters.origem !== "all") q = q.eq("origem", filters.origem as OrigemDemanda);
-      if (filters.municipioId) q = q.eq("municipio_id", filters.municipioId);
-      if (filters.semResponsavel) q = q.is("responsavel_id", null);
-      if (filters.search?.trim()) {
-        const s = filters.search.trim();
-        q = q.or(`titulo.ilike.%${s}%,protocolo.ilike.%${s}%,descricao.ilike.%${s}%`);
-      }
-      const { data, error } = await q;
-      if (error) throw error;
-      let rows = data || [];
-      if (filters.vencidas) {
-        const now = new Date();
-        rows = rows.filter((d: any) => d.data_prazo && new Date(d.data_prazo) < now && !["resolvida", "arquivada"].includes(d.status));
-      }
-      return rows;
+      const params = new URLSearchParams();
+      if (filters.status) params.append("status", filters.status);
+      if (filters.prioridade) params.append("prioridade", filters.prioridade);
+      if (filters.categoria) params.append("categoria", filters.categoria);
+      if (filters.origem) params.append("origem", filters.origem);
+      if (filters.municipioId) params.append("municipioId", filters.municipioId);
+      if (filters.semResponsavel) params.append("semResponsavel", String(filters.semResponsavel));
+      if (filters.search) params.append("search", filters.search);
+      if (filters.vencidas) params.append("vencidas", String(filters.vencidas));
+
+      const queryStr = params.toString();
+      return api.get<any[]>(`/demandas${queryStr ? `?${queryStr}` : ''}`);
     },
   });
 }
@@ -86,39 +73,7 @@ export function useDemandasStats() {
   return useQuery({
     queryKey: ["demandas-stats"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("demandas")
-        .select("status,prioridade,data_prazo,data_resolucao,data_abertura,satisfacao_cidadao")
-        .limit(5000);
-      if (error) throw error;
-      const rows = data || [];
-      const now = new Date();
-      const ativas = rows.filter((d) => !["resolvida", "arquivada"].includes(d.status));
-      const vencidas = ativas.filter((d) => d.data_prazo && new Date(d.data_prazo) < now);
-      const resolvidas = rows.filter((d) => d.status === "resolvida");
-      const urgentes = ativas.filter((d) => d.prioridade === "urgente");
-      const tempoMedio = (() => {
-        const arr = resolvidas
-          .filter((d) => d.data_resolucao && d.data_abertura)
-          .map((d) => (new Date(d.data_resolucao!).getTime() - new Date(d.data_abertura).getTime()) / 86400000);
-        if (!arr.length) return 0;
-        return arr.reduce((a, b) => a + b, 0) / arr.length;
-      })();
-      const satisfacao = (() => {
-        const arr = rows.filter((d) => d.satisfacao_cidadao).map((d) => d.satisfacao_cidadao!);
-        if (!arr.length) return 0;
-        return arr.reduce((a, b) => a + b, 0) / arr.length;
-      })();
-      return {
-        total: rows.length,
-        ativas: ativas.length,
-        vencidas: vencidas.length,
-        resolvidas: resolvidas.length,
-        urgentes: urgentes.length,
-        tempoMedioDias: tempoMedio,
-        satisfacaoMedia: satisfacao,
-        taxaResolucao: rows.length ? (resolvidas.length / rows.length) * 100 : 0,
-      };
+      return api.get<any>('/demandas/stats');
     },
   });
 }
@@ -128,13 +83,7 @@ export function useDemanda(id?: string) {
     queryKey: ["demanda", id],
     queryFn: async () => {
       if (!id) return null;
-      const { data, error } = await supabase
-        .from("demandas")
-        .select("*, pessoas(full_name), municipios(nome), bairros(nome)")
-        .eq("id", id)
-        .single();
-      if (error) throw error;
-      return data;
+      return api.get<any>(`/demandas/${id}`);
     },
     enabled: !!id,
   });
@@ -142,27 +91,16 @@ export function useDemanda(id?: string) {
 
 export function useCreateDemanda() {
   const qc = useQueryClient();
-  const { user } = useAuth();
   return useMutation({
-    mutationFn: async (values: {
-      titulo: string; descricao?: string; pessoa_id?: string;
-      categoria?: CategoriaDemanda; prioridade?: PrioridadeDemanda;
-      origem?: OrigemDemanda; municipio_id?: string; bairro_id?: string;
-      responsavel_id?: string; data_prazo?: string;
-    }) => {
-      // Auto-set SLA based on priority if no prazo provided
-      let data_prazo = values.data_prazo;
-      if (!data_prazo && values.prioridade) {
+    mutationFn: async (values: any) => {
+      let dataPrazo = values.dataPrazo;
+      if (!dataPrazo && values.prioridade) {
         const days = prioridadeSLA[values.prioridade] ?? 15;
         const d = new Date();
         d.setDate(d.getDate() + days);
-        data_prazo = d.toISOString();
+        dataPrazo = d.toISOString();
       }
-      const { data, error } = await supabase.from("demandas")
-        .insert({ ...values, data_prazo, protocolo: "TEMP", created_by: user?.id })
-        .select().single();
-      if (error) throw error;
-      return data;
+      return api.post<any>('/demandas', { ...values, dataPrazo });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["demandas"] });
@@ -174,15 +112,8 @@ export function useCreateDemanda() {
 export function useUpdateDemanda() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...values }: {
-      id: string; titulo?: string; descricao?: string; categoria?: CategoriaDemanda;
-      prioridade?: PrioridadeDemanda; status?: StatusDemanda; responsavel_id?: string;
-      resolucao_descricao?: string; satisfacao_cidadao?: number; data_resolucao?: string;
-      data_prazo?: string; municipio_id?: string; bairro_id?: string; origem?: OrigemDemanda;
-    }) => {
-      const { data, error } = await supabase.from("demandas").update(values).eq("id", id).select().single();
-      if (error) throw error;
-      return data;
+    mutationFn: async ({ id, ...values }: any) => {
+      return api.patch<any>(`/demandas/${id}`, values);
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["demandas"] });
@@ -196,8 +127,7 @@ export function useDeleteDemanda() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("demandas").delete().eq("id", id);
-      if (error) throw error;
+      return api.delete<void>(`/demandas/${id}`);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["demandas"] });
@@ -211,9 +141,7 @@ export function useEncaminhamentos(demandaId?: string) {
   return useQuery({
     queryKey: ["demandas_encaminhamentos", demandaId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("demandas_encaminhamentos").select("*").eq("demanda_id", demandaId!).order("created_at", { ascending: false });
-      if (error) throw error;
-      return data || [];
+      return api.get<any[]>(`/demandas/${demandaId}/encaminhamentos`);
     },
     enabled: !!demandaId,
   });
@@ -221,14 +149,12 @@ export function useEncaminhamentos(demandaId?: string) {
 
 export function useCreateEncaminhamento() {
   const qc = useQueryClient();
-  const { user } = useAuth();
   return useMutation({
-    mutationFn: async (values: { demanda_id: string; para_usuario_id?: string; observacao?: string }) => {
-      const { data, error } = await supabase.from("demandas_encaminhamentos").insert({ ...values, de_usuario_id: user?.id }).select().single();
-      if (error) throw error;
-      return data;
+    mutationFn: async (values: { demandaId: string; paraUsuarioId?: string; observacao?: string }) => {
+      const { demandaId, ...data } = values;
+      return api.post<any>(`/demandas/${demandaId}/encaminhamentos`, data);
     },
-    onSuccess: (_, v) => qc.invalidateQueries({ queryKey: ["demandas_encaminhamentos", v.demanda_id] }),
+    onSuccess: (_, v) => qc.invalidateQueries({ queryKey: ["demandas_encaminhamentos", v.demandaId] }),
   });
 }
 
@@ -237,9 +163,7 @@ export function useAnexos(demandaId?: string) {
   return useQuery({
     queryKey: ["demandas_anexos", demandaId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("demandas_anexos").select("*").eq("demanda_id", demandaId!).order("created_at", { ascending: false });
-      if (error) throw error;
-      return data || [];
+      return api.get<any[]>(`/demandas/${demandaId}/anexos`);
     },
     enabled: !!demandaId,
   });
@@ -248,11 +172,10 @@ export function useAnexos(demandaId?: string) {
 export function useCreateAnexo() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (values: { demanda_id: string; arquivo_url: string; descricao?: string; tipo?: string }) => {
-      const { data, error } = await supabase.from("demandas_anexos").insert(values).select().single();
-      if (error) throw error;
-      return data;
+    mutationFn: async (values: { demandaId: string; arquivoUrl: string; descricao?: string; tipo?: string }) => {
+      const { demandaId, ...data } = values;
+      return api.post<any>(`/demandas/${demandaId}/anexos`, data);
     },
-    onSuccess: (_, v) => qc.invalidateQueries({ queryKey: ["demandas_anexos", v.demanda_id] }),
+    onSuccess: (_, v) => qc.invalidateQueries({ queryKey: ["demandas_anexos", v.demandaId] }),
   });
 }
