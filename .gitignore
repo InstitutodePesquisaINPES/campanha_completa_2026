@@ -12,6 +12,13 @@ dist
 dist-ssr
 *.local
 
+# Environment — NUNCA commitar secrets
+.env
+.env.local
+.env.production
+.env.staging
+.env.*.local
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -22,3 +29,18 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Python
+__pycache__
+*.pyc
+.venv
+.mypy_cache
+
+# Docker
+docker-compose.override.yml
+
+# Prisma
+apps/api/prisma/*.db
+
+# OS
+Thumbs.db

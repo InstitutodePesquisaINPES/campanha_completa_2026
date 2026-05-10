@@ -1,0 +1,98 @@
+# ─── Infraestrutura ─────────────────────────────────────────
+# Docker Compose para deploy no Coolify — Stack App
+# Serviços: web, api, postgres, redis, worker-tse
+# ─────────────────────────────────────────────────────────────
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    environment:
+      - VITE_API_URL=${VITE_API_URL}
+    depends_on:
+      api:
+        condition: service_healthy
+    labels:
+      - coolify.managed=true
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://campanha:${PG_PASSWORD}@postgres:5432/campanha
+      - REDIS_URL=redis://redis:6379
+      - CLICKHOUSE_URL=http://clickhouse:8123
+      - CLICKHOUSE_DB=eleicoes
+      - CLICKHOUSE_USER=campanha
+      - CLICKHOUSE_PASSWORD=${CH_PASSWORD}
+      - MINIO_ENDPOINT=minio
+      - MINIO_PORT=9000
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_USE_SSL=false
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - JWT_EXPIRATION=15m
+      - JWT_REFRESH_EXPIRATION=7d
+      - API_PORT=3001
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    labels:
+      - coolify.managed=true
+
+  worker-tse:
+    build:
+      context: ./workers/tse-etl
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://campanha:${PG_PASSWORD}@postgres:5432/campanha
+      - CLICKHOUSE_URL=http://clickhouse:8123
+      - CLICKHOUSE_DB=eleicoes
+      - CLICKHOUSE_USER=campanha
+      - CLICKHOUSE_PASSWORD=${CH_PASSWORD}
+      - MINIO_ENDPOINT=minio
+      - MINIO_PORT=9000
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_USE_SSL=false
+      - TSE_WORKER_POLL_INTERVAL=10
+      - TSE_WORKER_BATCH_SIZE=10000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: campanha
+      POSTGRES_USER: campanha
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U campanha"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+
+volumes:
+  pg_data:
+  redis_data:
