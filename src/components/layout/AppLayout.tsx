@@ -4,6 +4,7 @@ import { ProtectedRoute } from "./ProtectedRoute";
 import { ThemeToggle } from "./ThemeToggle";
 import { NotificationBell } from "./NotificationBell";
 import { GlobalSearch } from "./GlobalSearch";
+import { PwaInstallBanner } from "./PwaInstallBanner";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -27,6 +28,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </main>
           </div>
         </div>
+        <PwaInstallBanner />
       </SidebarProvider>
     </ProtectedRoute>
   );
