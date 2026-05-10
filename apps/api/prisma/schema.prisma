@@ -438,6 +438,20 @@ model AgendaFollowup {
 
 // ─── FINANCEIRO ────────────────────────────────────────────
 
+model CentroCusto {
+  id                String   @id @default(uuid()) @db.Uuid
+  nome              String
+  descricao         String?
+  orcamentoPrevisto Float?   @map("orcamento_previsto")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  despesas          Despesa[]
+  receitas          Receita[]
+
+  @@map("centros_custo")
+}
+
 model Despesa {
   id                String   @id @default(uuid()) @db.Uuid
   descricao         String
@@ -445,24 +459,35 @@ model Despesa {
   dataDespesa       DateTime @map("data_despesa")
   categoria         String
   status            String   @default("pendente")
+  centroCustoId     String?  @map("centro_custo_id") @db.Uuid
   fornecedorId      String?  @map("fornecedor_id") @db.Uuid
+  documentoTipo     String?  @map("documento_tipo")
+  documentoNumero   String?  @map("documento_numero")
   comprovanteUrl    String?  @map("comprovante_url")
+  responsavelId     String?  @map("responsavel_id") @db.Uuid
+  aprovadorId       String?  @map("aprovador_id") @db.Uuid
+  dataPagamento     DateTime? @map("data_pagamento")
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
+
+  centroCusto       CentroCusto? @relation(fields: [centroCustoId], references: [id], onDelete: SetNull)
 
   @@map("despesas")
 }
 
 model Receita {
   id                String   @id @default(uuid()) @db.Uuid
-  descricao         String
+  descricao         String?
   valor             Float
   dataReceita       DateTime @map("data_receita")
   tipo              String
-  doadorId          String?  @map("doador_id") @db.Uuid
+  centroCustoId     String?  @map("centro_custo_id") @db.Uuid
+  origemPessoaId    String?  @map("origem_pessoa_id") @db.Uuid
   comprovanteUrl    String?  @map("comprovante_url")
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
+
+  centroCusto       CentroCusto? @relation(fields: [centroCustoId], references: [id], onDelete: SetNull)
 
   @@map("receitas")
 }

@@ -1,10 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { api } from "@/lib/apiClient";
 
-type CategoriaDespesa = "pessoal" | "material" | "transporte" | "alimentacao" | "comunicacao" | "evento" | "juridico" | "outros";
-type StatusDespesa = "pendente" | "aprovada" | "paga" | "cancelada";
-type TipoReceita = "doacao" | "fundo_partidario" | "recursos_proprios" | "outros";
+export type CategoriaDespesa = "pessoal" | "material" | "transporte" | "alimentacao" | "comunicacao" | "evento" | "juridico" | "outros";
+export type StatusDespesa = "pendente" | "aprovada" | "paga" | "cancelada";
+export type TipoReceita = "doacao" | "fundo_partidario" | "recursos_proprios" | "outros";
 
 export const categoriaDespesaLabels: Record<string, string> = {
   pessoal: "Pessoal", material: "Material", transporte: "Transporte", alimentacao: "Alimentação",
@@ -26,9 +25,7 @@ export function useCentrosCusto() {
   return useQuery({
     queryKey: ["centros_custo"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("centros_custo").select("*").order("nome");
-      if (error) throw error;
-      return data || [];
+      return api.get<any[]>('/financeiro/centros-custo');
     },
   });
 }
@@ -36,10 +33,8 @@ export function useCentrosCusto() {
 export function useCreateCentroCusto() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (values: { nome: string; descricao?: string; orcamento_previsto?: number }) => {
-      const { data, error } = await supabase.from("centros_custo").insert(values).select().single();
-      if (error) throw error;
-      return data;
+    mutationFn: async (values: { nome: string; descricao?: string; orcamentoPrevisto?: number }) => {
+      return api.post<any>('/financeiro/centros-custo', values);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["centros_custo"] }),
   });
@@ -49,8 +44,7 @@ export function useDeleteCentroCusto() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("centros_custo").delete().eq("id", id);
-      if (error) throw error;
+      return api.delete<void>(`/financeiro/centros-custo/${id}`);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["centros_custo"] }),
   });
@@ -61,26 +55,19 @@ export function useDespesas(centroCustoId?: string) {
   return useQuery({
     queryKey: ["despesas", centroCustoId],
     queryFn: async () => {
-      let q = supabase.from("despesas").select("*, centros_custo(nome), pessoas(full_name)").order("data_despesa", { ascending: false }).limit(300);
-      if (centroCustoId && centroCustoId !== "all") q = q.eq("centro_custo_id", centroCustoId);
-      const { data, error } = await q;
-      if (error) throw error;
-      return data || [];
+      return api.get<any[]>(`/financeiro/despesas${centroCustoId && centroCustoId !== 'all' ? `?centroCustoId=${centroCustoId}` : ''}`);
     },
   });
 }
 
 export function useCreateDespesa() {
   const qc = useQueryClient();
-  const { user } = useAuth();
   return useMutation({
     mutationFn: async (values: {
-      descricao: string; valor: number; categoria?: CategoriaDespesa; centro_custo_id?: string;
-      data_despesa?: string; fornecedor_pessoa_id?: string; documento_tipo?: string; documento_numero?: string;
+      descricao: string; valor: number; categoria?: CategoriaDespesa; centroCustoId?: string;
+      dataDespesa?: string; fornecedorId?: string; documentoTipo?: string; documentoNumero?: string;
     }) => {
-      const { data, error } = await supabase.from("despesas").insert({ ...values, responsavel_id: user?.id }).select().single();
-      if (error) throw error;
-      return data;
+      return api.post<any>('/financeiro/despesas', values);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["despesas"] }),
   });
@@ -89,10 +76,8 @@ export function useCreateDespesa() {
 export function useUpdateDespesa() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...values }: { id: string; status?: StatusDespesa; aprovador_id?: string; data_pagamento?: string }) => {
-      const { data, error } = await supabase.from("despesas").update(values).eq("id", id).select().single();
-      if (error) throw error;
-      return data;
+    mutationFn: async ({ id, ...values }: { id: string; status?: StatusDespesa; aprovadorId?: string; dataPagamento?: string }) => {
+      return api.patch<any>(`/financeiro/despesas/${id}`, values);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["despesas"] }),
   });
@@ -102,8 +87,7 @@ export function useDeleteDespesa() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("despesas").delete().eq("id", id);
-      if (error) throw error;
+      return api.delete<void>(`/financeiro/despesas/${id}`);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["despesas"] }),
   });
@@ -114,11 +98,7 @@ export function useReceitas(centroCustoId?: string) {
   return useQuery({
     queryKey: ["receitas", centroCustoId],
     queryFn: async () => {
-      let q = supabase.from("receitas").select("*, centros_custo(nome), pessoas(full_name)").order("data", { ascending: false }).limit(300);
-      if (centroCustoId && centroCustoId !== "all") q = q.eq("centro_custo_id", centroCustoId);
-      const { data, error } = await q;
-      if (error) throw error;
-      return data || [];
+      return api.get<any[]>(`/financeiro/receitas${centroCustoId && centroCustoId !== 'all' ? `?centroCustoId=${centroCustoId}` : ''}`);
     },
   });
 }
@@ -126,10 +106,8 @@ export function useReceitas(centroCustoId?: string) {
 export function useCreateReceita() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (values: { valor: number; tipo?: TipoReceita; centro_custo_id?: string; descricao?: string; data?: string; origem_pessoa_id?: string }) => {
-      const { data, error } = await supabase.from("receitas").insert(values).select().single();
-      if (error) throw error;
-      return data;
+    mutationFn: async (values: { valor: number; tipo?: TipoReceita; centroCustoId?: string; descricao?: string; dataReceita?: string; origemPessoaId?: string }) => {
+      return api.post<any>('/financeiro/receitas', values);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["receitas"] }),
   });
@@ -139,8 +117,7 @@ export function useDeleteReceita() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("receitas").delete().eq("id", id);
-      if (error) throw error;
+      return api.delete<void>(`/financeiro/receitas/${id}`);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["receitas"] }),
   });

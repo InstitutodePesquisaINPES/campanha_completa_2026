@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Request } from '@nestjs/common';
 import { FinanceiroService } from './financeiro.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 
@@ -7,14 +7,31 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 export class FinanceiroController {
   constructor(private readonly financeiroService: FinanceiroService) {}
 
+  // ---- CENTROS DE CUSTO ----
+  @Get('centros-custo')
+  getCentrosCusto() {
+    return this.financeiroService.getCentrosCusto();
+  }
+
+  @Post('centros-custo')
+  createCentroCusto(@Body() data: any) {
+    return this.financeiroService.createCentroCusto(data);
+  }
+
+  @Delete('centros-custo/:id')
+  removeCentroCusto(@Param('id') id: string) {
+    return this.financeiroService.deleteCentroCusto(id);
+  }
+
+  // ---- DESPESAS ----
   @Get('despesas')
-  findAllDespesas() {
-    return this.financeiroService.findAllDespesas();
+  findAllDespesas(@Query('centroCustoId') centroCustoId?: string) {
+    return this.financeiroService.findAllDespesas(centroCustoId);
   }
 
   @Post('despesas')
-  createDespesa(@Body() data: any) {
-    return this.financeiroService.createDespesa(data);
+  createDespesa(@Body() data: any, @Request() req: any) {
+    return this.financeiroService.createDespesa(data, req.user.sub);
   }
 
   @Patch('despesas/:id')
@@ -27,9 +44,10 @@ export class FinanceiroController {
     return this.financeiroService.deleteDespesa(id);
   }
 
+  // ---- RECEITAS ----
   @Get('receitas')
-  findAllReceitas() {
-    return this.financeiroService.findAllReceitas();
+  findAllReceitas(@Query('centroCustoId') centroCustoId?: string) {
+    return this.financeiroService.findAllReceitas(centroCustoId);
   }
 
   @Post('receitas')
