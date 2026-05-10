@@ -27,6 +27,7 @@ import { InteligenciaModule } from './modules/inteligencia/inteligencia.module';
 import { ScoreModule } from './modules/score/score.module';
 import { SystemSettingsModule } from './modules/system-settings/system-settings.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { EquipeModule } from './modules/equipe/equipe.module';
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { AdminModule } from './modules/admin/admin.module';
     ScoreModule,
     SystemSettingsModule,
     AdminModule,
+    EquipeModule,
   ],
 })
 export class AppModule {}

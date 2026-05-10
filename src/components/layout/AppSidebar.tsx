@@ -86,8 +86,9 @@ const systemItems = [
 ];
 
 const adminItems = [
-  { title: "Admin", url: "/admin", icon: Shield },
+  { title: "Gestão de Equipe", url: "/equipe", icon: Users },
   { title: "Configurações", url: "/configuracoes", icon: Settings },
+  { title: "Admin Geral", url: "/admin", icon: Shield },
 ];
 
 const enterpriseItems = [
@@ -143,6 +144,10 @@ export function AppSidebar() {
   const { signOut } = useAuth();
   const { data: profile } = useProfile();
   const isAdmin = useIsAdmin();
+  
+  // Apenas quem gerencia vê a aba de Administração
+  const { data: roles = [] } = useUserRoles();
+  const canManage = roles.some(r => ["admin", "coord_geral", "coord_mobilizacao", "lideranca_regional", "lideranca_local"].includes(r));
 
   // Buscar configurações de Branding em tempo real
   const { data: settings = {} } = useSystemSettings();
@@ -186,7 +191,7 @@ export function AppSidebar() {
         <SidebarNavGroup label="Módulos" items={modulesItems} collapsed={collapsed} />
         <SidebarNavGroup label="Inteligência" items={analyticsItems} collapsed={collapsed} />
         <SidebarNavGroup label="Sistema" items={systemItems} collapsed={collapsed} />
-        {isAdmin && <SidebarNavGroup label="Administração" items={adminItems} collapsed={collapsed} />}
+        {canManage && <SidebarNavGroup label="Gestão & Admin" items={adminItems} collapsed={collapsed} />}
       </SidebarContent>
 
       <SidebarSeparator />

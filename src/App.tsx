@@ -16,6 +16,7 @@ import LoginPage from "./pages/auth/LoginPage";
 import SignupPage from "./pages/auth/SignupPage";
 import ProfilePage from "./pages/ProfilePage";
 import AdminPage from "./pages/admin/AdminPage";
+import EquipePage from "./pages/admin/EquipePage";
 import SettingsPage from "./pages/SettingsPage";
 import MateriaisPageRoute from "./pages/materiais/MateriaisPageRoute";
 import FinanceiroPageRoute from "./pages/financeiro/FinanceiroPageRoute";
@@ -58,6 +59,7 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/perfil" element={<ProfilePage />} />
                 <Route path="/configuracoes" element={<SettingsPage />} />
+                <Route path="/equipe" element={<EquipePage />} />
                 <Route path="/territorios" element={<TerritoriosPage />} />
                 <Route path="/pessoas" element={<PessoasPage />} />
                 <Route path="/demandas" element={<DemandasPage />} />
