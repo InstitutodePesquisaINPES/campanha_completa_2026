@@ -116,6 +116,37 @@ export class StrategyService {
         orcamentoRealizado: orcamentoGasto,
         eventosCampanha: agendasExecutadas,
       };
+      };
     });
+  }
+
+  // --- UPDATE E DELETE ---
+  
+  async updateCampanha(id: string, data: any) {
+    return this.prisma.campanhaEstrategia.update({ where: { id }, data });
+  }
+
+  async deleteCampanha(id: string) {
+    return this.prisma.campanhaEstrategia.delete({ where: { id } });
+  }
+
+  async updateEixo(id: string, data: any) {
+    return this.prisma.eixoEstrategico.update({ where: { id }, data });
+  }
+
+  async deleteEixo(id: string) {
+    return this.prisma.eixoEstrategico.delete({ where: { id } });
+  }
+
+  async updatePlanoAcao(id: string, data: any) {
+    return this.prisma.planoAcao.update({ where: { id }, data });
+  }
+
+  async deletePlanoAcao(id: string) {
+    return this.prisma.planoAcao.delete({ where: { id } });
+  }
+
+  async deleteParceria(id: string) {
+    return this.prisma.campanhaParceria.delete({ where: { id } });
   }
 }

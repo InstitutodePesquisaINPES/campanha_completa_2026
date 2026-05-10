@@ -35,6 +35,10 @@ import CopilotPage from "./pages/copilot/CopilotPage";
 import PesquisasPage from "./pages/pesquisas/PesquisasPage";
 import EleitoralPage from "./pages/eleitoral/EleitoralPage";
 
+import WarRoomDashboard from "./pages/WarRoom/WarRoomDashboard";
+import DisparoEmMassa from "./pages/Comunicacao/DisparoEmMassa";
+import RankingLideres from "./pages/Gamificacao/RankingLideres";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -73,6 +77,12 @@ const App = () => (
               <Route path="/copilot" element={<CopilotPage />} />
               <Route path="/pesquisas" element={<PesquisasPage />} />
               <Route path="/eleitoral" element={<EleitoralPage />} />
+              
+              {/* --- Enterprise Modules --- */}
+              <Route path="/war-room" element={<WarRoomDashboard />} />
+              <Route path="/comunicacao/disparo" element={<DisparoEmMassa />} />
+              <Route path="/gamificacao/ranking" element={<RankingLideres />} />
+              
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

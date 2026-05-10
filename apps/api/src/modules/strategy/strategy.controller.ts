@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Request, Patch, Delete } from '@nestjs/common';
 import { StrategyService } from './strategy.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 
@@ -40,5 +40,40 @@ export class StrategyController {
   @Get('war-room/:campanhaId')
   getWarRoomStats(@Param('campanhaId') campanhaId: string) {
     return this.strategyService.getWarRoomStats(campanhaId);
+  }
+
+  @Patch('campanhas/:id')
+  updateCampanha(@Param('id') id: string, @Body() data: any) {
+    return this.strategyService.updateCampanha(id, data);
+  }
+
+  @Delete('campanhas/:id')
+  deleteCampanha(@Param('id') id: string) {
+    return this.strategyService.deleteCampanha(id);
+  }
+
+  @Patch('eixos/:id')
+  updateEixo(@Param('id') id: string, @Body() data: any) {
+    return this.strategyService.updateEixo(id, data);
+  }
+
+  @Delete('eixos/:id')
+  deleteEixo(@Param('id') id: string) {
+    return this.strategyService.deleteEixo(id);
+  }
+
+  @Patch('planos/:id')
+  updatePlanoAcao(@Param('id') id: string, @Body() data: any) {
+    return this.strategyService.updatePlanoAcao(id, data);
+  }
+
+  @Delete('planos/:id')
+  deletePlanoAcao(@Param('id') id: string) {
+    return this.strategyService.deletePlanoAcao(id);
+  }
+
+  @Delete('parcerias/:id')
+  deleteParceria(@Param('id') id: string) {
+    return this.strategyService.deleteParceria(id);
   }
 }

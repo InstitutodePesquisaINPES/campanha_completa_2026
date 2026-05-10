@@ -84,6 +84,12 @@ const adminItems = [
   { title: "Configurações", url: "/configuracoes", icon: Settings },
 ];
 
+const enterpriseItems = [
+  { title: "War Room", url: "/war-room", icon: Target },
+  { title: "Ranking (Gamificação)", url: "/gamificacao/ranking", icon: Sparkles },
+  { title: "Disparo Omnichannel", url: "/comunicacao/disparo", icon: MessageSquare },
+];
+
 function SidebarNavGroup({
   label,
   items,
@@ -161,6 +167,7 @@ export function AppSidebar() {
 
       <SidebarContent>
         <SidebarNavGroup label="Principal" items={mainItems} collapsed={collapsed} />
+        <SidebarNavGroup label="Enterprise (War Room)" items={enterpriseItems} collapsed={collapsed} />
         <SidebarNavGroup label="Módulos" items={modulesItems} collapsed={collapsed} />
         <SidebarNavGroup label="Inteligência" items={analyticsItems} collapsed={collapsed} />
         <SidebarNavGroup label="Sistema" items={systemItems} collapsed={collapsed} />
