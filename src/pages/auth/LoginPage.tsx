@@ -1,5 +1,7 @@
-import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { api } from "@/lib/apiClient";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -9,19 +11,31 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Shield, Lock, Mail, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
+const loginSchema = z.object({
+  email: z.string().email("E-mail inválido"),
+  password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
+});
+
+type LoginForm = z.infer<typeof loginSchema>;
+
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { refreshUser } = useAuth();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginForm>({
+    resolver: zodResolver(loginSchema),
+  });
+
+  const handleLogin = async (data: LoginForm) => {
     setLoading(true);
     try {
-      const res = await api.post<{ token: string }>('/auth/login', { email, password });
+      const res = await api.post<{ token: string }>('/auth/login', data);
       api.setToken(res.token);
       await refreshUser();
       navigate("/");
@@ -84,7 +98,7 @@ export default function LoginPage() {
               <p className="text-slate-500 dark:text-slate-400 text-sm">Insira suas credenciais para acessar a central de comando.</p>
             </div>
 
-            <form onSubmit={handleLogin} className="space-y-5">
+            <form onSubmit={handleSubmit(handleLogin)} className="space-y-5">
               <div className="space-y-2 relative">
                 <Label htmlFor="email" className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider">E-mail</Label>
                 <div className="relative">
@@ -95,12 +109,12 @@ export default function LoginPage() {
                     id="email"
                     type="email"
                     placeholder="seu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
+                    {...register("email")}
+                    disabled={loading}
                     className="pl-10 h-12 bg-white/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 rounded-xl focus-visible:ring-blue-500 transition-all"
                   />
                 </div>
+                {errors.email && <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>}
               </div>
 
               <div className="space-y-2 relative">
@@ -116,12 +130,12 @@ export default function LoginPage() {
                     id="password"
                     type="password"
                     placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
+                    {...register("password")}
+                    disabled={loading}
                     className="pl-10 h-12 bg-white/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 rounded-xl focus-visible:ring-blue-500 transition-all"
                   />
                 </div>
+                {errors.password && <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>}
               </div>
 
               <Button type="submit" className="w-full h-12 text-md font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 transition-all group" disabled={loading}>

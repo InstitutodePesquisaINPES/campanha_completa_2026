@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 import TerritoriosPage from "./pages/territorial/TerritoriosPage";
 import PessoasPage from "./pages/crm/PessoasPage";
 import DemandasPage from "./pages/demandas/DemandasPage";
@@ -52,36 +53,43 @@ const App = () => (
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/cadastro" element={<SignupPage />} />
-              <Route path="/" element={<Index />} />
-              <Route path="/perfil" element={<ProfilePage />} />
-              <Route path="/admin" element={<AdminPage />} />
-              <Route path="/configuracoes" element={<SettingsPage />} />
-              <Route path="/territorios" element={<TerritoriosPage />} />
-              <Route path="/pessoas" element={<PessoasPage />} />
-              <Route path="/demandas" element={<DemandasPage />} />
-              <Route path="/agenda" element={<AgendaPage />} />
-              <Route path="/campo" element={<CampoPage />} />
-              <Route path="/materiais" element={<MateriaisPageRoute />} />
-              <Route path="/financeiro" element={<FinanceiroPageRoute />} />
-              <Route path="/compliance" element={<CompliancePage />} />
-              <Route path="/inteligencia" element={<InteligenciaPage />} />
-              <Route path="/comando" element={<ComandoPage />} />
-              <Route path="/plano" element={<PlanoCampanhaPage />} />
-              <Route path="/mapa-estrategico" element={<MapaEstrategicoPage />} />
-              <Route path="/inteligencia-politica" element={<InteligenciaPoliticaPage />} />
-              <Route path="/plano-estrategico" element={<PlanoEstrategicoPage />} />
-              <Route path="/bi" element={<BIPage />} />
-              <Route path="/mapas" element={<MapasPage />} />
-              <Route path="/documentos" element={<DocumentosPage />} />
-              <Route path="/comunicacao" element={<ComunicacaoPage />} />
-              <Route path="/copilot" element={<CopilotPage />} />
-              <Route path="/pesquisas" element={<PesquisasPage />} />
-              <Route path="/eleitoral" element={<EleitoralPage />} />
               
-              {/* --- Enterprise Modules --- */}
-              <Route path="/war-room" element={<WarRoomDashboard />} />
-              <Route path="/comunicacao/disparo" element={<DisparoEmMassa />} />
-              <Route path="/gamificacao/ranking" element={<RankingLideres />} />
+              <Route element={<ProtectedRoute />}>
+                <Route path="/" element={<Index />} />
+                <Route path="/perfil" element={<ProfilePage />} />
+                <Route path="/configuracoes" element={<SettingsPage />} />
+                <Route path="/territorios" element={<TerritoriosPage />} />
+                <Route path="/pessoas" element={<PessoasPage />} />
+                <Route path="/demandas" element={<DemandasPage />} />
+                <Route path="/agenda" element={<AgendaPage />} />
+                <Route path="/campo" element={<CampoPage />} />
+                <Route path="/materiais" element={<MateriaisPageRoute />} />
+                <Route path="/financeiro" element={<FinanceiroPageRoute />} />
+                <Route path="/compliance" element={<CompliancePage />} />
+                <Route path="/inteligencia" element={<InteligenciaPage />} />
+                <Route path="/comando" element={<ComandoPage />} />
+                <Route path="/plano" element={<PlanoCampanhaPage />} />
+                <Route path="/mapa-estrategico" element={<MapaEstrategicoPage />} />
+                <Route path="/inteligencia-politica" element={<InteligenciaPoliticaPage />} />
+                <Route path="/plano-estrategico" element={<PlanoEstrategicoPage />} />
+                <Route path="/bi" element={<BIPage />} />
+                <Route path="/mapas" element={<MapasPage />} />
+                <Route path="/documentos" element={<DocumentosPage />} />
+                <Route path="/comunicacao" element={<ComunicacaoPage />} />
+                <Route path="/copilot" element={<CopilotPage />} />
+                <Route path="/pesquisas" element={<PesquisasPage />} />
+                <Route path="/eleitoral" element={<EleitoralPage />} />
+                
+                {/* --- Enterprise Modules --- */}
+                <Route path="/war-room" element={<WarRoomDashboard />} />
+                <Route path="/comunicacao/disparo" element={<DisparoEmMassa />} />
+                <Route path="/gamificacao/ranking" element={<RankingLideres />} />
+              </Route>
+
+              {/* Admin Route Protection */}
+              <Route element={<ProtectedRoute requiredRoles={['ADMIN']} />}>
+                <Route path="/admin" element={<AdminPage />} />
+              </Route>
               
               <Route path="*" element={<NotFound />} />
             </Routes>
