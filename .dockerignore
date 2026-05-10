@@ -1,0 +1,14 @@
+node_modules
+dist
+dist-ssr
+.git
+.github
+.vscode
+.idea
+.env
+.env.*
+*.log
+apps/api/node_modules
+apps/api/dist
+scratch
+docs
