@@ -14,6 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 
+/**
  * Dashboard por perfil. Renderiza blocos diferentes conforme as roles do usuário.
  * - admin/candidato/coord_geral: visão completa
  * - coordenadores específicos: visão setorial
