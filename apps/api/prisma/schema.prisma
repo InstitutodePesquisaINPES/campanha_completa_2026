@@ -525,3 +525,87 @@ model TseImportLog {
 
   @@map("tse_import_logs")
 }
+
+model TseEleitorado {
+  id               String   @id @default(uuid()) @db.Uuid
+  ano              Int
+  uf               String
+  codMunicipioTse  String?  @map("cod_municipio_tse")
+  zona             Int?
+  secao            Int?
+  totalEleitores   Int      @default(0) @map("total_eleitores")
+  genero           Json?
+  faixaEtaria      Json?    @map("faixa_etaria")
+  escolaridade     Json?
+  estadoCivil      Json?    @map("estado_civil")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@index([uf, ano])
+  @@index([codMunicipioTse])
+  @@map("tse_eleitorado")
+}
+
+model TseLocalVotacao {
+  id               String   @id @default(uuid()) @db.Uuid
+  ano              Int
+  uf               String
+  codMunicipioTse  String?  @map("cod_municipio_tse")
+  codigoLocal      String?  @map("codigo_local")
+  nomeLocal        String?  @map("nome_local")
+  endereco         String?
+  bairro           String?
+  cep              String?
+  zona             Int?
+  latitude         Float?
+  longitude        Float?
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@index([uf, ano])
+  @@index([codMunicipioTse])
+  @@map("tse_locais_votacao")
+}
+
+model TseCandidato {
+  id                   String   @id @default(uuid()) @db.Uuid
+  ano                  Int
+  uf                   String
+  turno                Int      @default(1)
+  cargo                String
+  numeroUrna           String?  @map("numero_urna")
+  nomeUrna             String?  @map("nome_urna")
+  nomeCompleto         String?  @map("nome_completo")
+  cpf                  String?
+  partidoSigla         String?  @map("partido_sigla")
+  partidoNumero        String?  @map("partido_numero")
+  coligacao            String?
+  genero               String?
+  ocupacao             String?
+  situacaoCandidatura  String?  @map("situacao_candidatura")
+  situacaoEleicao      String?  @map("situacao_eleicao")
+  eleito               Boolean  @default(false)
+  codMunicipioTse      String?  @map("cod_municipio_tse")
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  @@index([uf, ano, cargo])
+  @@index([codMunicipioTse])
+  @@map("tse_candidatos")
+}
+
+model TseResultadoSecao {
+  id               String   @id @default(uuid()) @db.Uuid
+  ano              Int
+  uf               String
+  turno            Int      @default(1)
+  cargo            String
+  codMunicipioTse  String?  @map("cod_municipio_tse")
+  zona             Int?
+  secao            Int?
+  numeroVotavel    String?  @map("numero_votavel")
+  partidoSigla     String?  @map("partido_sigla")
+  votos            Int      @default(0)
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@index([uf, ano, cargo])
+  @@index([codMunicipioTse, zona, secao])
+  @@map("tse_resultados_secao")
+}

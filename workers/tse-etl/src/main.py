@@ -1,118 +1,52 @@
-"""
-TSE ETL Worker — Entry Point
+import argparse
+import tempfile
+import uuid
+from src.downloader import download_and_extract
+from src.processor import process_file
+from src.db import get_connection, log_job
 
-Poll tse_import_jobs no PostgreSQL e processa cada job:
-1. Download ZIP do CDN TSE
-2. Salva bruto no MinIO (bronze)
-3. Extrai CSV, normaliza, gera Parquet (silver)
-4. Carrega no ClickHouse (gold)
-5. Atualiza status no PostgreSQL
-"""
-import time
-import traceback
-import psycopg
-from src.config import DATABASE_URL, POLL_INTERVAL
-
-
-def poll_next_job(conn) -> dict | None:
-    """Busca o próximo job com status 'queued' e marca como 'running'."""
-    with conn.cursor() as cur:
-        cur.execute("""
-            UPDATE tse_import_jobs
-            SET status = 'running', started_at = NOW()
-            WHERE id = (
-                SELECT id FROM tse_import_jobs
-                WHERE status = 'queued'
-                ORDER BY created_at ASC
-                LIMIT 1
-                FOR UPDATE SKIP LOCKED
+def start_job(tipo: str, ano: int, uf: str) -> str:
+    job_id = str(uuid.uuid4())
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO tse_import_jobs (id, tipo, uf, ano, status, progress_pct, started_at)
+                VALUES (%s, %s, %s, %s, 'running', 0, NOW())
+                """,
+                (job_id, tipo, uf, ano)
             )
-            RETURNING id, tipo, uf, ano, source_url
-        """)
-        row = cur.fetchone()
-        conn.commit()
-        if row:
-            return {
-                "id": str(row[0]),
-                "tipo": row[1],
-                "uf": row[2],
-                "ano": row[3],
-                "source_url": row[4],
-            }
-    return None
-
-
-def log_job(conn, job_id: str, level: str, message: str):
-    """Registra log do job no PostgreSQL."""
-    with conn.cursor() as cur:
-        cur.execute(
-            "INSERT INTO tse_import_logs (job_id, level, message) VALUES (%s, %s, %s)",
-            (job_id, level, message),
-        )
-        conn.commit()
-
-
-def finish_job(conn, job_id: str, status: str, total: int = 0, error_msg: str | None = None):
-    """Finaliza o job com status 'done' ou 'failed'."""
-    with conn.cursor() as cur:
-        cur.execute(
-            """UPDATE tse_import_jobs
-               SET status = %s, finished_at = NOW(),
-                   total_registros = %s, progress_pct = 100,
-                   error_msg = %s
-               WHERE id = %s""",
-            (status, total, error_msg, job_id),
-        )
-        conn.commit()
-
-
-def process_job(conn, job: dict):
-    """Processa um job TSE completo."""
-    job_id = job["id"]
-    tipo = job["tipo"]
-    uf = job["uf"]
-    ano = job["ano"]
-
-    log_job(conn, job_id, "info", f"Iniciando processamento: {tipo} {uf} {ano}")
-
-    # TODO Fase 4: implementar pipeline completo
-    # 1. download_tse_zip(tipo, uf, ano) → salvar em MinIO bronze/
-    # 2. extract_csv_stream() → parse streaming
-    # 3. normalize_schema() → polars DataFrame
-    # 4. write_parquet() → MinIO silver/
-    # 5. load_clickhouse() → INSERT batch
-    # 6. run_quality_checks()
-
-    log_job(conn, job_id, "info", "Pipeline placeholder — aguardando implementação completa")
-    finish_job(conn, job_id, "done", total=0)
-
+            conn.commit()
+    return job_id
 
 def main():
-    """Loop principal do worker."""
-    print("[TSE Worker] Iniciando...")
-    print(f"[TSE Worker] Poll interval: {POLL_INTERVAL}s")
-
-    conn = psycopg.connect(DATABASE_URL)
-
-    while True:
-        try:
-            job = poll_next_job(conn)
-            if job:
-                print(f"[TSE Worker] Job encontrado: {job['id']} ({job['tipo']} {job['uf']} {job['ano']})")
-                process_job(conn, job)
-                print(f"[TSE Worker] Job {job['id']} concluído")
-            else:
-                time.sleep(POLL_INTERVAL)
-        except KeyboardInterrupt:
-            print("[TSE Worker] Encerrando...")
-            break
-        except Exception as e:
-            print(f"[TSE Worker] Erro: {e}")
-            traceback.print_exc()
-            time.sleep(POLL_INTERVAL)
-
-    conn.close()
-
-
+    parser = argparse.ArgumentParser(description="TSE ETL Worker")
+    parser.add_argument("--tipo", required=True, choices=["eleitorado", "locais", "candidatos", "resultados"])
+    parser.add_argument("--ano", type=int, default=2024)
+    parser.add_argument("--uf", default="BA", help="UF ou BR para nacional")
+    
+    args = parser.parse_args()
+    
+    job_id = start_job(args.tipo, args.ano, args.uf)
+    print(f"Iniciando Job {job_id} para {args.tipo} {args.ano} {args.uf}")
+    
+    try:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            extracted_files = download_and_extract(args.tipo, args.ano, args.uf, tmpdir)
+            total_inserted = 0
+            for csv_file in extracted_files:
+                inserted = process_file(csv_file, args.tipo, args.uf, args.ano, job_id)
+                total_inserted += inserted
+                
+        from src.db import update_job_status
+        update_job_status(job_id, "completed", progress=100.0)
+        print(f"Job {job_id} concluído com sucesso. {total_inserted} registros inseridos.")
+        
+    except Exception as e:
+        print(f"Erro fatal no job {job_id}: {e}")
+        # o status error ja e atualizado pelo processor.py ou precisaria catch aqui
+        from src.db import update_job_status
+        update_job_status(job_id, "error", error_msg=str(e))
+        
 if __name__ == "__main__":
     main()
