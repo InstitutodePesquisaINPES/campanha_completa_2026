@@ -52,7 +52,7 @@ async function main() {
 
   if (!adminExists) {
     console.log('Criando usuário Super Admin...');
-    const passwordHash = await bcrypt.hash('admin123', 12);
+    const passwordHash = await bcrypt.hash('Sistema@1@2@3', 12);
     
     await prisma.user.create({
       data: {
@@ -78,7 +78,7 @@ async function main() {
 
   if (!coordExists) {
     console.log('Criando usuário Coordenador Geral...');
-    const passwordHash = await bcrypt.hash('coord123', 12);
+    const passwordHash = await bcrypt.hash('Sistema@1@2@3', 12);
     
     await prisma.user.create({
       data: {
@@ -99,8 +99,8 @@ async function main() {
   console.log('✅ Seeding finalizado com sucesso!');
   console.log('----------------------------------------------------');
   console.log('Credenciais Padrão de Acesso:');
-  console.log('Admin (Billing/Sysadmin): admin@kiribamba.com / admin123');
-  console.log('Chefe de Campanha (Operação): coordenacao@kiribamba.com / coord123');
+  console.log('Admin (Billing/Sysadmin): admin@kiribamba.com / Sistema@1@2@3');
+  console.log('Chefe de Campanha (Operação): coordenacao@kiribamba.com / Sistema@1@2@3');
   console.log('----------------------------------------------------');
 }
 

@@ -50,8 +50,8 @@ Durante o startup, você verá no log de Deploy do Coolify:
 
 O sistema automaticamente injetará na tabela de produção:
 - **O Tenant Master:** Comitê Central Kiribamba.
-- **Login do Agência/Dono (Super Admin):** `admin@kiribamba.com` / Senha: `admin123`
-- **Login da Operação (Coordenação):** `coordenacao@kiribamba.com` / Senha: `coord123`
+- **Login do Agência/Dono (Super Admin):** `admin@kiribamba.com` / Senha: `Sistema@1@2@3`
+- **Login da Operação (Coordenação):** `coordenacao@kiribamba.com` / Senha: `Sistema@1@2@3`
 
 > ⚠️ **IMPORTANTE:** Ao acessar a aplicação web pela primeira vez, faça o login e imediatamente altere estas senhas no menu `Configurações` -> `Perfil`.
 

@@ -7,8 +7,8 @@ services:
     container_name: kiribamba_db
     restart: always
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres_password}
+      POSTGRES_USER: ${POSTGRES_USER:-kiribamba_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-Sistema@1@2@3}
       POSTGRES_DB: ${POSTGRES_DB:-kiribamba}
     ports:
       - "5432:5432"
@@ -52,10 +52,10 @@ services:
       - "3001:3001"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres_password}@postgres:5432/${POSTGRES_DB:-kiribamba}?schema=public
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-kiribamba_admin}:${POSTGRES_PASSWORD:-Sistema@1@2@3}@postgres:5432/${POSTGRES_DB:-kiribamba}?schema=public
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - JWT_SECRET=${JWT_SECRET:-kiribamba_super_secret_production_key_2026}
+      - JWT_SECRET=${JWT_SECRET:-Sistema@1@2@3}
       - JWT_EXPIRATION=${JWT_EXPIRATION:-7d}
       # Pode injetar OpenAI, Supabase, Minio aqui depois
     volumes:
