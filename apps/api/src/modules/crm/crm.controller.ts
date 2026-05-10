@@ -17,6 +17,15 @@ import {
   CurrentTenant,
   CurrentUser,
 } from '../../common/decorators/tenant.decorator';
+import {
+  CreatePessoaDto,
+  UpdatePessoaDto,
+  CreateTagDto,
+  CreateContatoDto,
+  CreateEnderecoDto,
+  CreatePapelDto,
+  GerarSegmentacaoDto,
+} from './dto/crm.dto';
 
 @UseGuards(JwtAuthGuard, TenantGuard)
 @Controller('pessoas')
@@ -27,7 +36,7 @@ export class CrmController {
   ) {}
 
   @Post('segmentacao')
-  gerarSegmentacao(@Body() filtros: any, @CurrentTenant() tenantId: string) {
+  gerarSegmentacao(@Body() filtros: GerarSegmentacaoDto, @CurrentTenant() tenantId: string) {
     return this.segmentacaoService.gerarAudiencia(filtros);
   }
 
@@ -47,7 +56,7 @@ export class CrmController {
   }
 
   @Post('tags')
-  createTag(@Body() data: any, @CurrentTenant() tenantId: string) {
+  createTag(@Body() data: CreateTagDto, @CurrentTenant() tenantId: string) {
     return this.crmService.createTag(data, tenantId);
   }
 
@@ -58,7 +67,7 @@ export class CrmController {
 
   @Post()
   create(
-    @Body() data: any,
+    @Body() data: CreatePessoaDto,
     @CurrentUser() userId: string,
     @CurrentTenant() tenantId: string,
   ) {
@@ -68,7 +77,7 @@ export class CrmController {
   @Patch(':id')
   update(
     @Param('id') id: string,
-    @Body() data: any,
+    @Body() data: UpdatePessoaDto,
     @CurrentTenant() tenantId: string,
   ) {
     return this.crmService.update(id, data, tenantId);
@@ -86,7 +95,7 @@ export class CrmController {
   }
 
   @Post(':id/contatos')
-  createContato(@Param('id') id: string, @Body() data: any) {
+  createContato(@Param('id') id: string, @Body() data: CreateContatoDto) {
     return this.crmService.createContato({ ...data, pessoaId: id });
   }
 
@@ -102,7 +111,7 @@ export class CrmController {
   }
 
   @Post(':id/enderecos')
-  createEndereco(@Param('id') id: string, @Body() data: any) {
+  createEndereco(@Param('id') id: string, @Body() data: CreateEnderecoDto) {
     return this.crmService.createEndereco({ ...data, pessoaId: id });
   }
 
@@ -118,7 +127,7 @@ export class CrmController {
   }
 
   @Post(':id/papeis')
-  createPapel(@Param('id') id: string, @Body() data: any) {
+  createPapel(@Param('id') id: string, @Body() data: CreatePapelDto) {
     return this.crmService.createPapel({ ...data, pessoaId: id });
   }
 

@@ -11,6 +11,15 @@ import {
 } from '@nestjs/common';
 import { TerritorialService } from './territorial.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import {
+  CreateMunicipioDto,
+  UpdateMunicipioDto,
+  CreateBairroDto,
+  UpdateBairroDto,
+  CreateZonaDto,
+  CreateSecaoDto,
+  CreateAreaAtuacaoDto,
+} from './dto/territorial.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('territorial')
@@ -28,11 +37,11 @@ export class TerritorialController {
     return this.territorialService.getMunicipios(estadoId);
   }
   @Post('municipios')
-  createMunicipio(@Body() data: any) {
+  createMunicipio(@Body() data: CreateMunicipioDto) {
     return this.territorialService.createMunicipio(data);
   }
   @Patch('municipios/:id')
-  updateMunicipio(@Param('id') id: string, @Body() data: any) {
+  updateMunicipio(@Param('id') id: string, @Body() data: UpdateMunicipioDto) {
     return this.territorialService.updateMunicipio(id, data);
   }
   @Delete('municipios/:id')
@@ -46,11 +55,11 @@ export class TerritorialController {
     return this.territorialService.getBairros(municipioId);
   }
   @Post('bairros')
-  createBairro(@Body() data: any) {
+  createBairro(@Body() data: CreateBairroDto) {
     return this.territorialService.createBairro(data);
   }
   @Patch('bairros/:id')
-  updateBairro(@Param('id') id: string, @Body() data: any) {
+  updateBairro(@Param('id') id: string, @Body() data: UpdateBairroDto) {
     return this.territorialService.updateBairro(id, data);
   }
   @Delete('bairros/:id')
@@ -64,7 +73,7 @@ export class TerritorialController {
     return this.territorialService.getZonasEleitorais(municipioId);
   }
   @Post('zonas')
-  createZona(@Body() data: any) {
+  createZona(@Body() data: CreateZonaDto) {
     return this.territorialService.createZona(data);
   }
   @Delete('zonas/:id')
@@ -78,7 +87,7 @@ export class TerritorialController {
     return this.territorialService.getSecoesEleitorais(zonaId);
   }
   @Post('secoes')
-  createSecao(@Body() data: any) {
+  createSecao(@Body() data: CreateSecaoDto) {
     return this.territorialService.createSecao(data);
   }
   @Delete('secoes/:id')
@@ -102,7 +111,7 @@ export class TerritorialController {
     return this.territorialService.getAreasAtuacao(municipioId);
   }
   @Post('areas-atuacao')
-  createAreaAtuacao(@Body() data: any) {
+  createAreaAtuacao(@Body() data: CreateAreaAtuacaoDto) {
     return this.territorialService.createAreaAtuacao(data);
   }
   @Delete('areas-atuacao/:id')

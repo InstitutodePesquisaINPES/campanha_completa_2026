@@ -12,6 +12,15 @@ import {
 import { AiService } from './ai.service';
 import { AuthGuard } from '@nestjs/passport';
 import { TenantGuard } from '../../common/guards/tenant.guard';
+import {
+  CreateAiProviderDto,
+  UpdateAiProviderDto,
+  CreateAiModelDto,
+  UpdateAiModelDto,
+  CreateAiCopilotDto,
+  UpdateAiCopilotDto,
+  AiChatPayloadDto,
+} from './dto/ai.dto';
 
 @Controller('ai')
 @UseGuards(AuthGuard('jwt'), TenantGuard)
@@ -24,7 +33,7 @@ export class AiController {
   }
 
   @Post('provedores')
-  async createProvider(@Request() req: any, @Body() body: any) {
+  async createProvider(@Request() req: any, @Body() body: CreateAiProviderDto) {
     return this.aiService.createProvider(req.tenantId, body);
   }
 
@@ -32,7 +41,7 @@ export class AiController {
   async updateProvider(
     @Request() req: any,
     @Param('id') id: string,
-    @Body() body: any,
+    @Body() body: UpdateAiProviderDto,
   ) {
     return this.aiService.updateProvider(req.tenantId, id, body);
   }
@@ -48,7 +57,7 @@ export class AiController {
   }
 
   @Post('modelos')
-  async createModel(@Request() req: any, @Body() body: any) {
+  async createModel(@Request() req: any, @Body() body: CreateAiModelDto) {
     return this.aiService.createModel(req.tenantId, body);
   }
 
@@ -56,7 +65,7 @@ export class AiController {
   async updateModel(
     @Request() req: any,
     @Param('id') id: string,
-    @Body() body: any,
+    @Body() body: UpdateAiModelDto,
   ) {
     return this.aiService.updateModel(req.tenantId, id, body);
   }
@@ -72,7 +81,7 @@ export class AiController {
   }
 
   @Post('copilots')
-  async createCopilot(@Request() req: any, @Body() body: any) {
+  async createCopilot(@Request() req: any, @Body() body: CreateAiCopilotDto) {
     return this.aiService.createCopilot(req.tenantId, body);
   }
 
@@ -80,7 +89,7 @@ export class AiController {
   async updateCopilot(
     @Request() req: any,
     @Param('id') id: string,
-    @Body() body: any,
+    @Body() body: UpdateAiCopilotDto,
   ) {
     return this.aiService.updateCopilot(req.tenantId, id, body);
   }
@@ -91,7 +100,7 @@ export class AiController {
   }
 
   @Post('chat')
-  async chat(@Request() req: any, @Body() body: any) {
+  async chat(@Request() req: any, @Body() body: AiChatPayloadDto) {
     return this.aiService.chat(req.tenantId, req.user.userId, body);
   }
 }
