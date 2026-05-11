@@ -12,7 +12,9 @@ import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Brain, Plus, Pencil, Trash2, Zap, Check, X, AlertCircle, ExternalLink } from "lucide-react";
 import { useAIProvedores, useAIModelos, useUpsertProvedor, useDeleteProvedor, useTestProvedor, useUpsertModelo, useDeleteModelo, useAIUsoLog } from "@/hooks/useAI";
-import type { Database, Json } from "@/integrations/(api as any)/types";
+// Types were previously imported from Supabase integration — now defined inline
+type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
+type Database = { public: { Tables: { ai_provedores: { Row: any }; [key: string]: any } } };
 
 type ProviderType = "openai" | "anthropic" | "google" | "groq" | "mistral" | "openrouter" | "azure_openai" | "cohere" | "perplexity" | "xai" | "deepseek" | "custom";
 type ProviderStatus = "ativo" | "inativo" | "erro" | "testando";

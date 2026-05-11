@@ -160,15 +160,12 @@ export function TarefaDetailDrawer({
     queryKey: ["tarefa-historico", tarefa?.id],
     enabled: !!tarefa?.id && open,
     queryFn: async () => {
-      const { data, error } = await (api as any)
-        .from("audit_logs")
-        .select("id, action, user_id, new_data, old_data, created_at")
-        .eq("table_name", "campanha_tarefas")
-        .eq("record_id", tarefa!.id)
-        .order("created_at", { ascending: false })
-        .limit(30);
-      if (error) throw error;
-      return data ?? [];
+      try {
+        const data = await api.get<any[]>(`/campanhas/tarefas/${tarefa!.id}/historico`);
+        return data ?? [];
+      } catch {
+        return [];
+      }
     },
   });
 

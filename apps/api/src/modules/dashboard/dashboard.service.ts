@@ -203,4 +203,58 @@ export class DashboardService {
       eventos,
     };
   }
+
+  async globalSearch(tenantId: string, q: string) {
+    if (!q || q.length < 2) return [];
+
+    // Simple search across a few main entities, as the Prisma view 'v_busca_global' might not be directly queryable
+    const [pessoas, campanhas, demandas] = await Promise.all([
+      this.prisma.pessoa.findMany({
+        where: { tenantId, nomeCompleto: { contains: q, mode: 'insensitive' } },
+        take: 10,
+        select: { id: true, nomeCompleto: true, telefonePricipal: true },
+      }),
+      this.prisma.campanha.findMany({
+        where: { tenantId, nome: { contains: q, mode: 'insensitive' } },
+        take: 5,
+        select: { id: true, nome: true },
+      }),
+      this.prisma.demanda.findMany({
+        where: { tenantId, titulo: { contains: q, mode: 'insensitive' } },
+        take: 10,
+        select: { id: true, titulo: true, status: true },
+      }),
+    ]);
+
+    const results = [];
+    pessoas.forEach((p) =>
+      results.push({
+        tipo: 'pessoa',
+        id: p.id,
+        titulo: p.nomeCompleto,
+        subtitulo: p.telefonePricipal,
+        link: `/crm/pessoas/${p.id}`,
+      }),
+    );
+    campanhas.forEach((c) =>
+      results.push({
+        tipo: 'campanha',
+        id: c.id,
+        titulo: c.nome,
+        subtitulo: 'Campanha Eleitoral',
+        link: `/plano/campanhas`,
+      }),
+    );
+    demandas.forEach((d) =>
+      results.push({
+        tipo: 'demanda',
+        id: d.id,
+        titulo: d.titulo,
+        subtitulo: `Status: ${d.status}`,
+        link: `/campo/demandas/${d.id}`,
+      }),
+    );
+
+    return results;
+  }
 }

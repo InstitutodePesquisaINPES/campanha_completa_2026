@@ -50,6 +50,17 @@ export class CampanhasController {
     return this.campanhasService.create(tenantId, body);
   }
 
+  @Get('ativa')
+  async findAtiva(@CurrentTenant() tenantId: string) {
+    const campanhas = await this.campanhasService.findAll(tenantId);
+    if (!campanhas || campanhas.length === 0) {
+      // Just return null if no active campaign is found, the frontend expects null or a campaign object
+      return null;
+    }
+    // Retorna a primeira campanha por padrão ou implementar lógica de 'ativa' se houver um campo
+    return campanhas[0];
+  }
+
   @Get(':id')
   async findOne(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.campanhasService.findOne(tenantId, id);
@@ -74,6 +85,43 @@ export class CampanhasController {
     return this.campanhasService.gerarPlano90Dias(tenantId, id);
   }
 
+  // --- Parâmetros ---
+  @Get(':id/parametros')
+  async getParametros(@CurrentTenant() tenantId: string, @Param('id') id: string) {
+    return this.campanhasService.getParametros(tenantId, id);
+  }
+
+  @Put(':id/parametros')
+  async updateParametros(
+    @CurrentTenant() tenantId: string,
+    @Param('id') id: string,
+    @Body() body: any,
+  ) {
+    return this.campanhasService.updateParametros(tenantId, id, body);
+  }
+
+  // --- Marcos Críticos ---
+  @Get(':id/marcos-criticos')
+  async getMarcosCriticos(@CurrentTenant() tenantId: string, @Param('id') id: string) {
+    return this.campanhasService.getMarcosCriticos(tenantId, id);
+  }
+
+  // --- Tarefa Histórico ---
+  @Get('tarefas/:id/historico')
+  async getTarefaHistorico(@CurrentTenant() tenantId: string, @Param('id') id: string) {
+    return this.campanhasService.getTarefaHistorico(tenantId, id);
+  }
+
+  // --- Subtarefas ---
+  @Post(':id/subtarefas')
+  async createSubtarefas(
+    @CurrentTenant() tenantId: string,
+    @Param('id') id: string,
+    @Body() body: any,
+  ) {
+    return this.campanhasService.createSubtarefas(tenantId, id, body);
+  }
+
   // --- Fases ---
   @Get(':id/fases')
   async getFases(@CurrentTenant() tenantId: string, @Param('id') id: string) {
@@ -81,6 +129,11 @@ export class CampanhasController {
   }
 
   // --- Tarefas ---
+  @Get(':id/tarefas/anexos-count')
+  async getAnexosCount(@CurrentTenant() tenantId: string, @Param('id') id: string) {
+    return this.campanhasService.getAnexosCount(tenantId, id);
+  }
+
   @Get(':id/tarefas')
   async getTarefas(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     return this.campanhasService.getTarefas(tenantId, id);

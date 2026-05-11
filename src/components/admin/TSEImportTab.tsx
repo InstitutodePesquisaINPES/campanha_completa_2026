@@ -57,8 +57,8 @@ export function TSEImportTab() {
       return;
     }
     try {
-      const r = await enqueue.mutateAsync({ uf, anos, tipos });
-      toast.success(`${r.enqueued} jobs criados`);
+      const r: any = await enqueue.mutateAsync({ uf, anos, tipos });
+      toast.success(`${r?.enqueued ?? 0} jobs criados`);
     } catch (e: any) {
       toast.error(e.message ?? "Erro ao enfileirar");
     }
@@ -66,8 +66,8 @@ export function TSEImportTab() {
 
   const handleRunWorker = async () => {
     try {
-      const r = await runWorker.mutateAsync();
-      toast.success(r.picked ? `${r.picked} job(s) iniciados` : "Nenhum job na fila");
+      const r: any = await runWorker.mutateAsync();
+      toast.success(r?.picked ? `${r.picked} job(s) iniciados` : "Nenhum job na fila");
     } catch (e: any) {
       toast.error(e.message ?? "Erro");
     }

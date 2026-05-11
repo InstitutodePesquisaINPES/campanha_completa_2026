@@ -19,4 +19,9 @@ export class DashboardController {
   getMeusItens(@CurrentTenant() tenantId: string, @Request() req: any) {
     return this.dashboardService.getMeusItens(tenantId, req.user.userId);
   }
+
+  @Get('busca')
+  globalSearch(@CurrentTenant() tenantId: string, @Query('q') q: string) {
+    return this.dashboardService.globalSearch(tenantId, q);
+  }
 }

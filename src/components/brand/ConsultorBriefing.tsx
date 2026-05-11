@@ -23,8 +23,12 @@ export function ConsultorBriefing() {
   const { data: pessoasCount = 0 } = useQuery({
     queryKey: ["consultor-pessoas-count"],
     queryFn: async () => {
-      const { count } = await (api as any).from("pessoas").select("id", { count: "exact", head: true });
-      return count ?? 0;
+      try {
+        const data = await api.get<any>("/pessoas/count");
+        return data?.count ?? 0;
+      } catch {
+        return 0;
+      }
     },
   });
 

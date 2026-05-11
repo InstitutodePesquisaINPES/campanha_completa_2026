@@ -24,13 +24,8 @@ export function useTSEJobs() {
   return useQuery({
     queryKey: ["tse-jobs"],
     queryFn: async () => {
-      const { data, error } = await (api as any)
-        .from("tse_import_jobs")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(200);
-      if (error) throw error;
-      return data as TseImportJob[];
+      const data = await api.get<TseImportJob[]>("/tse/jobs");
+      return data || [];
     },
     refetchInterval: 3000,
   });
@@ -41,14 +36,8 @@ export function useTSEJobLogs(jobId?: string) {
     queryKey: ["tse-job-logs", jobId],
     queryFn: async () => {
       if (!jobId) return [];
-      const { data, error } = await (api as any)
-        .from("tse_import_logs")
-        .select("*")
-        .eq("job_id", jobId)
-        .order("created_at", { ascending: true })
-        .limit(500);
-      if (error) throw error;
-      return data;
+      const data = await api.get<any[]>(`/tse/jobs/${jobId}/logs`);
+      return data || [];
     },
     enabled: !!jobId,
     refetchInterval: 3000,
@@ -59,18 +48,13 @@ export function useTSEStats() {
   return useQuery({
     queryKey: ["tse-stats"],
     queryFn: async () => {
-      // RPC consolidada: soma real de eleitores e candidatos únicos,
-      // unificando tabelas agregadas (tse_eleitorado/tse_candidatos)
-      // e detalhadas (tse_eleitorado_perfil/tse_votacao_candidato_perfil).
-      const { data, error } = await (api as any).rpc("tse_estatisticas_globais" as any);
-      if (error) throw error;
-      const row: any = Array.isArray(data) ? data[0] : data;
+      const data = await api.get<any>("/tse/stats");
       return {
-        eleitorado: Number(row?.eleitorado ?? 0),
-        candidatos: Number(row?.candidatos ?? 0),
-        resultados: Number(row?.resultados ?? 0),
-        locais: Number(row?.locais ?? 0),
-        prestacao_contas: Number(row?.prestacao_contas ?? 0),
+        eleitorado: Number(data?.eleitorado ?? 0),
+        candidatos: Number(data?.candidatos ?? 0),
+        resultados: Number(data?.resultados ?? 0),
+        locais: Number(data?.locais ?? 0),
+        prestacao_contas: Number(data?.prestacao_contas ?? 0),
       };
     },
     refetchInterval: 5000,
@@ -81,8 +65,7 @@ export function useEnqueueTSE() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (vars: { uf: string; anos: number[]; tipos: TseJobTipo[] }) => {
-      const { data, error } = await (api as any).functions.invoke("tse-import-enqueue", { body: vars });
-      if (error) throw error;
+      const data = await api.post("/tse/jobs/enqueue", vars);
       return data;
     },
     onSuccess: () => {
@@ -95,8 +78,7 @@ export function useRunWorker() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async () => {
-      const { data, error } = await (api as any).functions.invoke("tse-import-worker", { body: {} });
-      if (error) throw error;
+      const data = await api.post("/tse/jobs/run", {});
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tse-jobs"] }),
@@ -107,12 +89,7 @@ export function useCancelTSEJob() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await (api as any)
-        .from("tse_import_jobs")
-        .update({ status: "cancelled", finished_at: new Date().toISOString() })
-        .eq("id", id)
-        .in("status", ["queued", "running"]);
-      if (error) throw error;
+      await api.delete(`/tse/jobs/${id}`);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tse-jobs"] }),
   });

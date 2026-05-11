@@ -23,7 +23,7 @@ export function MunicipiosEstrategicosTab({ campanhaId }: { campanhaId: string }
   const { data: municipios = [] } = useQuery({
     queryKey: ["municipios-list"],
     queryFn: async () => {
-      const { data } = await (api as any).from("municipios").select("id, nome").order("nome").limit(500);
+      const data = await api.get<any[]>("/territorio/municipios");
       return data ?? [];
     },
   });

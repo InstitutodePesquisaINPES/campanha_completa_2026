@@ -19,13 +19,8 @@ export function useLacunasTerritoriais() {
   return useQuery({
     queryKey: ["lacunas-territoriais"],
     queryFn: async () => {
-      const { data, error } = await ((api as any) as any)
-        .from("v_lacunas_territoriais")
-        .select("*")
-        .order("score_prioridade", { ascending: false })
-        .limit(500);
-      if (error) throw error;
-      return (data || []) as LacunaTerritorial[];
+      const data = await api.get<LacunaTerritorial[]>("/territorio/lacunas");
+      return data || [];
     },
   });
 }

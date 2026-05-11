@@ -41,10 +41,10 @@ export function useUpdateSubtarefa() {
   return useMutation({
     mutationFn: async ({ id, ...patch }: Partial<Subtarefa> & { id: string }) => {
       // Assuming patch has tarefa_id to invalidate query properly if not handled differently. 
-      const data = await api.put(`/campanhas/subtarefas/${id}`, patch);
+      const data = await api.put<any>(`/campanhas/subtarefas/${id}`, patch);
       return data;
     },
-    onSuccess: (d) => qc.invalidateQueries({ queryKey: ["subtarefas", d.tarefa_id] }),
+    onSuccess: (d) => qc.invalidateQueries({ queryKey: ["subtarefas", d?.tarefa_id] }),
     onError: (e: Error) => toast.error(e.message),
   });
 }

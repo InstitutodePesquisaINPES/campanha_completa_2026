@@ -14,7 +14,7 @@ export function ConfiguracaoPlano({ campanhaId }: { campanhaId: string }) {
   const { data: params } = useQuery({
     queryKey: ["campanha-parametros", campanhaId],
     queryFn: async () => {
-      const { data } = await (api as any).from("campanha_parametros").select("*").eq("campanha_id", campanhaId).single();
+      const data = await api.get<any>(`/campanhas/${campanhaId}/parametros`);
       return data;
     },
   });
@@ -24,8 +24,7 @@ export function ConfiguracaoPlano({ campanhaId }: { campanhaId: string }) {
 
   const save = useMutation({
     mutationFn: async (payload: any) => {
-      const { error } = await (api as any).from("campanha_parametros").update(payload).eq("campanha_id", campanhaId);
-      if (error) throw error;
+      await api.put(`/campanhas/${campanhaId}/parametros`, payload);
     },
     onSuccess: () => {
       toast.success("Parâmetros salvos");
@@ -36,8 +35,7 @@ export function ConfiguracaoPlano({ campanhaId }: { campanhaId: string }) {
 
   const gerar = useMutation({
     mutationFn: async () => {
-      const { error } = await (api as any).rpc("gerar_plano_90_dias" as any, { _campanha_id: campanhaId });
-      if (error) throw error;
+      await api.post(`/campanhas/${campanhaId}/gerar-plano`);
     },
     onSuccess: () => {
       toast.success("Plano gerado");

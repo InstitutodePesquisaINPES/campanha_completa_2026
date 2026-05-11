@@ -23,30 +23,17 @@ export function ImportIBGETab() {
       const estado = estados.find((e) => e.sigla === uf);
       if (!estado) throw new Error("Estado não encontrado");
 
-      const { data: dbEstado } = await (api as any)
-        .from("estados").select("id").eq("sigla", uf).maybeSingle();
-
-      let estadoId = dbEstado?.id;
-      if (!estadoId) {
-        const { data: ins, error } = await (api as any)
-          .from("estados")
-          .insert({ sigla: uf, nome: estado.nome, geocodigo_ibge: String(estado.id) })
-          .select("id").single();
-        if (error) throw error;
-        estadoId = ins.id;
-      }
-
       const municipios = await fetchMunicipiosByUF(uf);
-      const rows = municipios.map((m) => ({
-        nome: m.nome,
-        estado_id: estadoId!,
-        geocodigo_ibge: String(m.id),
-      }));
-      const { error: upErr } = await (api as any)
-        .from("municipios")
-        .upsert(rows, { onConflict: "geocodigo_ibge", ignoreDuplicates: true });
-      if (upErr) throw upErr;
-      return rows.length;
+      const data = await api.post<any>("/territorio/importar-ibge", {
+        uf,
+        estado_nome: estado.nome,
+        geocodigo_ibge: String(estado.id),
+        municipios: municipios.map((m) => ({
+          nome: m.nome,
+          geocodigo_ibge: String(m.id),
+        })),
+      });
+      return data?.count ?? municipios.length;
     },
     onSuccess: (n) => {
       qc.invalidateQueries({ queryKey: ["municipios"] });

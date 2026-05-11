@@ -28,6 +28,8 @@ import { ScoreModule } from './modules/score/score.module';
 import { SystemSettingsModule } from './modules/system-settings/system-settings.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { EquipeModule } from './modules/equipe/equipe.module';
+import { TseModule } from './modules/tse/tse.module';
+import { ExportModule } from './modules/export/export.module';
 
 @Module({
   imports: [
@@ -73,6 +75,8 @@ import { EquipeModule } from './modules/equipe/equipe.module';
     SystemSettingsModule,
     AdminModule,
     EquipeModule,
+    TseModule,
+    ExportModule,
   ],
 })
 export class AppModule {}

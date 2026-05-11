@@ -21,9 +21,7 @@ export function ConvidarUsuarioDialog() {
   const submit = async () => {
     setLoading(true);
     try {
-      const { data, error } = await (api as any).functions.invoke("admin-create-user", { body: form });
-      if (error) throw error;
-      if ((data as any)?.error) throw new Error((data as any).error);
+      await api.post("/admin/users", form);
       toast.success("Usuário criado!");
       qc.invalidateQueries({ queryKey: ["admin-users"] });
       setOpen(false);

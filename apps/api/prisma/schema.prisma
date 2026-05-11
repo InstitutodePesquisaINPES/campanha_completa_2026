@@ -59,6 +59,11 @@ model Tenant {
   receitas               Receita[]
   tseImportJobs          TseImportJob[]
   tseImportLogs          TseImportLog[]
+  tseCsvArquivos         TseCsvArquivo[]
+  tseEleitoradoPerfil    TseEleitoradoPerfil[]
+  tseCandidatos          TseCandidato[]
+  tseResultadosSecao     TseResultadoSecao[]
+  tseLocaisVotacao       TseLocalVotacao[]
   gamificacaoRegras      GamificacaoRegra[]
   comunicacaoCampanhas   ComunicacaoCampanha[]
   comunicacaoLogs        ComunicacaoLog[]
@@ -695,6 +700,129 @@ model TseImportLog {
   tenant   Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@map("tse_import_logs")
+}
+
+// ─── TSE CSV UPLOAD QUEUE ───────────────────────────────────
+
+model TseCsvArquivo {
+  id                 String    @id @default(uuid()) @db.Uuid
+  nomeOriginal       String    @map("nome_original")
+  tipo               String
+  ano                Int
+  uf                 String    @db.VarChar(2)
+  storagePath        String    @map("storage_path")
+  tabelaDestino      String    @map("tabela_destino")
+  tamanhoBytes       BigInt?   @map("tamanho_bytes")
+  totalLinhas        Int?      @map("total_linhas")
+  linhasProcessadas  Int       @default(0) @map("linhas_processadas")
+  byteCursor         BigInt    @default(0) @map("byte_cursor")
+  status             String    @default("aguardando")
+  progressPct        Float     @default(0) @map("progress_pct")
+  errorMsg           String?   @map("error_msg")
+  attempts           Int       @default(0)
+  startedAt          DateTime? @map("started_at")
+  finishedAt         DateTime? @map("finished_at")
+  createdBy          String?   @map("created_by") @db.Uuid
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+  tenantId           String    @default("00000000-0000-0000-0000-000000000000") @map("tenant_id") @db.Uuid
+  tenant             Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("tse_csv_arquivos")
+}
+
+// ─── TSE DATA TABLES ────────────────────────────────────────
+
+model TseEleitoradoPerfil {
+  id                   String   @id @default(uuid()) @db.Uuid
+  ano                  Int
+  uf                   String   @db.VarChar(2)
+  municipio            String?
+  regiao               String?
+  corRaca              String?  @map("cor_raca")
+  estadoCivil          String?  @map("estado_civil")
+  faixaEtaria          String?  @map("faixa_etaria")
+  genero               String?
+  grauInstrucao        String?  @map("grau_instrucao")
+  quantidadeEleitores  Int      @default(0) @map("quantidade_eleitores")
+  createdAt            DateTime @default(now()) @map("created_at")
+  tenantId             String   @default("00000000-0000-0000-0000-000000000000") @map("tenant_id") @db.Uuid
+  tenant               Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, ano, uf, municipio, corRaca, faixaEtaria, genero, grauInstrucao], name: "uq_eleitorado_perfil")
+  @@index([tenantId, ano, uf])
+  @@map("tse_eleitorado_perfil")
+}
+
+model TseCandidato {
+  id                     String   @id @default(uuid()) @db.Uuid
+  ano                    Int
+  uf                     String   @db.VarChar(2)
+  turno                  Int      @default(1)
+  cargo                  String
+  numeroUrna             String   @map("numero_urna")
+  nomeUrna               String?  @map("nome_urna")
+  nomeCompleto           String?  @map("nome_completo")
+  cpf                    String?
+  partidoSigla           String?  @map("partido_sigla")
+  partidoNumero          String?  @map("partido_numero")
+  coligacao              String?
+  genero                 String?
+  ocupacao               String?
+  situacaoCandidatura    String?  @map("situacao_candidatura")
+  situacaoEleicao        String?  @map("situacao_eleicao")
+  eleito                 Boolean  @default(false)
+  codMunicipioTse        String?  @map("cod_municipio_tse")
+  createdAt              DateTime @default(now()) @map("created_at")
+  tenantId               String   @default("00000000-0000-0000-0000-000000000000") @map("tenant_id") @db.Uuid
+  tenant                 Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, ano, uf, turno, cargo, numeroUrna, codMunicipioTse], name: "uq_candidato")
+  @@index([tenantId, ano, uf])
+  @@map("tse_candidatos")
+}
+
+model TseResultadoSecao {
+  id                String   @id @default(uuid()) @db.Uuid
+  ano               Int
+  uf                String   @db.VarChar(2)
+  turno             Int      @default(1)
+  cargo             String
+  codMunicipioTse   String   @map("cod_municipio_tse")
+  zona              Int
+  secao             Int
+  numeroVotavel     String   @map("numero_votavel")
+  partidoSigla      String?  @map("partido_sigla")
+  votos             Int      @default(0)
+  createdAt         DateTime @default(now()) @map("created_at")
+  tenantId          String   @default("00000000-0000-0000-0000-000000000000") @map("tenant_id") @db.Uuid
+  tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, ano, uf, turno, codMunicipioTse, zona, secao, numeroVotavel, cargo], name: "uq_resultado_secao")
+  @@index([tenantId, ano, uf])
+  @@map("tse_resultados_secao")
+}
+
+model TseLocalVotacao {
+  id                String   @id @default(uuid()) @db.Uuid
+  ano               Int
+  uf                String   @db.VarChar(2)
+  codMunicipioTse   String   @map("cod_municipio_tse")
+  codigoLocal       String   @map("codigo_local")
+  nomeLocal         String?  @map("nome_local")
+  endereco          String?
+  bairro            String?
+  cep               String?
+  zona              Int      @default(0)
+  latitude          Float?
+  longitude         Float?
+  createdAt         DateTime @default(now()) @map("created_at")
+  tenantId          String   @default("00000000-0000-0000-0000-000000000000") @map("tenant_id") @db.Uuid
+  tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, ano, uf, codMunicipioTse, codigoLocal, zona], name: "uq_local_votacao")
+  @@index([tenantId, ano, uf])
+  @@map("tse_locais_votacao")
 }
 
 // ─── GAMIFICACAO E PONTUACAO ───────────────────────────────

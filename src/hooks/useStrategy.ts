@@ -7,24 +7,24 @@ export const useStrategy = () => {
   const campanhasQuery = useQuery({
     queryKey: ['campanhas-estrategia'],
     queryFn: async () => {
-      const res = await api.get('/strategy/campanhas');
-      return res.data;
+      const res = await api.get<any>('/strategy/campanhas');
+      return res;
     },
   });
 
   const warRoomStatsQuery = (campanhaId: string) => useQuery({
     queryKey: ['war-room-stats', campanhaId],
     queryFn: async () => {
-      const res = await api.get(`/strategy/war-room/${campanhaId}`);
-      return res.data;
+      const res = await api.get<any>(`/strategy/war-room/${campanhaId}`);
+      return res;
     },
     enabled: !!campanhaId,
   });
 
   const createCampanhaMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await api.post('/strategy/campanhas', data);
-      return res.data;
+      const res = await api.post<any>('/strategy/campanhas', data);
+      return res;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['campanhas-estrategia'] });
@@ -33,8 +33,8 @@ export const useStrategy = () => {
 
   const createEixoMutation = useMutation({
     mutationFn: async ({ campanhaId, data }: { campanhaId: string; data: any }) => {
-      const res = await api.post(`/strategy/campanhas/${campanhaId}/eixos`, data);
-      return res.data;
+      const res = await api.post<any>(`/strategy/campanhas/${campanhaId}/eixos`, data);
+      return res;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['campanhas-estrategia'] });
@@ -43,8 +43,8 @@ export const useStrategy = () => {
 
   const createParceriaMutation = useMutation({
     mutationFn: async ({ campanhaId, data }: { campanhaId: string; data: any }) => {
-      const res = await api.post(`/strategy/campanhas/${campanhaId}/parcerias`, data);
-      return res.data;
+      const res = await api.post<any>(`/strategy/campanhas/${campanhaId}/parcerias`, data);
+      return res;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['campanhas-estrategia'] });

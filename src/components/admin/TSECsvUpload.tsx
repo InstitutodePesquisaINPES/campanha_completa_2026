@@ -320,19 +320,20 @@ export function TSECsvUpload() {
   const sendChunk = async (registros: any[]): Promise<number> => {
     let attempt = 0;
     while (true) {
-      const { data, error } = await (api as any).functions.invoke("tse-ingest-chunk-public", {
-        body: { tabela, registros },
-      });
-      if (error) throw new Error(error.message);
-      const d = data as any;
-      if (d?.retry && attempt < 5) {
+      try {
+        const res = await api.post<any>("/tse/ingest-chunk", {
+          tabela,
+          registros,
+        });
+        return res?.inserted ?? registros.length;
+      } catch (error: any) {
         attempt++;
+        if (attempt >= 5) {
+          throw new Error(error?.message ?? 'Falha ao enviar chunk');
+        }
         const wait = 500 * Math.pow(2, attempt) + Math.floor(Math.random() * 500);
         await new Promise((r) => setTimeout(r, wait));
-        continue;
       }
-      if (d?.error) throw new Error(d.error);
-      return d?.inserted ?? registros.length;
     }
   };
 

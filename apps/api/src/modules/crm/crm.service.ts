@@ -6,6 +6,12 @@ export class CrmService {
   constructor(private readonly prisma: PrismaService) {}
 
   // ---- PESSOAS ----
+  async count(tenantId: string) {
+    return this.prisma.pessoa.count({
+      where: { tenantId },
+    });
+  }
+
   async findAll(
     tenantId: string,
     search?: string,

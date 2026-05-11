@@ -107,29 +107,20 @@ export function useExportBI() {
 
         // Upload opcional
         if (opts.upload) {
-          const { data: { user } } = await (api as any).auth.getUser();
-          if (user) {
-            const path = `${user.id}/${filename}.${ext}`;
-            const { error: upErr } = await (api as any).storage
-              .from("relatorios-bi")
-              .upload(path, blob, { contentType: mime, upsert: true });
-            if (upErr) {
-              if (upErr.message.includes("Bucket not found")) {
-                toast.warning("Bucket 'relatorios-bi' não existe. Arquivo baixado localmente.");
-              } else {
-                toast.error(`Upload falhou: ${upErr.message}`);
-              }
-            } else {
-              const { data: signed } = await (api as any).storage
-                .from("relatorios-bi")
-                .createSignedUrl(path, 60 * 60 * 24 * 7);
-              if (signed?.signedUrl) {
-                toast.success("Exportado e salvo na nuvem", {
-                  action: { label: "Abrir", onClick: () => window.open(signed.signedUrl, "_blank") },
+          try {
+            const formData = new FormData();
+            formData.append("file", blob, `${filename}.${ext}`);
+            // Use the same endpoint we created for tse, or a new documents endpoint
+            // In a complete system this would be /documents/upload or similar
+            const res = await api.upload<any>("/tse/upload-chunk", formData);
+            if (res?.path) {
+                toast.success("Exportado e salvo no servidor", {
+                  action: { label: "Abrir", onClick: () => window.open(`/uploads/${res.path}`, "_blank") },
                 });
-                return signed.signedUrl;
-              }
+                return `/uploads/${res.path}`;
             }
+          } catch (upErr: any) {
+            toast.error(`Upload falhou: ${upErr.message}`);
           }
         }
 

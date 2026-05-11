@@ -52,12 +52,7 @@ export function GlobalSearch() {
     queryKey: ["busca-global", q],
     queryFn: async () => {
       if (q.trim().length < 2) return [] as ResultadoBusca[];
-      const { data, error } = await ((api as any) as any)
-        .from("v_busca_global")
-        .select("*")
-        .ilike("titulo", `%${q}%`)
-        .limit(30);
-      if (error) throw error;
+      const data = await api.get<ResultadoBusca[]>(`/dashboard/busca?q=${encodeURIComponent(q)}`);
       return (data || []) as ResultadoBusca[];
     },
     enabled: open && q.trim().length >= 2,

@@ -3,12 +3,12 @@ import { api } from "@/lib/apiClient";
 import { toast } from "sonner";
 
 
-export type Campanha = Database["public"]["Tables"]["campanhas"]["Row"];
-export type CampanhaInsert = Database["public"]["Tables"]["campanhas"]["Insert"];
-export type Tarefa = Database["public"]["Tables"]["campanha_tarefas"]["Row"];
-export type Fase = Database["public"]["Tables"]["campanha_fases"]["Row"];
-export type Meta = Database["public"]["Tables"]["campanha_metas"]["Row"];
-export type Semana = Database["public"]["Tables"]["campanha_semanas"]["Row"];
+export type Campanha = any;
+export type CampanhaInsert = any;
+export type Tarefa = any;
+export type Fase = any;
+export type Meta = any;
+export type Semana = any;
 
 const normalizarTexto = (value?: string | null) =>
   (value ?? "")
@@ -173,7 +173,7 @@ export function useUpdateTarefa() {
 export function useCreateTarefa() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: Database["public"]["Tables"]["campanha_tarefas"]["Insert"]) => {
+    mutationFn: async (input: any) => {
       const data = await api.post<Tarefa>(`/campanhas/${input.campanha_id}/tarefas`, input);
       return data;
     },
@@ -214,7 +214,7 @@ export function useUpdateMeta() {
 export function useCreateMeta() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: Database["public"]["Tables"]["campanha_metas"]["Insert"]) => {
+    mutationFn: async (input: any) => {
       const data = await api.post<Meta>(`/campanhas/${input.campanha_id}/metas`, input);
       return data;
     },

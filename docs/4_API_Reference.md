@@ -35,7 +35,13 @@ Abaixo está o mapeamento completo e exaustivo de todos os **27 Módulos (Contro
 - `PATCH /system-settings`: Atualiza dicionário chave-valor das regras globais.
 
 ### 1.6. Administração Global (`/admin`)
-- Módulo restrito ao Root do sistema (Dono da Kiribamba). Permite gestão de faturamento e infraestrutura que transcende o Tenant.
+- Módulo restrito ao Root do sistema (Dono da Kiribamba) e Administradores. Permite gestão de faturamento, infraestrutura e métricas de uso gerais.
+- `GET /admin/users`: Lista de todos os usuários do sistema.
+- `POST /admin/users`: Criação de novo usuário com hierarquia.
+- `GET /admin/centros-custo`, `POST /admin/centros-custo`, `DELETE /admin/centros-custo/:id`: CRUD completo de Centros de Custo (Financeiro).
+- `GET /admin/system-health`: Retorna métricas globais de saúde (Demandas em aberto, contas atrasadas, auditorias do dia).
+- `GET /admin/stats/counts`: Realiza contagens rápidas e otimizadas em massa de 10 tabelas principais para o dashboard administrativo.
+- `GET /admin/stats/30d`: Relatório estatístico dos últimos 30 dias de uso.
 
 ### 1.7. Healthcheck (`/health`)
 - `GET /health`: Monitoramento para Load Balancers e Kubernetes. Status do banco, fila e memória.
@@ -46,6 +52,7 @@ Abaixo está o mapeamento completo e exaustivo de todos os **27 Módulos (Contro
 
 ### 2.1. CRM de Eleitores (`/pessoas`)
 - `GET /pessoas`: Lista e pesquisa paginada da base de contatos.
+- `GET /pessoas/count`: Retorna o número total de contatos/eleitores registrados no tenant atual.
 - `POST /pessoas`: Cadastra novo contato/eleitor via DTO rígido.
 - `GET /pessoas/:id`: Dossiê completo do eleitor.
 - `PATCH /pessoas/:id`: Atualização de informações de contato e tags.
@@ -62,6 +69,9 @@ Abaixo está o mapeamento completo e exaustivo de todos os **27 Módulos (Contro
 ### 2.3. BI Territorial Avançado (`/territorio`)
 - `GET /territorio/mapa-calor`: Endpoint de dados GIS. Retorna GeoJSON e Heatmaps baseados em endereços do CRM.
 - `GET /territorio/liderancas`: Mapeia a presença de cabos eleitorais espalhados no mapa.
+- `GET /territorio/estados`: Retorna a lista de UFs ativas no sistema.
+- `GET /territorio/stats`: Contagem agregada de estados, municípios e bairros mapeados.
+- `POST /territorio/importar-ibge`: Sincroniza e realiza *upsert* da malha territorial em background consumindo fontes do IBGE e OSM.
 
 ### 2.4. Logística de Campo (`/campo`)
 - `GET /campo/roteiros`: Lista roteiros programados para porta a porta.
@@ -76,6 +86,12 @@ Abaixo está o mapeamento completo e exaustivo de todos os **27 Módulos (Contro
 ### 3.1. Planejamento de Campanhas (`/campanhas`)
 - `GET /campanhas`: Lista as campanhas (Ex: Prefeito 2024, Deputado 2026) que o Tenant disputa.
 - `POST /campanhas`: Abre um novo ciclo eleitoral no painel.
+- `GET /campanhas/:id/parametros`: Carrega a configuração global/cronograma de uma campanha.
+- `PUT /campanhas/:id/parametros`: Atualiza os parâmetros macro e escopo da campanha.
+- `POST /campanhas/:id/subtarefas`: Loop assíncrono otimizado para injeção massiva de sub-rotinas vinculadas.
+- `GET /campanhas/tarefas/:id/historico`: Busca log de auditoria detalhado das mudanças ocorridas em uma tarefa específica.
+- `GET /campanhas/:id/tarefas/anexos-count`: Contagem inteligente (via `groupBy`) dos anexos vinculados a cada tarefa.
+- `GET /campanhas/:id/marcos-criticos`: Filtra estritamente atividades estratégicas com urgência baseadas na data atual.
 
 ### 3.2. Estratégia e OKRs (`/strategy`)
 - `GET /strategy/eixos`: Pilares macro da campanha.
@@ -83,6 +99,7 @@ Abaixo está o mapeamento completo e exaustivo de todos os **27 Módulos (Contro
 
 ### 3.3. Painéis Consolidados (`/dashboard`)
 - `GET /dashboard/kpis`: Retorna o panorama executivo num único Request (Votos, Metas, Orçamento). Consumido pela Tela Inicial.
+- `GET /dashboard/busca`: Global Search Omnichannel. Consolida buscas cruzadas entre Pessoas, Demandas e Campanhas, devolvendo dados padronizados para o cabeçalho de pesquisa rápida.
 
 ### 3.4. Sala de Comando (`/comando`)
 - Rotas analíticas que trazem KPIs sensíveis (War Room) focados em metas semanais da coordenação.
@@ -148,6 +165,13 @@ Abaixo está o mapeamento completo e exaustivo de todos os **27 Módulos (Contro
 
 ### 6.3. Inteligência e Cruzamentos (`/inteligencia`)
 - Módulo focado em BI profundo. Realiza junções pesadas (SQL Aggregations) entre o banco de `pesquisas` e a tabela de `territorio` para prever tendência de queda de intenção de voto.
+
+---
+
+## 📊 7. Módulos Auxiliares Transversais
+
+### 7.1. Módulo de Exportação Universal (`/export`)
+- `GET /export/:table`: Único endpoint responsável por lidar com downloads em massa (Excel/CSV). Valida a tabela alvo contra uma _whitelist_ e retorna os dados brutos filtrados por Tenant, removendo a necessidade de múltiplas Views SQL.
 
 ---
 

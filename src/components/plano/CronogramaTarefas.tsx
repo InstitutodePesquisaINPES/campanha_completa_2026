@@ -77,16 +77,16 @@ function useAnexosCount(campanhaId: string) {
   return useQuery({
     queryKey: ["tarefa-anexos-count", campanhaId],
     queryFn: async () => {
-      const { data, error } = await (api as any)
-        .from("campanha_tarefa_anexos" as never)
-        .select("tarefa_id")
-        .eq("campanha_id", campanhaId);
-      if (error) throw error;
-      const map = new Map<string, number>();
-      (data ?? []).forEach((r: { tarefa_id: string }) => {
-        map.set(r.tarefa_id, (map.get(r.tarefa_id) ?? 0) + 1);
-      });
-      return map;
+      try {
+        const data = await api.get<any[]>(`/campanhas/${campanhaId}/tarefas/anexos-count`);
+        const map = new Map<string, number>();
+        (data ?? []).forEach((r: { tarefa_id: string; count?: number }) => {
+          map.set(r.tarefa_id, r.count ?? 1);
+        });
+        return map;
+      } catch {
+        return new Map<string, number>();
+      }
     },
   });
 }
@@ -273,14 +273,14 @@ function NovaTarefaDialog({
       respaldo_legal: form.respaldo_legal.trim() || null,
     } as never);
     if (subs.length > 0 && (created as { id?: string })?.id) {
+      const tarefaId = (created as { id: string }).id;
       await Promise.all(
         subs.map((titulo, idx) =>
-          (api as any).from("campanha_subtarefas" as never).insert({
-            tarefa_id: (created as { id: string }).id,
-            campanha_id: campanhaId,
+          api.post(`/campanhas/${campanhaId}/subtarefas`, {
+            tarefa_id: tarefaId,
             titulo,
             ordem: idx,
-          } as never)
+          })
         )
       );
     }

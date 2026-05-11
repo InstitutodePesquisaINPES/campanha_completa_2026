@@ -55,13 +55,8 @@ export function useTSECsvArquivos() {
   return useQuery({
     queryKey: ["tse-csv-arquivos"],
     queryFn: async () => {
-      const { data, error } = await (api as any)
-        .from("tse_csv_arquivos")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(200);
-      if (error) throw error;
-      return data as TseCsvArquivo[];
+      const data = await api.get<TseCsvArquivo[]>("/tse/arquivos");
+      return data || [];
     },
     refetchInterval: 3000,
   });
@@ -71,10 +66,7 @@ export function useRunTSECsvWorker() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async () => {
-      const { data, error } = await (api as any).functions.invoke("tse-csv-worker", {
-        body: { trigger: "manual" },
-      });
-      if (error) throw error;
+      const data = await api.post("/tse/jobs/run", { trigger: "manual" });
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tse-csv-arquivos"] }),
@@ -85,12 +77,8 @@ export function usePausarTSECsvArquivo() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await (api as any)
-        .from("tse_csv_arquivos")
-        .update({ status: "pausado" })
-        .eq("id", id)
-        .in("status", ["aguardando", "processando"]);
-      if (error) throw error;
+      // Dummy logic until backend is fully robust for partial pausing
+      await api.patch(`/tse/arquivos/${id}`, { status: "pausado" });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tse-csv-arquivos"] }),
   });
@@ -100,11 +88,7 @@ export function useRetomarTSECsvArquivo() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await (api as any)
-        .from("tse_csv_arquivos")
-        .update({ status: "aguardando", error_msg: null })
-        .eq("id", id);
-      if (error) throw error;
+      await api.patch(`/tse/arquivos/${id}`, { status: "aguardando", error_msg: null });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tse-csv-arquivos"] }),
   });
@@ -114,9 +98,7 @@ export function useReprocessarTSECsvArquivo() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await (api as any)
-        .from("tse_csv_arquivos")
-        .update({
+      await api.patch(`/tse/arquivos/${id}`, {
           status: "aguardando",
           byte_cursor: 0,
           linhas_processadas: 0,
@@ -126,9 +108,7 @@ export function useReprocessarTSECsvArquivo() {
           attempts: 0,
           started_at: null,
           finished_at: null,
-        })
-        .eq("id", id);
-      if (error) throw error;
+      });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tse-csv-arquivos"] }),
   });
@@ -138,17 +118,7 @@ export function useExcluirTSECsvArquivo() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (arquivo: TseCsvArquivo) => {
-      // remove todas as partes do storage (ou o objeto único legado)
-      const paths =
-        Array.isArray((arquivo as any).parts_paths) && (arquivo as any).parts_paths.length > 0
-          ? ((arquivo as any).parts_paths as string[])
-          : [arquivo.storage_path];
-      await (api as any).storage.from("tse-csv-uploads").remove(paths);
-      const { error } = await (api as any)
-        .from("tse_csv_arquivos")
-        .delete()
-        .eq("id", arquivo.id);
-      if (error) throw error;
+      await api.delete(`/tse/arquivos/${arquivo.id}`);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tse-csv-arquivos"] }),
   });
@@ -157,21 +127,14 @@ export function useExcluirTSECsvArquivo() {
 export function useDownloadTSECsv() {
   return useMutation({
     mutationFn: async (arquivo: TseCsvArquivo) => {
-      const { data, error } = await (api as any).storage
-        .from("tse-csv-uploads")
-        .createSignedUrl(arquivo.storage_path, 300);
-      if (error) throw error;
-      window.open(data.signedUrl, "_blank");
+      // Fallback para download local
+      window.open(`/uploads/${arquivo.storage_path}`, "_blank");
     },
   });
 }
 
-// Tamanho de cada parte (40 MB) — fica abaixo do limite de upload do plano (50 MB).
-// O navegador divide o File em N partes e sobe cada uma com upload() padrão.
-// O worker depois lê as partes em sequência como se fossem um único arquivo.
 const PART_SIZE = 40 * 1024 * 1024;
 
-// Upload + criação do registro de fila. retorna o arquivo criado.
 export async function arquivarCsvParaProcessamento(opts: {
   file: File;
   tipo: TseCsvTipo;
@@ -182,16 +145,11 @@ export async function arquivarCsvParaProcessamento(opts: {
   onProgress?: (pct: number) => void;
 }): Promise<TseCsvArquivo> {
   const { file, tipo, ano, uf } = opts;
-  const { data: userData } = await (api as any).auth.getUser();
-  const userId = userData?.user?.id;
-  if (!userId) throw new Error("Usuário não autenticado");
 
   const ts = new Date().toISOString().replace(/[:.]/g, "-");
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-  const baseDir = `${userId}/${ts}_${safeName}`;
+  const baseDir = `${ts}_${safeName}`;
 
-  // Divide o arquivo em partes de PART_SIZE bytes e sobe cada uma como um objeto separado.
-  // Isso evita totalmente o limite de upload do Storage (50 MB padrão) sem depender do plano.
   const totalParts = Math.max(1, Math.ceil(file.size / PART_SIZE));
   const partsPaths: string[] = [];
   const partsSizes: number[] = [];
@@ -200,42 +158,34 @@ export async function arquivarCsvParaProcessamento(opts: {
     const start = i * PART_SIZE;
     const end = Math.min(file.size, start + PART_SIZE);
     const blob = file.slice(start, end);
-    const partName = `${baseDir}/part-${String(i).padStart(5, "0")}.csv`;
+
+    const formData = new FormData();
+    // Pass as file
+    formData.append("file", blob, `part-${String(i).padStart(5, "0")}.csv`);
+    formData.append("baseDir", baseDir);
 
     let attempt = 0;
-    // Retry simples por parte
-    // eslint-disable-next-line no-constant-condition
     while (true) {
-      const { error } = await (api as any).storage
-        .from("tse-csv-uploads")
-        .upload(partName, blob, {
-          contentType: "text/csv",
-          upsert: true,
-          cacheControl: "3600",
-        });
-      if (!error) break;
-      attempt++;
-      if (attempt >= 3) {
-        throw new Error(
-          `Falha ao enviar parte ${i + 1}/${totalParts}: ${error.message}`,
-        );
+      try {
+        const res = await api.upload<any>("/tse/upload-chunk", formData);
+        partsPaths.push(res.path);
+        partsSizes.push(end - start);
+        break;
+      } catch (error: any) {
+        attempt++;
+        if (attempt >= 3) {
+          throw new Error(`Falha ao enviar parte ${i + 1}/${totalParts}: ${error.message}`);
+        }
+        await new Promise((r) => setTimeout(r, 1000 * attempt));
       }
-      await new Promise((r) => setTimeout(r, 1000 * attempt));
     }
 
-    partsPaths.push(partName);
-    partsSizes.push(end - start);
-
-    // Progresso por parte
     const pct = Math.min(99, Math.round(((i + 1) / totalParts) * 100));
     opts.onProgress?.(pct);
   }
   opts.onProgress?.(100);
 
-  // O storage_path "lógico" é a primeira parte (mantém compatibilidade com o restante)
-  const { data, error } = await (api as any)
-    .from("tse_csv_arquivos")
-    .insert({
+  const metaData = {
       nome_original: file.name,
       tipo,
       ano,
@@ -246,20 +196,14 @@ export async function arquivarCsvParaProcessamento(opts: {
       parts_total: totalParts,
       parts_paths: partsPaths,
       parts_sizes: partsSizes,
-      municipios_filtro:
-        opts.municipios_filtro && opts.municipios_filtro.length > 0
-          ? opts.municipios_filtro
-          : null,
+      municipios_filtro: opts.municipios_filtro && opts.municipios_filtro.length > 0 ? opts.municipios_filtro : null,
       chunk_size: opts.chunk_size ?? 500,
-      created_by: userId,
-      status: "aguardando",
-    })
-    .select("*")
-    .single();
-  if (error) throw error;
+  };
 
-  // Dispara o worker uma vez (fast-start)
-  (api as any).functions.invoke("tse-csv-worker", { body: { trigger: "fast-start" } }).catch(() => {});
+  const arquivoCriado = await api.post<TseCsvArquivo>("/tse/arquivos", metaData);
+  
+  // Fast-start
+  api.post("/tse/jobs/run", { trigger: "fast-start" }).catch(() => {});
 
-  return data as TseCsvArquivo;
+  return arquivoCriado;
 }

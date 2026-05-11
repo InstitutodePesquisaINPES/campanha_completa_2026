@@ -40,6 +40,12 @@ export class CrmController {
     return this.segmentacaoService.gerarAudiencia(filtros);
   }
 
+  @Get('count')
+  async count(@CurrentTenant() tenantId: string) {
+    const count = await this.crmService.count(tenantId);
+    return { count };
+  }
+
   @Get()
   findAll(
     @CurrentTenant() tenantId: string,

@@ -9,17 +9,12 @@ export function MarcosCriticos({ campanhaId }: { campanhaId: string }) {
     queryKey: ["marcos-criticos", campanhaId],
     enabled: !!campanhaId,
     queryFn: async () => {
-      const hoje = new Date().toISOString().slice(0, 10);
-      const { data, error } = await ((api as any) as any)
-        .from("campanha_tarefas")
-        .select("id, titulo, data_prevista, area, prioridade, status")
-        .eq("campanha_id", campanhaId)
-        .gte("data_prevista", hoje)
-        .in("prioridade", ["urgente", "alta"])
-        .order("data_prevista")
-        .limit(8);
-      if (error) throw error;
-      return data || [];
+      try {
+        const data = await api.get<any[]>(`/campanhas/${campanhaId}/marcos-criticos`);
+        return data || [];
+      } catch {
+        return [];
+      }
     },
   });
 

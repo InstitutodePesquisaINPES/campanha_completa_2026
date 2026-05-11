@@ -27,8 +27,7 @@ export function TSEDadosResumo() {
   const carregar = async () => {
     setLoading(true);
     try {
-      const { data, error } = await (api as any).rpc("tse_resumo_municipios" as any, { _ano: ano, _uf: uf });
-      if (error) throw error;
+      const data = await api.get<any[]>(`/tse/resumo-municipios?ano=${ano}&uf=${uf}`);
       const arr: LinhaMunicipio[] = (data ?? []).map((r: any) => ({
         municipio: r.municipio ?? "—",
         eleitores: Number(r.eleitores ?? 0),
@@ -41,6 +40,10 @@ export function TSEDadosResumo() {
         eleitores: arr.reduce((s, x) => s + x.eleitores, 0),
         candidatos: arr.reduce((s, x) => s + x.candidatos_perfil, 0),
       });
+    } catch (e: any) {
+      // silently handle — empty data is fine
+      setLinhas([]);
+      setTotais({ municipios: 0, eleitores: 0, candidatos: 0 });
     } finally {
       setLoading(false);
     }

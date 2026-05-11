@@ -75,12 +75,16 @@ interface FetchOptions {
 
 export async function fetchTableData(cfg: ExportTableConfig, opts: FetchOptions = {}): Promise<any[]> {
   const limit = opts.limit ?? 50000;
-  let q = (api as any).from(cfg.name as any).select(cfg.select ?? "*").limit(limit);
-  if (cfg.dateField && opts.from) q = q.gte(cfg.dateField, opts.from);
-  if (cfg.dateField && opts.to) q = q.lte(cfg.dateField, opts.to);
-  const { data, error } = await q;
-  if (error) throw error;
-  return (data as any[]) || [];
+  const params = new URLSearchParams({ limit: String(limit) });
+  if (cfg.dateField && opts.from) params.set("from", opts.from);
+  if (cfg.dateField && opts.to) params.set("to", opts.to);
+  if (cfg.dateField) params.set("dateField", cfg.dateField);
+  try {
+    const data = await api.get<any[]>(`/export/${cfg.name}?${params.toString()}`);
+    return data || [];
+  } catch {
+    return [];
+  }
 }
 
 function flattenRow(row: any): Record<string, any> {

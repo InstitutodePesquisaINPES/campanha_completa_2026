@@ -7,10 +7,11 @@
 
 O Kiribamba é desenhado para alta concorrência e estabilidade corporativa. Optou-se por uma estrutura **Monorepo**, garantindo que as fronteiras entre o front-end visual e o back-end transacional sejam fluidas para o desenvolvedor, mas impenetráveis para o usuário final.
 
-### Stack Tecnológica:
-- **Frontend (Visual):** React 18, Vite, TailwindCSS, Shadcn UI, Framer Motion, TanStack Query, React Hook Form + Zod.
-- **Backend (API):** NestJS 11 (Node.js), TypeScript estrito, JWT Passport, RxJS.
-- **Banco de Dados (Storage):** PostgreSQL gerenciado via Prisma ORM v7.
+### Stack Tecnológica (100% Self-Hosted):
+- **Frontend (Visual):** React 18, Vite, TailwindCSS, Shadcn UI, Framer Motion, TanStack Query.
+  - **Comunicação de Rede:** Todas as interações com o backend ocorrem via **Axios (`apiClient.ts`)**, eliminando o antigo SDK do Supabase. O wrapper injeta os headers de Autenticação (Bearer) e Tenant (`x-tenant-id`).
+- **Backend (API):** NestJS 11 (Node.js), TypeScript estrito, JWT Passport, BullMQ para mensageria assíncrona.
+- **Banco de Dados (Storage):** PostgreSQL gerenciado via Prisma ORM v7. A solução independe de serviços DBaaS, operando inteiramente em contêineres próprios.
 
 ---
 
@@ -19,9 +20,9 @@ O Kiribamba é desenhado para alta concorrência e estabilidade corporativa. Opt
 A maior premissa de um SaaS Político é a **inviolabilidade de dados**. Um candidato não pode, sob hipótese alguma, ter acesso aos eleitores de um concorrente hospedado na mesma plataforma.
 
 Para resolver isso de forma imune a erro humano no desenvolvimento:
-- Utilizamos **Prisma Client Extensions** para injetar automaticamente o filtro de inquilino (Tenant).
+- Utilizamos **Prisma Client Extensions** no backend para injetar automaticamente o filtro de inquilino (Tenant). Isso atua como o motor de Row-Level Security no nível da aplicação.
 - Toda consulta e gravação no banco de dados recebe obrigatoriamente a assinatura do `tenantId`.
-- No lado da API, o decorator `@CurrentTenant()` aciona o interceptador global e repassa essa variável para o ORM. Não há como realizar um "SELECT * FROM pessoas" sem que a extensão adicione na retaguarda "WHERE tenant_id = XYZ".
+- No lado da API, o decorator `@CurrentTenant()` aciona o interceptador global (`TenantGuard`) e repassa essa variável. O Prisma bloqueia na base qualquer operação cross-tenant ou operações sem o ID do comitê explícito.
 
 ---
 

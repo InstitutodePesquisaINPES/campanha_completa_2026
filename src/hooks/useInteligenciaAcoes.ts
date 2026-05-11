@@ -16,8 +16,8 @@ export function usePromoverLiderancaParaCRM() {
         return lideranca.pessoa_id;
       }
 
-      const res = await api.post(`/inteligencia/liderancas/${lideranca.id}/promover`, {});
-      return res.pessoaId;
+      const res = await api.post<any>(`/inteligencia/liderancas/${lideranca.id}/promover`, {});
+      return res?.pessoaId;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["liderancas"] });

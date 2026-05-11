@@ -20,13 +20,12 @@ export function StatsTab() {
   const { data: counts, isLoading } = useQuery({
     queryKey: ["admin-stats"],
     queryFn: async () => {
-      const results = await Promise.all(
-        tables.map(async (t) => {
-          const { count } = await (api as any).from(t.name as any).select("*", { count: "exact", head: true });
-          return { name: t.name, count: count || 0 };
-        })
-      );
-      return Object.fromEntries(results.map((r) => [r.name, r.count]));
+      try {
+        const data = await api.get<Record<string, number>>("/admin/stats/counts");
+        return data || {};
+      } catch {
+        return {} as Record<string, number>;
+      }
     },
   });
 

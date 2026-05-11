@@ -16,28 +16,29 @@ export function DashboardTab() {
   const { data: counts, isLoading: lc } = useQuery({
     queryKey: ["admin-counts"],
     queryFn: async () => {
-      const out: Record<string, number> = {};
-      await Promise.all(
-        TABLES.map(async (t) => {
-          const { count } = await (api as any).from(t.table as any).select("*", { count: "exact", head: true });
-          out[t.table] = count ?? 0;
-        }),
-      );
-      return out;
+      try {
+        const data = await api.get<Record<string, number>>("/admin/stats/counts");
+        return data || {};
+      } catch {
+        return {} as Record<string, number>;
+      }
     },
   });
 
   const { data: serie = [], isLoading: ls } = useQuery({
     queryKey: ["admin-stats-30d"],
     queryFn: async () => {
-      const { data, error } = await (api as any).from("v_admin_stats_30d" as any).select("*");
-      if (error) throw error;
-      return (data || []).map((r: any) => ({
-        dia: new Date(r.dia).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
-        pessoas: Number(r.pessoas),
-        demandas: Number(r.demandas),
-        eventos: Number(r.eventos),
-      }));
+      try {
+        const data = await api.get<any[]>("/admin/stats/30d");
+        return (data || []).map((r: any) => ({
+          dia: new Date(r.dia).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
+          pessoas: Number(r.pessoas),
+          demandas: Number(r.demandas),
+          eventos: Number(r.eventos),
+        }));
+      } catch {
+        return [];
+      }
     },
   });
 

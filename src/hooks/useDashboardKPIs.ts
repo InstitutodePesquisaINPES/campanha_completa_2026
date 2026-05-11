@@ -44,8 +44,8 @@ export interface DashboardKPIs {
 }
 
 export function useDashboardKPIs() {
-  // Simplificado realtime pois não usaremos (api as any).channel.
-  // Polling a cada 30 segundos é uma boa alternativa para dashboard ou podemos manter refetch manual.
+  // Polling at 30s intervals as a substitute for WebSocket realtime.
+  // Future: migrate to NestJS WebSocket Gateway for push-based updates.
   return useQuery<DashboardKPIs>({
     queryKey: ["dashboard-kpis"],
     queryFn: async () => {

@@ -53,7 +53,6 @@ services:
       - REDIS_PORT=6379
       - JWT_SECRET=${JWT_SECRET:-Sistema@1@2@3}
       - JWT_EXPIRATION=${JWT_EXPIRATION:-7d}
-      # Pode injetar OpenAI, Supabase, Minio aqui depois
     volumes:
       - kiribamba_uploads:/app/uploads
 

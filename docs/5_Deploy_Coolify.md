@@ -1,6 +1,6 @@
 # 🚀 Deploy Enterprise com Coolify & Docker Compose
 
-A plataforma Kiribamba foi projetada para um deploy **Zero-Touch** (One-Click) em ambientes de produção através de um único arquivo `docker-compose.yml`.
+A plataforma Kiribamba foi projetada para um deploy **Zero-Touch** (One-Click) em ambientes de produção através de um único arquivo `docker-compose.yml`. Como o sistema é **100% Self-Hosted**, você detém controle absoluto sobre o armazenamento dos dados e não possui vendor-lock com plataformas DBaaS.
 
 Este método orquestra automaticamente:
 1. **PostgreSQL 16** (Banco de Dados Isolado).
@@ -28,6 +28,8 @@ Vá até a aba **Environment Variables** no Coolify e adicione as senhas reais. 
 - `POSTGRES_PASSWORD` = (Sua senha forte)
 - `POSTGRES_DB` = `kiribamba`
 - `JWT_SECRET` = (Gere um hash sha256 aleatório)
+- `REDIS_HOST` = `redis` (Referência ao nome do serviço dentro da rede do compose)
+- `REDIS_PORT` = `6379`
 
 ### 4. Deploy 🚀
 Clique no botão roxo **Deploy**.

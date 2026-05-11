@@ -40,6 +40,11 @@ export class AdminController {
     return this.adminService.getUsers(tenantId);
   }
 
+  @Post('users')
+  createUser(@Body() body: any, @CurrentTenant() tenantId: string) {
+    return this.adminService.createUser(tenantId, body);
+  }
+
   @Post('users/:id/roles')
   addRole(
     @Param('id') userId: string,
@@ -56,6 +61,38 @@ export class AdminController {
     @CurrentTenant() tenantId: string,
   ) {
     return this.adminService.removeRole(tenantId, userId, role);
+  }
+
+  // --- Centros de Custo ---
+  @Get('centros-custo')
+  getCentrosCusto(@CurrentTenant() tenantId: string) {
+    return this.adminService.getCentrosCusto(tenantId);
+  }
+
+  @Post('centros-custo')
+  createCentroCusto(@Body() body: any, @CurrentTenant() tenantId: string) {
+    return this.adminService.createCentroCusto(tenantId, body);
+  }
+
+  @Delete('centros-custo/:id')
+  removeCentroCusto(@Param('id') id: string, @CurrentTenant() tenantId: string) {
+    return this.adminService.removeCentroCusto(tenantId, id);
+  }
+
+  // --- Dashboard & System Health ---
+  @Get('system-health')
+  getSystemHealth(@CurrentTenant() tenantId: string) {
+    return this.adminService.getSystemHealth(tenantId);
+  }
+
+  @Get('stats/counts')
+  getStatsCounts(@CurrentTenant() tenantId: string) {
+    return this.adminService.getStatsCounts(tenantId);
+  }
+
+  @Get('stats/30d')
+  getStats30d(@CurrentTenant() tenantId: string) {
+    return this.adminService.getStats30d(tenantId);
   }
 
   @Post('seed-test-users')

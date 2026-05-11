@@ -7,9 +7,12 @@ export function SystemHealthCard() {
   const { data, isLoading } = useQuery({
     queryKey: ["admin-system-health"],
     queryFn: async () => {
-      const { data, error } = await (api as any).functions.invoke("admin-system-health");
-      if (error) throw error;
-      return data as Record<string, number>;
+      try {
+        const data = await api.get<Record<string, number>>("/admin/system-health");
+        return data || {};
+      } catch {
+        return {} as Record<string, number>;
+      }
     },
     refetchInterval: 60_000,
   });

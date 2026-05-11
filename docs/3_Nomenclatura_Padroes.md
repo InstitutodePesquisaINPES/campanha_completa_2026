@@ -58,18 +58,30 @@ Estrutura modular rigorosa. Todo módulo deve morar dentro de `apps/api/src/modu
 - `src/components/`: Pedaços visuais isolados (botões, modais).
 - `src/pages/`: Representações de rotas completas (telas).
 - `src/hooks/`: Hooks React customizados, geralmente invocando `useQuery` do TanStack.
-- `src/lib/`: Funções utilitárias, clientes de API (`apiClient.ts`) e configurações vitais.
+- `src/lib/`: Funções utilitárias, clientes de API (`apiClient.ts`) e configurações vitais. Não há dependências diretas de SDKs de banco de dados (ex: Supabase) nestes módulos; toda a comunicação de dados cruza a rede via `apiClient`.
 
 ---
 
-## 4. Git Flow e Controle de Versão
+## 4. Integração Frontend-Backend (API REST)
 
-### 4.1 Nomenclatura de Branches
+### 4.1 Padrão de Endpoints
+- **Mapeamento Direto:** Todos os endpoints NestJS devem seguir a taxonomia exata do recurso (ex: `GET /pessoas/count`, `POST /territorio/importar-ibge`).
+- **Uso do Axios:** No frontend, as chamadas são feitas através de instâncias assíncronas limpas (`await api.get()`), tipando os retornos com Interfaces e encapsulando o erro no bloco `try/catch`.
+
+### 4.2 Arquitetura de Módulos Globais (Export/Busca)
+- Módulos transversais que não pertencem a um contexto único de negócios (como Exportação Genérica para Excel ou Busca Global na Navbar) devem ter seu próprio Módulo independente no backend.
+- **Exemplo:** O `ExportModule` (`/export/:table`) recebe a requisição, valida a Tabela contra uma *whitelist*, localiza dinamicamente a Model do Prisma correspondente, extrai os dados limitados ao `tenantId` e devolve, centralizando as exportações em um só lugar.
+
+---
+
+## 5. Git Flow e Controle de Versão
+
+### 5.1 Nomenclatura de Branches
 - `main`: Ambiente de Produção.
 - `campanha_completa_2026`: Branch de trabalho primário (Staging/Features).
 - Prefixos para features paralelas: `feat/`, `fix/`, `chore/`.
 
-### 4.2 Commits (Conventional Commits)
+### 5.2 Commits (Conventional Commits)
 - `feat(modulo): descricao` -> Adição de novas funções.
 - `fix(modulo): descricao` -> Correção de bugs.
 - `docs(core): descricao` -> Documentação.

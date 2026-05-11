@@ -7,21 +7,14 @@ export function TerritorioStats() {
   const { data } = useQuery({
     queryKey: ["territorio-stats"],
     queryFn: async () => {
-      const [e, m, b, z, s, a] = await Promise.all([
-        (api as any).from("estados").select("*", { count: "exact", head: true }),
-        (api as any).from("municipios").select("*", { count: "exact", head: true }),
-        (api as any).from("bairros").select("*", { count: "exact", head: true }),
-        (api as any).from("zonas_eleitorais").select("*", { count: "exact", head: true }),
-        (api as any).from("secoes_eleitorais").select("*", { count: "exact", head: true }),
-        (api as any).from("areas_atuacao").select("*", { count: "exact", head: true }),
-      ]);
+      const stats = await api.get<any>("/territorio/stats");
       return {
-        estados: e.count ?? 0,
-        municipios: m.count ?? 0,
-        bairros: b.count ?? 0,
-        zonas: z.count ?? 0,
-        secoes: s.count ?? 0,
-        areas: a.count ?? 0,
+        estados: stats?.estados ?? 0,
+        municipios: stats?.municipios ?? 0,
+        bairros: stats?.bairros ?? 0,
+        zonas: stats?.zonas ?? 0,
+        secoes: stats?.secoes ?? 0,
+        areas: stats?.areas ?? 0,
       };
     },
   });

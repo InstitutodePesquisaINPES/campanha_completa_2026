@@ -34,7 +34,7 @@ export function CampanhaEscopoForm({ cargo, estadoId, municipioId, municipiosFoc
   const { data: estados = [] } = useQuery({
     queryKey: ["estados-list"],
     queryFn: async () => {
-      const { data } = await (api as any).from("estados").select("id, sigla, nome").order("nome");
+      const data = await api.get<any[]>("/territorio/estados");
       return data ?? [];
     },
   });
@@ -43,7 +43,7 @@ export function CampanhaEscopoForm({ cargo, estadoId, municipioId, municipiosFoc
     queryKey: ["municipios-by-estado", estadoId],
     enabled: !!estadoId,
     queryFn: async () => {
-      const { data } = await (api as any).from("municipios").select("id, nome").eq("estado_id", estadoId).order("nome").limit(1000);
+      const data = await api.get<any[]>(`/territorio/municipios?estadoId=${estadoId}`);
       return data ?? [];
     },
   });
@@ -52,7 +52,7 @@ export function CampanhaEscopoForm({ cargo, estadoId, municipioId, municipiosFoc
     queryKey: ["municipios-all"],
     enabled: !estadoId && escopo === "municipal",
     queryFn: async () => {
-      const { data } = await (api as any).from("municipios").select("id, nome").order("nome").limit(1000);
+      const data = await api.get<any[]>("/territorio/municipios");
       return data ?? [];
     },
   });

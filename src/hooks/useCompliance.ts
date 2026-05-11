@@ -25,12 +25,8 @@ export function useContratos() {
   return useQuery({
     queryKey: ["contratos"],
     queryFn: async () => {
-      const { data, error } = await ((api as any) as any)
-        .from("contratos")
-        .select("*")
-        .order("data_fim", { ascending: true });
-      if (error) throw error;
-      return (data || []) as Contrato[];
+      const data = await api.get<Contrato[]>("/contratos");
+      return data || [];
     },
   });
 }
@@ -39,12 +35,8 @@ export function useContratosAlerta() {
   return useQuery({
     queryKey: ["contratos-alerta"],
     queryFn: async () => {
-      const { data, error } = await ((api as any) as any)
-        .from("v_contratos_alerta")
-        .select("*")
-        .order("dias_para_vencer", { ascending: true });
-      if (error) throw error;
-      return (data || []) as (Contrato & { dias_para_vencer: number })[];
+      const data = await api.get<(Contrato & { dias_para_vencer: number })[]>("/contratos/alertas");
+      return data || [];
     },
   });
 }
@@ -55,13 +47,9 @@ export function useUpsertContrato() {
     mutationFn: async (input: Partial<Contrato> & { objeto: string; data_inicio: string; data_fim: string }) => {
       const { id, ...rest } = input as any;
       if (id) {
-        const { data, error } = await ((api as any) as any).from("contratos").update(rest).eq("id", id).select().single();
-        if (error) throw error;
-        return data;
+        return await api.put<Contrato>(`/contratos/${id}`, rest);
       }
-      const { data, error } = await ((api as any) as any).from("contratos").insert(rest).select().single();
-      if (error) throw error;
-      return data;
+      return await api.post<Contrato>("/contratos", rest);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["contratos"] });
@@ -76,8 +64,7 @@ export function useDeleteContrato() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await ((api as any) as any).from("contratos").delete().eq("id", id);
-      if (error) throw error;
+      await api.delete(`/contratos/${id}`);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["contratos"] });
@@ -109,13 +96,8 @@ export function useRiscos() {
   return useQuery({
     queryKey: ["riscos"],
     queryFn: async () => {
-      const { data, error } = await ((api as any) as any)
-        .from("riscos")
-        .select("*")
-        .order("severidade", { ascending: false })
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return (data || []) as Risco[];
+      const data = await api.get<Risco[]>("/compliance/riscos");
+      return data || [];
     },
   });
 }
@@ -126,13 +108,9 @@ export function useUpsertRisco() {
     mutationFn: async (input: Partial<Risco> & { titulo: string; categoria: Risco["categoria"] }) => {
       const { id, ...rest } = input as any;
       if (id) {
-        const { data, error } = await ((api as any) as any).from("riscos").update(rest).eq("id", id).select().single();
-        if (error) throw error;
-        return data;
+        return await api.put<Risco>(`/compliance/riscos/${id}`, rest);
       }
-      const { data, error } = await ((api as any) as any).from("riscos").insert(rest).select().single();
-      if (error) throw error;
-      return data;
+      return await api.post<Risco>("/compliance/riscos", rest);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["riscos"] });
@@ -146,8 +124,7 @@ export function useDeleteRisco() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await ((api as any) as any).from("riscos").delete().eq("id", id);
-      if (error) throw error;
+      await api.delete(`/compliance/riscos/${id}`);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["riscos"] }),
     onError: (e: Error) => toast.error(e.message),
@@ -176,12 +153,8 @@ export function useIncidentes() {
   return useQuery({
     queryKey: ["incidentes"],
     queryFn: async () => {
-      const { data, error } = await ((api as any) as any)
-        .from("incidentes")
-        .select("*")
-        .order("data_ocorrencia", { ascending: false });
-      if (error) throw error;
-      return (data || []) as Incidente[];
+      const data = await api.get<Incidente[]>("/compliance/incidentes");
+      return data || [];
     },
   });
 }
@@ -192,13 +165,9 @@ export function useUpsertIncidente() {
     mutationFn: async (input: Partial<Incidente> & { titulo: string; categoria: Risco["categoria"] }) => {
       const { id, ...rest } = input as any;
       if (id) {
-        const { data, error } = await ((api as any) as any).from("incidentes").update(rest).eq("id", id).select().single();
-        if (error) throw error;
-        return data;
+        return await api.put<Incidente>(`/compliance/incidentes/${id}`, rest);
       }
-      const { data, error } = await ((api as any) as any).from("incidentes").insert(rest).select().single();
-      if (error) throw error;
-      return data;
+      return await api.post<Incidente>("/compliance/incidentes", rest);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["incidentes"] });
@@ -212,8 +181,7 @@ export function useDeleteIncidente() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await ((api as any) as any).from("incidentes").delete().eq("id", id);
-      if (error) throw error;
+      await api.delete(`/compliance/incidentes/${id}`);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["incidentes"] }),
     onError: (e: Error) => toast.error(e.message),

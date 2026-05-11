@@ -20,12 +20,12 @@ export function TerritoriosAdminTab() {
   const { data: counts } = useQuery({
     queryKey: ["territorio-counts"],
     queryFn: async () => {
-      const [e, m, b] = await Promise.all([
-        (api as any).from("estados").select("*", { count: "exact", head: true }),
-        (api as any).from("municipios").select("*", { count: "exact", head: true }),
-        (api as any).from("bairros").select("*", { count: "exact", head: true }),
-      ]);
-      return { estados: e.count ?? 0, municipios: m.count ?? 0, bairros: b.count ?? 0 };
+      try {
+        const data = await api.get<any>("/territorio/stats");
+        return data || { estados: 0, municipios: 0, bairros: 0 };
+      } catch {
+        return { estados: 0, municipios: 0, bairros: 0 };
+      }
     },
   });
 
@@ -35,28 +35,17 @@ export function TerritoriosAdminTab() {
       const estado = estados.find((e) => e.sigla === uf);
       if (!estado) throw new Error("Estado não encontrado");
 
-      // ensure estado exists in our DB
-      const { data: dbEstado } = await (api as any)
-        .from("estados").select("id").eq("sigla", uf).maybeSingle();
-
-      let estadoId = dbEstado?.id;
-      if (!estadoId) {
-        const { data: ins, error } = await (api as any)
-          .from("estados")
-          .insert({ sigla: uf, nome: estado.nome, geocodigo_ibge: String(estado.id) })
-          .select("id").single();
-        if (error) throw error;
-        estadoId = ins.id;
-      }
-
       const municipios = await fetchMunicipiosByUF(uf);
-      const rows = municipios.map((m) => ({
-        nome: m.nome, estado_id: estadoId!, geocodigo_ibge: String(m.id),
-      }));
-      // upsert by geocodigo_ibge
-      const { error: upErr } = await (api as any).from("municipios").upsert(rows, { onConflict: "geocodigo_ibge", ignoreDuplicates: true });
-      if (upErr) throw upErr;
-      return rows.length;
+      const data = await api.post<any>("/territorio/importar-ibge", {
+        uf,
+        estado_nome: estado.nome,
+        geocodigo_ibge: String(estado.id),
+        municipios: municipios.map((m) => ({
+          nome: m.nome,
+          geocodigo_ibge: String(m.id),
+        })),
+      });
+      return data?.count ?? municipios.length;
     },
     onSuccess: (n) => {
       qc.invalidateQueries({ queryKey: ["territorio-counts"] });

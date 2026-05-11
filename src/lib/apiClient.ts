@@ -81,6 +81,33 @@ class ApiClient {
   delete<T>(path: string, options?: RequestInit) {
     return this.request<T>(path, { ...options, method: 'DELETE' });
   }
+
+  upload<T>(path: string, formData: FormData, options?: RequestInit) {
+    // Para FormData, NÃO podemos forçar application/json. O fetch define automaticamente o multipart/form-data + boundary
+    const headers = new Headers(options?.headers);
+    if (headers.has('Content-Type')) {
+      headers.delete('Content-Type');
+    }
+
+    const token = this.getToken();
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    return fetch(`${API_URL}${path}`, {
+      ...options,
+      method: 'POST',
+      headers,
+      body: formData,
+      credentials: 'omit',
+    }).then(async (res) => {
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText || 'API Error');
+      }
+      return res.json() as Promise<T>;
+    });
+  }
 }
 
 export const api = new ApiClient();

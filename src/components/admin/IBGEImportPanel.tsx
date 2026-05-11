@@ -22,12 +22,7 @@ function useMunicipiosSearch(q: string) {
     queryKey: ["mun-search", q],
     enabled: q.trim().length >= 2,
     queryFn: async () => {
-      const { data } = await ((api as any) as any)
-        .from("municipios")
-        .select("id, nome, geocodigo_ibge")
-        .ilike("nome", `%${q.trim()}%`)
-        .order("nome")
-        .limit(8);
+      const data = await api.get<any[]>(`/territorio/municipios?search=${encodeURIComponent(q.trim())}&limit=8`);
       return (data || []) as Array<{ id: string; nome: string; geocodigo_ibge: string | null }>;
     },
   });

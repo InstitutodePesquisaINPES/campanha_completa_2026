@@ -47,11 +47,79 @@ const MICRORREGIAO_VC_IBGE = [
 @Injectable()
 export class TerritorioService {
   constructor(private readonly prisma: PrismaService) {}
-  async getMunicipios() {
-    return this.prisma.municipio.findMany({
-      select: { id: true, nome: true, estadoId: true },
+  async getEstados() {
+    return this.prisma.estado.findMany({
+      select: { id: true, sigla: true, nome: true },
       orderBy: { nome: 'asc' },
-      take: 500,
+    });
+  }
+
+  async getStats() {
+    const [estados, municipios, bairros] = await Promise.all([
+      this.prisma.estado.count(),
+      this.prisma.municipio.count(),
+      this.prisma.bairro.count(),
+    ]);
+    return { estados, municipios, bairros };
+  }
+
+  async importarIbge(data: {
+    uf: string;
+    estado_nome: string;
+    geocodigo_ibge: string;
+    municipios: Array<{ nome: string; geocodigo_ibge: string }>;
+  }) {
+    // Upsert estado
+    let estado = await this.prisma.estado.findFirst({
+      where: { sigla: data.uf },
+    });
+    if (!estado) {
+      estado = await this.prisma.estado.create({
+        data: {
+          sigla: data.uf,
+          nome: data.estado_nome,
+          geocodigoIbge: data.geocodigo_ibge,
+        },
+      });
+    }
+
+    // Upsert municipios
+    let count = 0;
+    for (const m of data.municipios) {
+      await this.prisma.municipio.upsert({
+        where: { geocodigoIbge: m.geocodigo_ibge },
+        create: {
+          nome: m.nome,
+          estadoId: estado.id,
+          geocodigoIbge: m.geocodigo_ibge,
+        },
+        update: { nome: m.nome },
+      });
+      count++;
+    }
+
+    return { count };
+  }
+
+  async getMunicipios(estadoId?: string, search?: string, limit?: number) {
+    return this.prisma.municipio.findMany({
+      select: {
+        id: true,
+        nome: true,
+        estadoId: true,
+        geocodigoIbge: true,
+        populacao: true,
+        areaKm2: true,
+        idh: true,
+        urbanoPct: true,
+        densidadeHabKm2: true,
+      },
+      where: {
+        ...(estadoId && { estadoId }),
+        ...(search && { nome: { contains: search, mode: 'insensitive' } }),
+      },
+      orderBy: { nome: 'asc' },
+      take: limit ?? 500,
     });
   }
 

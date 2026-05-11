@@ -40,10 +40,8 @@ function CandidatoPicker({ value, onChange }: { value: string | null; onChange: 
   const { data: pessoas = [] } = useQuery({
     queryKey: ["pessoas-picker", search],
     queryFn: async () => {
-      let q = (api as any).from("pessoas").select("id, full_name").order("full_name").limit(20);
-      if (search.trim()) q = q.ilike("full_name", `%${search.trim()}%`);
-      const { data, error } = await q;
-      if (error) throw error;
+      const params = search.trim() ? `?search=${encodeURIComponent(search.trim())}&limit=20` : "?limit=20";
+      const data = await api.get<any[]>(`/pessoas${params}`);
       return (data ?? []) as { id: string; full_name: string }[];
     },
   });
@@ -52,7 +50,7 @@ function CandidatoPicker({ value, onChange }: { value: string | null; onChange: 
     queryKey: ["pessoa-selected", value],
     enabled: !!value,
     queryFn: async () => {
-      const { data } = await (api as any).from("pessoas").select("id, full_name").eq("id", value!).maybeSingle();
+      const data = await api.get<any>(`/pessoas/${value}`);
       return data;
     },
   });

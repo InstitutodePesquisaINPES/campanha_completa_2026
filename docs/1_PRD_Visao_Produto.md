@@ -68,4 +68,6 @@ A plataforma modela a estrutura exata de uma eleição profissional, dividindo a
 ---
 
 ## 4. Diferencial Competitivo (Moat)
-Diferente das ferramentas genéricas de CRM (Salesforce, Hubspot), o Kiribamba possui ontologia estritamente eleitoral. Todos os dados respeitam a taxonomia do **TSE** (Tribunal Superior Eleitoral). O modelo multi-tenant robusto permite que a plataforma seja alugada simultaneamente para 100 candidatos diferentes, sem vazamento de dados, por conta do Row-Level Security (RLS).
+Diferente das ferramentas genéricas de CRM (Salesforce, Hubspot), o Kiribamba possui ontologia estritamente eleitoral. Todos os dados respeitam a taxonomia do **TSE** (Tribunal Superior Eleitoral). 
+
+**100% Self-Hosted e Soberania de Dados:** O sistema rompeu com plataformas de DBaaS (como Supabase/Firebase) e opera em uma arquitetura `NestJS + Prisma + PostgreSQL` fechada, garantindo total controle sobre a residência dos dados. O modelo multi-tenant robusto, garantido pelas **Client Extensions do Prisma**, permite que a plataforma seja alugada simultaneamente para 100 candidatos diferentes, sem nenhum vazamento de dados, operando com total segurança e performance sob um único cluster Kubernetes/Docker.

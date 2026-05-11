@@ -22,13 +22,8 @@ export function useTarefaAnexos(tarefaId?: string) {
     queryKey: ["tarefa-anexos", tarefaId],
     enabled: !!tarefaId,
     queryFn: async () => {
-      const { data, error } = await (api as any)
-        .from("campanha_tarefa_anexos" as never)
-        .select("*")
-        .eq("tarefa_id", tarefaId!)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as unknown as TarefaAnexo[];
+      const data = await api.get<TarefaAnexo[]>(`/campanhas/tarefas/${tarefaId}/anexos`);
+      return data || [];
     },
   });
 }
@@ -44,35 +39,13 @@ export function useUploadTarefaAnexo() {
       tipo_documento?: string;
       file: File;
     }) => {
-      const safeName = input.file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-      const path = `${input.campanha_id}/${input.tarefa_id}/${Date.now()}-${safeName}`;
-      const { error: upErr } = await (api as any).storage
-        .from("tarefa-documentos")
-        .upload(path, input.file, { contentType: input.file.type, upsert: false });
-      if (upErr) throw upErr;
+      const formData = new FormData();
+      formData.append("file", input.file);
+      formData.append("titulo", input.titulo);
+      if (input.descricao) formData.append("descricao", input.descricao);
+      if (input.tipo_documento) formData.append("tipo_documento", input.tipo_documento);
 
-      const { data: userRes } = await (api as any).auth.getUser();
-      const { data, error } = await (api as any)
-        .from("campanha_tarefa_anexos" as never)
-        .insert({
-          tarefa_id: input.tarefa_id,
-          campanha_id: input.campanha_id,
-          titulo: input.titulo,
-          descricao: input.descricao ?? null,
-          tipo_documento: input.tipo_documento ?? "outros",
-          storage_path: path,
-          arquivo_nome: input.file.name,
-          arquivo_tamanho: input.file.size,
-          mime_type: input.file.type,
-          uploaded_by: userRes.user?.id ?? null,
-        } as never)
-        .select()
-        .single();
-      if (error) {
-        // tenta limpar arquivo se falhou registrar
-        await (api as any).storage.from("tarefa-documentos").remove([path]);
-        throw error;
-      }
+      const data = await api.upload<TarefaAnexo>(`/campanhas/tarefas/${input.tarefa_id}/anexos`, formData);
       return data;
     },
     onSuccess: (_d, vars) => {
@@ -88,12 +61,7 @@ export function useDeleteTarefaAnexo() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (anexo: TarefaAnexo) => {
-      await (api as any).storage.from("tarefa-documentos").remove([anexo.storage_path]);
-      const { error } = await (api as any)
-        .from("campanha_tarefa_anexos" as never)
-        .delete()
-        .eq("id", anexo.id);
-      if (error) throw error;
+      await api.delete(`/campanhas/tarefas/anexos/${anexo.id}`);
     },
     onSuccess: (_d, anexo) => {
       qc.invalidateQueries({ queryKey: ["tarefa-anexos", anexo.tarefa_id] });
@@ -105,9 +73,5 @@ export function useDeleteTarefaAnexo() {
 }
 
 export async function getSignedUrl(path: string) {
-  const { data, error } = await (api as any).storage
-    .from("tarefa-documentos")
-    .createSignedUrl(path, 3600);
-  if (error) throw error;
-  return data.signedUrl;
+  return `/uploads/${path}`;
 }

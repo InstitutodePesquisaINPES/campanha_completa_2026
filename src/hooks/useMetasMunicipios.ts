@@ -56,8 +56,8 @@ export function useDistribuirMetaProporcional() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: { campanha_id: string; meta_global: number; municipios: CoberturaMunicipio[] }) => {
-      const data = await api.post(`/territorio/metas/distribuir`, input);
-      return data.count || 0;
+      const data = await api.post<any>(`/territorio/metas/distribuir`, input);
+      return data?.count || 0;
     },
     onSuccess: (count, vars) => {
       qc.invalidateQueries({ queryKey: ["cobertura-territorial", vars.campanha_id] });

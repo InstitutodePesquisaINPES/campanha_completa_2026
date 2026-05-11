@@ -56,9 +56,29 @@ export class TerritorioController {
     return this.ibgeService.syncIbgeTerritories();
   }
 
+  @Get('estados')
+  async getEstados() {
+    return this.territorioService.getEstados();
+  }
+
+  @Get('stats')
+  async getStats() {
+    return this.territorioService.getStats();
+  }
+
+  @Post('importar-ibge')
+  async importarIbge(@Body() body: any) {
+    return this.territorioService.importarIbge(body);
+  }
+
   @Get('municipios')
-  getMunicipios() {
-    return this.territorioService.getMunicipios();
+  getMunicipios(
+    @Query('estadoId') estadoId?: string,
+    @Query('search') search?: string,
+    @Query('limit') limit?: string,
+    @Query('fields') fields?: string,
+  ) {
+    return this.territorioService.getMunicipios(estadoId, search, limit ? parseInt(limit) : undefined);
   }
 
   @Get('municipios/strategic')

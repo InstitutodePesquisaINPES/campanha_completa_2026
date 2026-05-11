@@ -20,12 +20,8 @@ export function DemografiaTab() {
   const { data: municipios = [] } = useQuery({
     queryKey: ["municipios-demografia-list"],
     queryFn: async () => {
-      const { data, error } = await ((api as any) as any)
-        .from("municipios")
-        .select("id, nome, populacao_2022, area_km2, idh, urbano_pct, densidade_hab_km2")
-        .order("nome");
-      if (error) throw error;
-      return data as Array<{
+      const data = await api.get<any[]>("/territorio/municipios?fields=id,nome,populacao_2022,area_km2,idh,urbano_pct,densidade_hab_km2");
+      return (data || []) as Array<{
         id: string; nome: string;
         populacao_2022: number | null; area_km2: number | null;
         idh: number | null; urbano_pct: number | null; densidade_hab_km2: number | null;

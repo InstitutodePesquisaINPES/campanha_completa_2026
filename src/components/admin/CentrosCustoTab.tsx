@@ -18,18 +18,16 @@ export function CentrosCustoTab() {
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["admin-centros-custo"],
     queryFn: async () => {
-      const { data, error } = await (api as any).from("centros_custo").select("*").order("nome");
-      if (error) throw error;
+      const data = await api.get<any[]>("/admin/centros-custo");
       return data || [];
     },
   });
 
   const create = useMutation({
     mutationFn: async () => {
-      const { error } = await (api as any).from("centros_custo").insert({
+      await api.post("/admin/centros-custo", {
         nome, descricao: descricao || null, orcamento_previsto: Number(orcamento) || 0,
       });
-      if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-centros-custo"] });
@@ -41,8 +39,7 @@ export function CentrosCustoTab() {
 
   const remove = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await (api as any).from("centros_custo").delete().eq("id", id);
-      if (error) throw error;
+      await api.delete(`/admin/centros-custo/${id}`);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-centros-custo"] });
