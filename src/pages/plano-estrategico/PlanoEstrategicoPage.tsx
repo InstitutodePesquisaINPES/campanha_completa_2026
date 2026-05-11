@@ -177,7 +177,7 @@ export default function PlanoEstrategicoPage() {
                   {liderStats && Object.entries(liderStats.porTipo).slice(0, 5).map(([k, v]) => (
                     <div key={k} className="flex justify-between text-xs">
                       <span className="capitalize">{k}</span>
-                      <span className="font-bold">{v}</span>
+                      <span className="font-bold">{v as any}</span>
                     </div>
                   ))}
                   {(!liderStats || Object.keys(liderStats.porTipo).length === 0) && <p className="text-xs text-muted-foreground">Sem dados</p>}
@@ -192,7 +192,7 @@ export default function PlanoEstrategicoPage() {
                   {liderStats && Object.entries(liderStats.porStatus).map(([k, v]) => (
                     <div key={k} className="flex justify-between text-xs">
                       <span className="capitalize">{k.replace("_", " ")}</span>
-                      <span className="font-bold">{v}</span>
+                      <span className="font-bold">{v as any}</span>
                     </div>
                   ))}
                   {(!liderStats || Object.keys(liderStats.porStatus).length === 0) && <p className="text-xs text-muted-foreground">Sem dados</p>}

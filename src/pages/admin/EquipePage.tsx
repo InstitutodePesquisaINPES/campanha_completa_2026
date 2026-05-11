@@ -42,7 +42,7 @@ export default function EquipePage() {
     queryKey: ["equipe-list"],
     queryFn: async () => {
       const res = await api.get("/equipe");
-      return res.data;
+      return res as any;
     },
     enabled: canManage,
   });
@@ -62,9 +62,9 @@ export default function EquipePage() {
     mutationFn: async (data: any) => {
       return await api.post("/equipe", data);
     },
-    onSuccess: (res) => {
+    onSuccess: (res: any) => {
       toast.success("Membro adicionado com sucesso!", {
-        description: `Senha temporária gerada: ${res.data.temporaryPassword}`,
+        description: `Senha temporária gerada: ${res.temporaryPassword}`,
         duration: 10000, // Tempo extra para copiar a senha
       });
       queryClient.invalidateQueries({ queryKey: ["equipe-list"] });
@@ -79,7 +79,7 @@ export default function EquipePage() {
     queryKey: ["equipe-logs", selectedUserLogs],
     queryFn: async () => {
       const res = await api.get(`/equipe/${selectedUserLogs}/logs`);
-      return res.data;
+      return res as any;
     },
     enabled: !!selectedUserLogs,
   });

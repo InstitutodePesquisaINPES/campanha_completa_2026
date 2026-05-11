@@ -71,7 +71,7 @@ export default function WarRoomDashboard() {
             ];
 
             return (
-              <motion.div key={campanha.id} variants={itemVariants} className="glass-card rounded-2xl overflow-hidden group">
+              <motion.div key={campanha.id} variants={itemVariants as any} className="glass-card rounded-2xl overflow-hidden group">
                 {/* Header Premium */}
                 <div className="bg-gradient-to-r from-slate-900 to-slate-800 dark:from-black dark:to-slate-900 p-8 text-white relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 opacity-10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>

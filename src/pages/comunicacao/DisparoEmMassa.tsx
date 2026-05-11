@@ -58,10 +58,10 @@ export default function DisparoEmMassa() {
 
             <button 
               onClick={handleSimular}
-              disabled={gerarSegmentacaoMutation.isLoading}
+              disabled={gerarSegmentacaoMutation.isPending}
               className="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-800 hover:bg-gray-900 focus:outline-none"
             >
-              {gerarSegmentacaoMutation.isLoading ? 'Calculando...' : 'Calcular Audiência'}
+              {gerarSegmentacaoMutation.isPending ? 'Calculando...' : 'Calcular Audiência'}
             </button>
           </div>
         </div>
