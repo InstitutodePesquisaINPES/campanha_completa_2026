@@ -17,6 +17,10 @@ const ROLE_WEIGHT: Record<AppRole, number> = {
   cabo_eleitoral: 20,
   operador_crm: 20,
   analista_dados: 20,
+  coordenador: 0,
+  lideranca: 0,
+  operador: 0,
+  visualizador: 0,
 };
 
 @Injectable()
