@@ -107,9 +107,16 @@ export class TseController {
     @Query('ano') ano: string,
     @Query('cod_municipio_tse') codMunicipioTse: string,
     @Query('zona') zona: string,
-    @Query('secao') secao: string,
+    @Query('secao') secao?: string,
   ) {
-    return this.tseService.getEleitoradoSecaoPerfil(tenantId, uf, parseInt(ano, 10), codMunicipioTse, parseInt(zona, 10), parseInt(secao, 10));
+    return this.tseService.getEleitoradoSecaoPerfil(
+      tenantId, 
+      uf, 
+      parseInt(ano, 10), 
+      codMunicipioTse, 
+      parseInt(zona, 10), 
+      secao ? parseInt(secao, 10) : undefined
+    );
   }
 
   @Post('votos/secao')
@@ -140,6 +147,17 @@ export class TseController {
   @Post('origem-votos-local')
   async getOrigemVotosLocal(@CurrentTenant() tenantId: string, @Body() body: any) {
     return this.tseService.getOrigemVotosLocal(tenantId, body);
+  }
+
+  @Get('quociente-eleitoral')
+  async getQuocienteEleitoral(
+    @CurrentTenant() tenantId: string,
+    @Query('uf') uf: string,
+    @Query('ano') ano: string,
+    @Query('cod_municipio_tse') codMunicipioTse: string,
+    @Query('cargo') cargo: string,
+  ) {
+    return this.tseService.getQuocienteEleitoral(tenantId, uf, parseInt(ano, 10), codMunicipioTse, cargo);
   }
 
   // ─── IMPORT JOBS ──────────────────────────────────────────

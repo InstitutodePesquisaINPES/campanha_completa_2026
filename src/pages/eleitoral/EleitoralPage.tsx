@@ -14,6 +14,7 @@ import { PerfilEleitoradoTab } from "@/components/eleitoral/PerfilEleitoradoTab"
 import { OrigemVotosTab } from "@/components/eleitoral/OrigemVotosTab";
 import { LocaisVotacaoTab } from "@/components/eleitoral/LocaisVotacaoTab";
 import { ComparativoTab } from "@/components/eleitoral/ComparativoTab";
+import { InteligenciaPreditivaTab } from "@/components/eleitoral/InteligenciaPreditivaTab";
 
 export default function EleitoralPage() {
   const { data: campanhaAtiva } = useCampanhaAtiva();
@@ -68,6 +69,7 @@ export default function EleitoralPage() {
               <TabsTrigger value="comparativo">Comparativo entre Eleições</TabsTrigger>
               <TabsTrigger value="origem">Origem de Votos (Zona/Seção)</TabsTrigger>
               <TabsTrigger value="locais">Locais de Votação</TabsTrigger>
+              <TabsTrigger value="preditiva">Inteligência Preditiva</TabsTrigger>
             </TabsList>
 
             <TabsContent value="visao" className="mt-4">
@@ -87,6 +89,9 @@ export default function EleitoralPage() {
             </TabsContent>
             <TabsContent value="locais" className="mt-4">
               <LocaisVotacaoTab uf={uf} ano={ano} codMunicipio={municipioPick?.cod} />
+            </TabsContent>
+            <TabsContent value="preditiva" className="mt-4">
+              <InteligenciaPreditivaTab uf={uf} ano={ano} codMunicipio={municipioPick?.cod} cargo={cargo} />
             </TabsContent>
           </Tabs>
         </div>

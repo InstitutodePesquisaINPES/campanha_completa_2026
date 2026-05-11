@@ -255,6 +255,34 @@ export class TseService {
 
   // ─── API DATA RETRIEVAL ───────────────────────────────────
 
+  async getQuocienteEleitoral(tenantId: string, uf: string, ano: number, codMunicipioTse: string, cargo: string) {
+    const eleitos = await this.prisma.tseCandidato.count({
+      where: { tenantId, uf, ano, codMunicipioTse, cargo, eleito: true }
+    });
+
+    const votosValidosRes = await this.prisma.tseResultadoSecao.aggregate({
+      where: {
+        tenantId, uf, ano, codMunicipioTse, cargo,
+        numeroVotavel: { notIn: ['95', '96', '97'] } // 95=Branco, 96=Nulo, 97=Anulado
+      },
+      _sum: { votos: true }
+    });
+
+    const votosValidos = votosValidosRes._sum.votos || 0;
+    const vagas = eleitos > 0 ? eleitos : 1; 
+    const quocienteEleitoral = Math.floor(votosValidos / vagas);
+
+    return {
+      uf,
+      ano,
+      codMunicipioTse,
+      cargo,
+      votosValidos,
+      vagas: eleitos,
+      quocienteEleitoral
+    };
+  }
+
   async getCandidatos(tenantId: string, filters: any) {
     const { uf, ano, cargo, cod_municipio_tse, busca, eleito, partido } = filters;
     
@@ -391,8 +419,11 @@ export class TseService {
     };
   }
 
-  async getEleitoradoSecaoPerfil(tenantId: string, uf: string, ano: number, codMunicipioTse: string, zona: number, secao: number) {
-    const whereObj: any = { tenantId, uf, ano, codMunicipioTse, zona, secao };
+  async getEleitoradoSecaoPerfil(tenantId: string, uf: string, ano: number, codMunicipioTse: string, zona: number, secao?: number) {
+    const whereObj: any = { tenantId, uf, ano, codMunicipioTse, zona };
+    if (secao) {
+      whereObj.secao = secao;
+    }
 
     const totalRes = await this.prisma.tseEleitoradoSecao.aggregate({
       where: whereObj,

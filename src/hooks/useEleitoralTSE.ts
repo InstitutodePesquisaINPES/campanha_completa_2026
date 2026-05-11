@@ -163,6 +163,19 @@ export function useEleitoralSecaoPerfil(uf: string, ano: number, codMunicipioTse
   });
 }
 
+export function useQuocienteEleitoral(uf: string, ano: number, codMunicipioTse?: string, cargo?: string) {
+  return useQuery({
+    queryKey: ["tse-quociente", uf, ano, codMunicipioTse, cargo],
+    enabled: !!(uf && ano && codMunicipioTse && cargo),
+    queryFn: async () => {
+      const data = await api.get<any>(
+        `/tse/quociente-eleitoral?uf=${uf}&ano=${ano}&cod_municipio_tse=${codMunicipioTse}&cargo=${cargo}`
+      );
+      return data || null;
+    },
+  });
+}
+
 export const CARGOS_TSE = [
   "Vereador", "Prefeito", "Vice-Prefeito",
   "Deputado Estadual", "Deputado Federal", "Senador",
