@@ -6,6 +6,8 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 
+RUN apk add --no-cache openssl
+
 COPY package.json package-lock.json ./
 RUN npm ci
 
@@ -22,6 +24,8 @@ RUN ls -la dist/main.js || (echo "ERRO: dist/main.js não foi gerado!" && exit 1
 # --- Estágio 2: Produção ---
 FROM node:20-alpine
 WORKDIR /app
+
+RUN apk add --no-cache openssl
 
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
