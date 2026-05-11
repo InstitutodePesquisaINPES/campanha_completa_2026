@@ -27,14 +27,40 @@ Retorna a árvore de lideranças e o número de pessoas atreladas a cada uma, fo
 
 ## 2. Módulo de TSE / Uploads Massivos
 
-### `POST /tse/upload`
-Inicia o processo assíncrono de leitura de CSV.
-- **Body:** `multipart/form-data` (arquivo CSV), campo `tipo` (`eleitorado_perfil`, `candidatos`, etc).
-- **Retorno:** `{ "arquivoId": "uuid", "status": "aguardando" }`
+### `POST /tse/upload` (Obsoleto/Interno)
+Rotas agora são geridas via background worker.
+- **POST `/tse/jobs/run`**: Dispara o background worker (`import-master.js`).
 
-### `GET /tse/arquivos/:id/status`
-Faz o polling para a interface desenhar a barra de progresso.
-- **Retorno:** `{ "progressPct": 45, "status": "processando", "linhasProcessadas": 450000 }`
+### `GET /tse/kpis`
+Retorna totais consolidados para a dashboard principal.
+
+### `GET /tse/candidato/historico`
+Retorna o histórico de campanhas de um candidato pelo seu CPF ou Nome Completo.
+- **Query Params:** `cpf`, `nomeCompleto`
+
+### `POST /tse/candidatos`
+Realiza buscas avançadas na base consolidada do TSE.
+- **Body:** `{ "uf": "BA", "ano": 2024, "cargo": "Prefeito", "busca": "Nome do candidato" }`
+
+### `GET /tse/eleitorado/perfil`
+Retorna métricas demográficas agrupadas (gênero, faixa etária, escolaridade) de um estado ou município.
+- **Query Params:** `uf`, `ano`, `municipio`
+
+### `POST /tse/votos/secao`
+Busca votos consolidados por seção eleitoral de um candidato específico.
+- **Body:** `{ "uf": "BA", "ano": 2024, "cod_municipio_tse": "12345", "numero_votavel": "13" }`
+
+### `GET /tse/locais-votacao`
+Lista todos os locais físicos de votação do município.
+- **Query Params:** `uf`, `ano`, `cod_municipio_tse`
+
+### `GET /tse/comparativo`
+Compara os top 10 candidatos mais votados num município por cargo.
+- **Query Params:** `uf`, `municipio`, `cargo`
+
+### `POST /tse/origem-votos-local`
+Cruza votos com locais de votação para retornar o peso geográfico do candidato.
+- **Body:** `{ "uf": "BA", "ano": 2024, "cod_municipio_tse": "12345", "numero_votavel": "13" }`
 
 ---
 
