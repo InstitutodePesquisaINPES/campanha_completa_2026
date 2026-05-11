@@ -1,7 +1,9 @@
 import { PrismaClient, AppRole } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasourceUrl: process.env.DATABASE_URL,
+});
 
 async function main() {
   console.log('🌱 Iniciando o Seeding da Kiribamba Enterprise...');
@@ -59,7 +61,7 @@ async function main() {
         email: adminEmail,
         fullName: 'Super Administrador',
         passwordHash,
-        tenantId: tenant.id, // O Admin global reside no tenant master
+        tenantId: tenant.id,
         roles: {
           create: {
             role: AppRole.admin,

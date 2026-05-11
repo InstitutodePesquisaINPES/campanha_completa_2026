@@ -1,3 +1,8 @@
+# ============================================
+# KIRIBAMBA API - Backend Build (Multi-Stage)
+# ============================================
+
+# --- Estágio 1: Build ---
 FROM node:20-alpine AS build
 WORKDIR /app
 
@@ -5,11 +10,16 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY prisma ./prisma
+COPY prisma.config.ts tsconfig.json tsconfig.build.json nest-cli.json ./
 RUN npx prisma generate
 
 COPY . .
 RUN npm run build
 
+# Verificar que o build gerou o arquivo principal
+RUN ls -la dist/main.js || (echo "ERRO: dist/main.js não foi gerado!" && exit 1)
+
+# --- Estágio 2: Produção ---
 FROM node:20-alpine
 WORKDIR /app
 
