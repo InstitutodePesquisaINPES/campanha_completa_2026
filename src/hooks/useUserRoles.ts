@@ -33,15 +33,11 @@ export function useUserRoles() {
     queryKey: ["user-roles", user?.id],
     queryFn: async () => {
       if (!user) return [];
-      const { data, error } = await (api as any)
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id);
-      if (error) throw error;
-      return (data || []).map((r: { role: string }) => r.role as AppRole);
+      // The API now returns roles in the user object from the JWT/API Me endpoint
+      return user.roles as AppRole[];
     },
     enabled: !!user && !loading,
-    staleTime: 30_000,
+    staleTime: Infinity,
   });
 }
 
