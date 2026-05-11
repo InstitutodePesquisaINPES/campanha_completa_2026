@@ -89,7 +89,7 @@ const systemItems = [
 const adminItems = [
   { title: "Gestão de Equipe", url: "/equipe", icon: Users },
   { title: "Configurações", url: "/configuracoes", icon: Settings },
-  { title: "Admin Geral", url: "/admin", icon: Shield },
+  { title: "Importação TSE & Admin", url: "/admin", icon: Shield },
 ];
 
 const enterpriseItems = [

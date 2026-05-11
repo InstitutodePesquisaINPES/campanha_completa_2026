@@ -81,7 +81,21 @@ export default function SettingsPage() {
             <Settings className="h-7 w-7 text-blue-600" />
             Configurações e White Label
           </h1>
-          <p className="text-slate-500 mt-1">Gerencie os parâmetros globais e a identidade visual da campanha.</p>
+          <p className="text-slate-500 mt-1 mb-4">Gerencie os parâmetros globais e a identidade visual da campanha.</p>
+          
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between shadow-sm">
+            <div>
+              <h3 className="text-blue-800 font-bold flex items-center gap-2">
+                Procurando pela Importação de Dados do TSE?
+              </h3>
+              <p className="text-blue-600 text-sm mt-1">
+                A importação de dados brutos e planilhas fica no painel principal de Administração.
+              </p>
+            </div>
+            <Button variant="default" className="bg-blue-600 hover:bg-blue-700" onClick={() => window.location.href = '/admin?tab=tse'}>
+              Acessar Dados do TSE
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

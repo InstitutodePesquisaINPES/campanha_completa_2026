@@ -19,6 +19,10 @@ export default function AdminPage() {
   const { data: roles = [], isLoading } = useUserRoles();
   const isAdmin = roles.includes("admin");
 
+  // Allow direct linking to specific tabs via ?tab=xxx
+  const queryParams = new URLSearchParams(window.location.search);
+  const defaultTab = queryParams.get("tab") || "dashboard";
+
   if (isLoading) {
     return null;
   }
@@ -35,7 +39,7 @@ export default function AdminPage() {
           Painel Administrativo
         </h1>
 
-        <Tabs defaultValue="dashboard">
+        <Tabs defaultValue={defaultTab}>
           <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="users">Usuários</TabsTrigger>
