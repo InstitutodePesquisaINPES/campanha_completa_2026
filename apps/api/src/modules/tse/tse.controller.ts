@@ -21,6 +21,13 @@ import {
 } from '../../common/decorators/tenant.decorator';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import * as fs from 'fs';
+
+// Garante que o diretorio de uploads existe
+const uploadDir = './uploads/tse';
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 @Controller('tse')
 @UseGuards(AuthGuard('jwt'), TenantGuard)
