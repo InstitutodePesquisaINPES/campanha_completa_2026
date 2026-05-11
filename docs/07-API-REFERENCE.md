@@ -43,8 +43,12 @@ Realiza buscas avançadas na base consolidada do TSE.
 - **Body:** `{ "uf": "BA", "ano": 2024, "cargo": "Prefeito", "busca": "Nome do candidato" }`
 
 ### `GET /tse/eleitorado/perfil`
-Retorna métricas demográficas agrupadas (gênero, faixa etária, escolaridade) de um estado ou município.
+Retorna métricas demográficas agrupadas (gênero, faixa etária, escolaridade, cor_raca, estado_civil) de um estado ou município.
 - **Query Params:** `uf`, `ano`, `municipio`
+
+### `GET /tse/eleitorado/secao/perfil`
+Idêntico ao Perfil do Eleitorado, mas com granularidade local, agrupando os dados dos eleitores de uma Zona e Seção eleitoral específica.
+- **Query Params:** `uf`, `ano`, `cod_municipio_tse`, `zona`, `secao`
 
 ### `POST /tse/votos/secao`
 Busca votos consolidados por seção eleitoral de um candidato específico.

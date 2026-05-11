@@ -100,6 +100,18 @@ export class TseController {
     return this.tseService.getEleitoradoPerfil(tenantId, uf, parseInt(ano, 10), municipio);
   }
 
+  @Get('eleitorado/secao/perfil')
+  async getEleitoradoSecaoPerfil(
+    @CurrentTenant() tenantId: string,
+    @Query('uf') uf: string,
+    @Query('ano') ano: string,
+    @Query('cod_municipio_tse') codMunicipioTse: string,
+    @Query('zona') zona: string,
+    @Query('secao') secao: string,
+  ) {
+    return this.tseService.getEleitoradoSecaoPerfil(tenantId, uf, parseInt(ano, 10), codMunicipioTse, parseInt(zona, 10), parseInt(secao, 10));
+  }
+
   @Post('votos/secao')
   async getVotosSecao(@CurrentTenant() tenantId: string, @Body() body: any) {
     return this.tseService.getVotosSecao(tenantId, body);

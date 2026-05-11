@@ -367,6 +367,18 @@ export class TseService {
       _sum: { quantidadeEleitores: true }
     });
 
+    const corRacaRaw = await this.prisma.tseEleitoradoPerfil.groupBy({
+      by: ['corRaca'],
+      where: whereObj,
+      _sum: { quantidadeEleitores: true }
+    });
+
+    const estadoCivilRaw = await this.prisma.tseEleitoradoPerfil.groupBy({
+      by: ['estadoCivil'],
+      where: whereObj,
+      _sum: { quantidadeEleitores: true }
+    });
+
     const formatData = (raw: any[], key: string) => raw.map(r => ({ name: r[key] || 'Não Informado', value: r._sum.quantidadeEleitores || 0 }));
 
     return {
@@ -374,8 +386,36 @@ export class TseService {
       genero: formatData(generoRaw, 'genero'),
       faixa_etaria: formatData(faixaEtariaRaw, 'faixaEtaria'),
       grau_instrucao: formatData(grauInstrucaoRaw, 'grauInstrucao'),
-      cor_raca: [], // Implement if needed
-      estado_civil: [] // Implement if needed
+      cor_raca: formatData(corRacaRaw, 'corRaca'),
+      estado_civil: formatData(estadoCivilRaw, 'estadoCivil')
+    };
+  }
+
+  async getEleitoradoSecaoPerfil(tenantId: string, uf: string, ano: number, codMunicipioTse: string, zona: number, secao: number) {
+    const whereObj: any = { tenantId, uf, ano, codMunicipioTse, zona, secao };
+
+    const totalRes = await this.prisma.tseEleitoradoSecao.aggregate({
+      where: whereObj,
+      _sum: { quantidadeEleitores: true }
+    });
+    
+    const total = totalRes._sum.quantidadeEleitores || 0;
+
+    const generoRaw = await this.prisma.tseEleitoradoSecao.groupBy({ by: ['genero'], where: whereObj, _sum: { quantidadeEleitores: true } });
+    const faixaEtariaRaw = await this.prisma.tseEleitoradoSecao.groupBy({ by: ['faixaEtaria'], where: whereObj, _sum: { quantidadeEleitores: true } });
+    const grauInstrucaoRaw = await this.prisma.tseEleitoradoSecao.groupBy({ by: ['grauInstrucao'], where: whereObj, _sum: { quantidadeEleitores: true } });
+    const corRacaRaw = await this.prisma.tseEleitoradoSecao.groupBy({ by: ['corRaca'], where: whereObj, _sum: { quantidadeEleitores: true } });
+    const estadoCivilRaw = await this.prisma.tseEleitoradoSecao.groupBy({ by: ['estadoCivil'], where: whereObj, _sum: { quantidadeEleitores: true } });
+
+    const formatData = (raw: any[], key: string) => raw.map(r => ({ name: r[key] || 'Não Informado', value: r._sum.quantidadeEleitores || 0 }));
+
+    return {
+      total,
+      genero: formatData(generoRaw, 'genero'),
+      faixa_etaria: formatData(faixaEtariaRaw, 'faixaEtaria'),
+      grau_instrucao: formatData(grauInstrucaoRaw, 'grauInstrucao'),
+      cor_raca: formatData(corRacaRaw, 'corRaca'),
+      estado_civil: formatData(estadoCivilRaw, 'estadoCivil')
     };
   }
 
