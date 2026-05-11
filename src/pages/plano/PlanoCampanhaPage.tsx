@@ -83,7 +83,7 @@ export default function PlanoCampanhaPage() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-1">
                     <Trophy className="h-4 w-4 text-warning" />
-                    <Badge variant="outline" className="text-[10px] capitalize">{campanha.cargo.replace("_", " ")}</Badge>
+                    <Badge variant="outline" className="text-[10px] capitalize">{campanha.cargo?.replace("_", " ") || "Não definido"}</Badge>
                   </div>
                   <div className="text-lg font-bold truncate">{campanha.nome}</div>
                   <p className="text-xs text-muted-foreground truncate">

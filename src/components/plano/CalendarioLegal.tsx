@@ -197,7 +197,7 @@ export function CalendarioLegal({ campanhaId }: { campanhaId: string }) {
       <Alert className="border-info/30 bg-info/5">
         <Info className="h-4 w-4 text-info" />
         <AlertDescription className="text-xs">
-          Calendário gerado automaticamente a partir da <strong>data da eleição ({new Date(campanha.data_eleicao).toLocaleDateString("pt-BR")})</strong> e do cargo (<strong className="capitalize">{campanha.cargo.replace("_", " ")}</strong>).
+          Calendário gerado automaticamente a partir da <strong>data da eleição ({new Date(campanha.data_eleicao).toLocaleDateString("pt-BR")})</strong> e do cargo (<strong className="capitalize">{campanha.cargo?.replace("_", " ") || "Não definido"}</strong>).
           Datas conforme <strong>Lei 9.504/97</strong>, <strong>Res. TSE 23.610/2019</strong> (atualizada pela 23.735/2024) e legislação correlata.
           Consulte sempre o calendário oficial do TSE para sua eleição.
         </AlertDescription>

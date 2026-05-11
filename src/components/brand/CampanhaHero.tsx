@@ -26,7 +26,7 @@ export function CampanhaHero() {
           <div className="flex flex-wrap items-center gap-2">
             <span className="brand-pill">{partido}</span>
             <span className="text-[11px] font-semibold uppercase tracking-wider text-white/80">
-              {c.cargo.replace("_", " ")} · Bahia
+              {c.cargo?.replace("_", " ") || "Cargo não definido"} · Bahia
             </span>
           </div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-black leading-tight" style={{ fontFamily: "'Sora', sans-serif" }}>
