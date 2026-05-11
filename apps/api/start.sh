@@ -8,10 +8,10 @@ echo "DATABASE_URL configurada: $(echo $DATABASE_URL | sed 's/:.*@/:***@/')"
 
 echo ""
 echo "🔄 Rodando migrações do banco de dados (Prisma)..."
-npx prisma migrate deploy 2>&1 || {
-  echo "⚠️ Migrações falharam. Tentando push do schema..."
-  npx prisma db push --accept-data-loss 2>&1 || echo "⚠️ Push também falhou. O banco pode ainda não estar pronto."
-}
+npx prisma migrate deploy 2>&1 || echo "⚠️ migrate deploy encontrou problemas, mas continuando..."
+
+echo "🔄 Forçando db push para garantir que tabelas não-migradas existam..."
+npx prisma db push --accept-data-loss 2>&1 || echo "⚠️ Push falhou. O banco pode não estar pronto."
 
 echo ""
 echo "🌱 Rodando seeder para garantir usuários base..."
