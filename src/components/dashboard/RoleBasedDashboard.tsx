@@ -11,6 +11,8 @@ import {
   MapPin, Users, ClipboardList, Calendar, Package, Vote, Wallet,
   MessageSquare, Flag, TrendingUp, Target, Crown,
 } from "lucide-react";
+import { useUserRoles } from "@/hooks/useUserRoles";
+import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 

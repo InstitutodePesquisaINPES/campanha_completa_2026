@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { NavLink } from "@/components/NavLink";
+import { useUserRoles } from "@/hooks/useUserRoles";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
