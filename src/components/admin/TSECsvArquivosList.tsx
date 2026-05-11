@@ -55,11 +55,13 @@ const STATUS_CFG: Record<
   erro: { label: "Erro", className: "bg-destructive text-destructive-foreground" },
 };
 
-function fmtBytes(b: number | null | undefined): string {
+function fmtBytes(b: number | string | null | undefined): string {
   if (!b) return "—";
+  let v = Number(b);
+  if (isNaN(v)) return "—";
+  
   const u = ["B", "KB", "MB", "GB"];
   let i = 0;
-  let v = b;
   while (v >= 1024 && i < u.length - 1) {
     v /= 1024;
     i++;
