@@ -8,6 +8,7 @@ import { PrismaService } from '../../common/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
+import { spawn } from 'child_process';
 
 @Injectable()
 export class TseService {
@@ -169,9 +170,46 @@ export class TseService {
   }
 
   async runWorker(tenantId: string) {
-    // Simply mark the fact that we processed — real CSV processing
-    // would be an async background task using BullMQ or cron
-    return { success: true, picked: 0, msg: 'Worker endpoint ativo' };
+    // 1. Check if there is already a file processing
+    const isProcessing = await this.prisma.tseCsvArquivo.findFirst({
+      where: { tenantId, status: 'processando' }
+    });
+    if (isProcessing) {
+      return { success: false, msg: 'Já existe um arquivo sendo processado no momento.', arquivo: isProcessing };
+    }
+
+    // 2. Find the oldest 'aguardando' file
+    const target = await this.prisma.tseCsvArquivo.findFirst({
+      where: { tenantId, status: 'aguardando' },
+      orderBy: { createdAt: 'asc' }
+    });
+
+    if (!target) {
+      return { success: false, picked: 0, msg: 'Nenhum arquivo aguardando na fila.' };
+    }
+
+    // 3. Mark as processing
+    await this.prisma.tseCsvArquivo.update({
+      where: { id: target.id },
+      data: { status: 'processando', startedAt: new Date(), errorMsg: null }
+    });
+
+    // 4. Resolve absolute path
+    const absolutePath = path.join(process.cwd(), target.storagePath);
+    const scriptPath = path.join(process.cwd(), 'import-master.js');
+
+    // 5. Spawn background worker
+    // node import-master.js <arquivo_id> <tenant_id> <tipo> <caminho_absoluto>
+    const child = spawn('node', [scriptPath, target.id, target.tenantId, target.tipo, absolutePath], {
+      detached: true,
+      stdio: 'ignore' // We ignore stdio to let it run completely detached in background
+    });
+
+    child.unref();
+
+    this.logger.log(`Worker import-master.js disparado para arquivo ${target.id} (${target.tipo})`);
+
+    return { success: true, picked: 1, arquivo: target, msg: 'Worker iniciado em background' };
   }
 
   // ─── STATISTICS ───────────────────────────────────────────
