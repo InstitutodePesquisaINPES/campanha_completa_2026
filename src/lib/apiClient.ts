@@ -41,7 +41,10 @@ class ApiClient {
     if (res.status === 401) {
       // No futuro podemos implementar refresh token flow aqui
       this.clearToken();
-      window.location.href = '/login';
+      const currentPath = window.location.pathname;
+      if (currentPath !== '/login' && currentPath !== '/cadastro') {
+        window.location.href = '/login';
+      }
       throw new Error('Session expired');
     }
 

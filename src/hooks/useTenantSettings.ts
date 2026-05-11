@@ -17,6 +17,7 @@ export function useTenantSettings() {
       const data = await api.get<TenantSettingsData>('/tenants/settings/current');
       return data;
     },
+    enabled: !!api.getToken(),
   });
 }
 
