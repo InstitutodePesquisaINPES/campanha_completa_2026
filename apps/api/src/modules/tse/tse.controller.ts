@@ -64,38 +64,70 @@ export class TseController {
   // ─── STUBS FOR FRONTEND (TO PREVENT 404s) ─────────────────
 
   @Post('candidatos')
-  async getCandidatos(@Body() body: any) {
-    return [];
+  async getCandidatos(@CurrentTenant() tenantId: string, @Body() body: any) {
+    return this.tseService.getCandidatos(tenantId, body);
   }
 
   @Post('candidato-match')
-  async getCandidatoMatch(@Body() body: any) {
-    return null;
+  async getCandidatoMatch(@CurrentTenant() tenantId: string, @Body() body: any) {
+    return this.tseService.getCandidatoMatch(tenantId, body);
+  }
+
+  @Get('pessoa-match')
+  async getPessoaMatch(
+    @CurrentTenant() tenantId: string,
+    @Query('pessoaId') pessoaId: string,
+  ) {
+    return this.tseService.getPessoaMatch(tenantId, pessoaId);
+  }
+
+  @Get('candidato/historico')
+  async getCandidatoHistorico(
+    @CurrentTenant() tenantId: string,
+    @Query('cpf') cpf: string,
+    @Query('nomeCompleto') nomeCompleto: string,
+  ) {
+    return this.tseService.getCandidatoHistorico(tenantId, cpf, nomeCompleto);
   }
 
   @Get('eleitorado/perfil')
-  async getEleitoradoPerfil() {
-    return { total: 0, genero: [], faixa_etaria: [], grau_instrucao: [], cor_raca: [], estado_civil: [] };
+  async getEleitoradoPerfil(
+    @CurrentTenant() tenantId: string,
+    @Query('uf') uf: string,
+    @Query('ano') ano: string,
+    @Query('municipio') municipio: string,
+  ) {
+    return this.tseService.getEleitoradoPerfil(tenantId, uf, parseInt(ano, 10), municipio);
   }
 
   @Post('votos/secao')
-  async getVotosSecao(@Body() body: any) {
-    return [];
+  async getVotosSecao(@CurrentTenant() tenantId: string, @Body() body: any) {
+    return this.tseService.getVotosSecao(tenantId, body);
   }
 
   @Get('locais-votacao')
-  async getLocaisVotacao() {
-    return [];
+  async getLocaisVotacao(
+    @CurrentTenant() tenantId: string,
+    @Query('uf') uf: string,
+    @Query('ano') ano: string,
+    @Query('cod_municipio_tse') codMunicipioTse: string,
+  ) {
+    return this.tseService.getLocaisVotacao(tenantId, uf, parseInt(ano, 10), codMunicipioTse);
   }
 
   @Get('comparativo')
-  async getComparativo() {
-    return [];
+  async getComparativo(
+    @CurrentTenant() tenantId: string,
+    @Query('uf') uf: string,
+    @Query('municipio') municipio: string,
+    @Query('cargo') cargo: string,
+  ) {
+    return this.tseService.getComparativo(tenantId, uf, municipio, cargo);
   }
 
   @Post('origem-votos-local')
-  async getOrigemVotosLocal(@Body() body: any) {
-    return [];
+  async getOrigemVotosLocal(@CurrentTenant() tenantId: string, @Body() body: any) {
+    return this.tseService.getOrigemVotosLocal(tenantId, body);
   }
 
   // ─── IMPORT JOBS ──────────────────────────────────────────

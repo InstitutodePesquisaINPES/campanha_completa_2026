@@ -253,6 +253,203 @@ export class TseService {
     return rows;
   }
 
+  // ─── API DATA RETRIEVAL ───────────────────────────────────
+
+  async getCandidatos(tenantId: string, filters: any) {
+    const { uf, ano, cargo, cod_municipio_tse, busca, eleito, partido } = filters;
+    
+    const where: any = { tenantId };
+    if (uf) where.uf = uf;
+    if (ano) where.ano = parseInt(ano, 10);
+    if (cargo) where.cargo = cargo;
+    if (cod_municipio_tse) where.codMunicipioTse = cod_municipio_tse;
+    if (eleito !== undefined) where.eleito = eleito;
+    if (partido) where.partidoSigla = partido;
+
+    if (busca) {
+      where.OR = [
+        { nomeUrna: { contains: busca, mode: 'insensitive' } },
+        { nomeCompleto: { contains: busca, mode: 'insensitive' } },
+        { numeroUrna: { contains: busca } }
+      ];
+    }
+
+    return this.prisma.tseCandidato.findMany({
+      where,
+      orderBy: { nomeUrna: 'asc' },
+      take: 100,
+    });
+  }
+
+  async getCandidatoMatch(tenantId: string, body: any) {
+    const { nomeCompleto, cpf } = body;
+    if (!nomeCompleto && !cpf) return null;
+
+    const where: any = { tenantId };
+    if (cpf) {
+      where.cpf = cpf.replace(/\D/g, '');
+    } else if (nomeCompleto) {
+      where.nomeCompleto = { equals: nomeCompleto, mode: 'insensitive' };
+    }
+
+    return this.prisma.tseCandidato.findFirst({ where });
+  }
+
+  async getPessoaMatch(tenantId: string, pessoaId: string) {
+    const pessoa = await this.prisma.pessoa.findFirst({
+      where: { id: pessoaId, tenantId }
+    });
+
+    if (!pessoa) return [];
+
+    const where: any = { tenantId };
+    if (pessoa.cpf) {
+      where.cpf = pessoa.cpf.replace(/\D/g, '');
+    } else if (pessoa.fullName) {
+      where.nomeCompleto = { equals: pessoa.fullName, mode: 'insensitive' };
+    } else {
+      return [];
+    }
+
+    return this.prisma.tseCandidato.findMany({
+      where,
+      orderBy: { ano: 'desc' }
+    });
+  }
+
+  async getCandidatoHistorico(tenantId: string, cpf?: string, nomeCompleto?: string) {
+    if (!nomeCompleto && !cpf) return [];
+
+    const where: any = { tenantId };
+    if (cpf) {
+      where.cpf = cpf.replace(/\D/g, '');
+    } else if (nomeCompleto) {
+      where.nomeCompleto = { equals: nomeCompleto, mode: 'insensitive' };
+    }
+
+    return this.prisma.tseCandidato.findMany({ 
+      where,
+      orderBy: { ano: 'desc' }
+    });
+  }
+
+  async getEleitoradoPerfil(tenantId: string, uf: string, ano: number, municipio?: string) {
+    const whereCondition = `ep.tenant_id = '${tenantId}'::uuid AND ep.uf = '${uf}' AND ep.ano = ${ano} ${municipio ? `AND ep.municipio = '${municipio}'` : ''}`;
+    
+    // As we can't do dynamic raw queries safely without Prisma.$queryRawUnsafe or careful mapping, we use raw.
+    // However, Prisma group by is easier for generic profiling.
+    
+    const whereObj: any = { tenantId, uf, ano };
+    if (municipio) whereObj.municipio = municipio;
+
+    const totalRes = await this.prisma.tseEleitoradoPerfil.aggregate({
+      where: whereObj,
+      _sum: { quantidadeEleitores: true }
+    });
+    
+    const total = totalRes._sum.quantidadeEleitores || 0;
+
+    const generoRaw = await this.prisma.tseEleitoradoPerfil.groupBy({
+      by: ['genero'],
+      where: whereObj,
+      _sum: { quantidadeEleitores: true }
+    });
+
+    const faixaEtariaRaw = await this.prisma.tseEleitoradoPerfil.groupBy({
+      by: ['faixaEtaria'],
+      where: whereObj,
+      _sum: { quantidadeEleitores: true }
+    });
+
+    const grauInstrucaoRaw = await this.prisma.tseEleitoradoPerfil.groupBy({
+      by: ['grauInstrucao'],
+      where: whereObj,
+      _sum: { quantidadeEleitores: true }
+    });
+
+    const formatData = (raw: any[], key: string) => raw.map(r => ({ name: r[key] || 'Não Informado', value: r._sum.quantidadeEleitores || 0 }));
+
+    return {
+      total,
+      genero: formatData(generoRaw, 'genero'),
+      faixa_etaria: formatData(faixaEtariaRaw, 'faixaEtaria'),
+      grau_instrucao: formatData(grauInstrucaoRaw, 'grauInstrucao'),
+      cor_raca: [], // Implement if needed
+      estado_civil: [] // Implement if needed
+    };
+  }
+
+  async getVotosSecao(tenantId: string, filters: any) {
+    const { uf, ano, cargo, cod_municipio_tse, numero_votavel } = filters;
+    const where: any = { tenantId, codMunicipioTse: cod_municipio_tse };
+    
+    if (uf) where.uf = uf;
+    if (ano) where.ano = parseInt(ano, 10);
+    if (cargo) where.cargo = cargo;
+    if (numero_votavel) where.numeroVotavel = numero_votavel;
+
+    return this.prisma.tseResultadoSecao.findMany({
+      where,
+      orderBy: [{ zona: 'asc' }, { secao: 'asc' }],
+      take: 1000,
+    });
+  }
+
+  async getLocaisVotacao(tenantId: string, uf: string, ano: number, codMunicipioTse?: string) {
+    const where: any = { tenantId, uf, ano };
+    if (codMunicipioTse) where.codMunicipioTse = codMunicipioTse;
+
+    return this.prisma.tseLocalVotacao.findMany({
+      where,
+      orderBy: { nomeLocal: 'asc' },
+      take: 500,
+    });
+  }
+
+  async getComparativo(tenantId: string, uf: string, municipio?: string, cargo?: string) {
+    // This is a complex aggregation. For simplicity, we just aggregate total votes by party or candidate.
+    // If cargo is specified, we aggregate top 10 voted candidates in that municipality.
+    if (!cargo || !municipio) return [];
+    
+    const rows = await this.prisma.$queryRawUnsafe(`
+      SELECT 
+        numero_votavel AS numero, 
+        MAX(partido_sigla) AS partido,
+        SUM(votos)::int AS total_votos
+      FROM tse_resultados_secao
+      WHERE tenant_id = $1::uuid AND uf = $2 AND cod_municipio_tse = $3 AND cargo = $4
+      GROUP BY numero_votavel
+      ORDER BY total_votos DESC
+      LIMIT 10
+    `, tenantId, uf, municipio, cargo);
+    
+    return rows;
+  }
+
+  async getOrigemVotosLocal(tenantId: string, filters: any) {
+    const { uf, ano, cargo, cod_municipio_tse, numero_votavel } = filters;
+    if (!cod_municipio_tse || !numero_votavel) return [];
+
+    // Join tse_resultados_secao with tse_locais_votacao on zona/secao
+    const rows = await this.prisma.$queryRawUnsafe(`
+      SELECT 
+        l.nome_local, l.bairro, l.latitude, l.longitude,
+        SUM(r.votos)::int AS total_votos
+      FROM tse_resultados_secao r
+      JOIN tse_locais_votacao l ON r.tenant_id = l.tenant_id AND r.cod_municipio_tse = l.cod_municipio_tse AND r.zona = l.zona
+      WHERE r.tenant_id = $1::uuid 
+        AND r.uf = $2 
+        AND r.ano = $3 
+        AND r.cod_municipio_tse = $4 
+        AND r.numero_votavel = $5
+      GROUP BY l.nome_local, l.bairro, l.latitude, l.longitude
+      ORDER BY total_votos DESC
+      LIMIT 100
+    `, tenantId, uf, parseInt(ano, 10), cod_municipio_tse, numero_votavel);
+
+    return rows;
+  }
+
   // ─── INGEST CHUNK (the core anti-duplication engine) ──────
 
   async ingestChunk(tenantId: string, tabela: string, registros: any[]) {
