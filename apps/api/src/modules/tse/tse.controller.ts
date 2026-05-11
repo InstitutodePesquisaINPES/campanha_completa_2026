@@ -21,18 +21,11 @@ import {
 } from '../../common/decorators/tenant.decorator';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
-import * as fs from 'fs';
-
-// Garante que o diretorio de uploads existe
-const uploadDir = './uploads/tse';
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
 
 @Controller('tse')
 @UseGuards(AuthGuard('jwt'), TenantGuard)
 export class TseController {
-  constructor(private readonly tseService: TseService) {}
+  constructor(private readonly tseService: TseService) { }
 
   // ─── STATS ────────────────────────────────────────────────
 
@@ -117,11 +110,11 @@ export class TseController {
     @Query('secao') secao?: string,
   ) {
     return this.tseService.getEleitoradoSecaoPerfil(
-      tenantId, 
-      uf, 
-      parseInt(ano, 10), 
-      codMunicipioTse, 
-      parseInt(zona, 10), 
+      tenantId,
+      uf,
+      parseInt(ano, 10),
+      codMunicipioTse,
+      parseInt(zona, 10),
       secao ? parseInt(secao, 10) : undefined
     );
   }

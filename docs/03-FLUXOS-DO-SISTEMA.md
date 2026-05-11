@@ -5,15 +5,15 @@
 1. Usuário acessa o painel admin no módulo "Dados TSE".
 2. Clica em "Arquivar e processar em background".
 3. Faz o upload de um arquivo `.csv` extraído dos Dados Abertos do TSE.
-4. O *Frontend* envia o arquivo via `multipart/form-data` e passa o "tipo de dado" e "ano".
-5. A Controller do NestJS armazena o arquivo no disco (pasta uploads) temporariamente.
-6. Cria um registro em `tse_csv_arquivos` com status = `aguardando`.
-7. O Controller chama `TseService.runWorker(tenantId)`.
-8. O Service faz um `spawn` do processo Node (`import-master.js`) desanexado (`detached: true`).
-9. O script `import-master.js` lê as linhas em Stream, mapeia as colunas, processa e tenta fazer o UPSERT no PostgreSQL via Prisma.
-10. A cada 10.000 linhas o worker atualiza `progress_pct` na tabela.
-11. O Frontend fica fazendo Polling desse `progress_pct` e move a barrinha de carregamento.
-12. Ao finalizar, o Worker marca como `concluido` e a UI notifica o sucesso.
+4. O *Frontend* fatia o arquivo localmente (`file.slice`) em **chunks de 40MB** para evitar estouro de memória e bypassar restrições de proxy reverso (ex: limites de tamanho de payload no NGINX do Coolify).
+5. O *Frontend* envia cada chunk de forma independente via `multipart/form-data` e o NestJS os armazena no disco (`/uploads/tse`).
+6. Quando todas as partes sobem, o frontend dispara a meta-chamada para agrupar as partes e cria um registro em `tse_csv_arquivos` com status = `aguardando`.
+7. O Controller (ou um CRON job) aciona o enfileiramento chamando `TseService.runWorker(tenantId)`.
+8. O Service processa a fila instanciando via `spawn` o processo Node (`import-master.js`) de maneira desanexada (`detached: true`).
+9. O script `import-master.js` junta as partes, lê as linhas em Stream, mapeia as colunas de acordo com o `TseCsvTipo`, processa e tenta fazer o UPSERT no PostgreSQL via Prisma.
+10. A cada *batch* de registros importados (ex: 10.000), o worker atualiza `progress_pct` e a contagem de lidos/importados na tabela.
+11. O Frontend fica fazendo Polling contínuo (usando `react-query` via `/tse/arquivos`) e move a barra de progresso.
+12. Ao finalizar, o Worker marca como `concluido` (ou `erro`) e a UI notifica o sucesso, tornando os dados disponíveis nos dashboards sem recarregar a página.
 
 ## Fluxo 2: Criação e Resolução de Demandas (Ouvidoria)
 
