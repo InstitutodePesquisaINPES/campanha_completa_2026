@@ -3,10 +3,10 @@
 # ============================================
 
 # --- Estágio 1: Build ---
-FROM node:20-alpine AS build
+FROM node:20-slim AS build
 WORKDIR /app
 
-RUN apk add --no-cache openssl
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 COPY package.json package-lock.json ./
 RUN npm ci
@@ -22,10 +22,10 @@ RUN npm run build
 RUN ls -la dist/main.js || (echo "ERRO: dist/main.js não foi gerado!" && exit 1)
 
 # --- Estágio 2: Produção ---
-FROM node:20-alpine
+FROM node:20-slim
 WORKDIR /app
 
-RUN apk add --no-cache openssl
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist

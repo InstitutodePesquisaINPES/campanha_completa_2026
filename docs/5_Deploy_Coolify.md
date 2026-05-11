@@ -64,3 +64,21 @@ Como estamos rodando tudo no `docker-compose.yml`, os dados vitais estão salvos
 - `kiribamba_uploads`: Contratos em PDF e comprovantes físicos.
 
 Para fazer backup seguro pela VPS, basta realizar o `tar` do diretório do docker `/var/lib/docker/volumes/` referente a esta aplicação.
+
+---
+
+## 🚨 Troubleshooting & Gotchas (Problemas Comuns)
+
+### 1. `PrismaClientInitializationError` (OpenSSL / Alpine Linux)
+Imagens Docker baseadas em Alpine (como `node:20-alpine`) **não incluem a biblioteca OpenSSL nativamente**. Como o Prisma depende dessa biblioteca para rodar a sua query engine em C/Rust (`libquery_engine-linux-musl.so.node`), a ausência do OpenSSL fará com que o Prisma crash e a API falhe silenciosamente na inicialização.
+**Como foi resolvido:** O `Dockerfile` da API agora inclui um passo explícito de instalação do OpenSSL nos estágios de build e de produção (`RUN apk add --no-cache openssl`). Se for criar novos containers com Prisma, **não esqueça dessa dependência**.
+
+### 2. Erro de Compilação do NestJS (`Cannot find module '/app/dist/main.js'`)
+Esse erro de runtime geralmente indica que a estrutura de pastas gerada no build (`dist`) foi corrompida (aninhada como `dist/src/main.js`). Isso acontece quando um arquivo na raiz (como `prisma.config.ts`) não é excluído e força o compilador TypeScript a preservar o caminho da árvore a partir da raiz.
+**Como foi resolvido:** O arquivo `tsconfig.build.json` precisa manter a pasta `prisma` e `prisma.config.ts` no seu array de `"exclude"`, isolando a build apenas para a pasta `src/`.
+
+### 3. Erro "failed to read dockerfile: no such file or directory" no Coolify
+Se o Coolify estourar esse erro, significa que ele está procurando o `Dockerfile` na raiz `/` em vez do diretório do serviço.
+**Solução:** 
+- Assegure que no painel do Coolify você configurou a aplicação como **Docker Compose** (que automaticamente lê os contexts de `./apps/api`).
+- Caso seja um deploy apenas de "Dockerfile", altere a configuração **Base Directory** no Coolify para `/apps/api`.

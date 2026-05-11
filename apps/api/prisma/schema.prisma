@@ -93,6 +93,10 @@ enum AppRole {
   lideranca_regional
   lideranca_local
   cabo_eleitoral
+  coordenador
+  lideranca
+  operador
+  visualizador
   operador_crm
   analista_dados
 }
