@@ -210,9 +210,9 @@ export class DashboardService {
     // Simple search across a few main entities, as the Prisma view 'v_busca_global' might not be directly queryable
     const [pessoas, campanhas, demandas] = await Promise.all([
       this.prisma.pessoa.findMany({
-        where: { tenantId, nomeCompleto: { contains: q, mode: 'insensitive' } },
+        where: { tenantId, fullName: { contains: q, mode: 'insensitive' } },
         take: 10,
-        select: { id: true, nomeCompleto: true, telefonePricipal: true },
+        select: { id: true, fullName: true },
       }),
       this.prisma.campanha.findMany({
         where: { tenantId, nome: { contains: q, mode: 'insensitive' } },
@@ -226,13 +226,13 @@ export class DashboardService {
       }),
     ]);
 
-    const results = [];
+    const results: any[] = [];
     pessoas.forEach((p) =>
       results.push({
         tipo: 'pessoa',
         id: p.id,
-        titulo: p.nomeCompleto,
-        subtitulo: p.telefonePricipal,
+        titulo: p.fullName,
+        subtitulo: 'Pessoa',
         link: `/crm/pessoas/${p.id}`,
       }),
     );

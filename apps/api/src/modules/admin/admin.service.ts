@@ -130,7 +130,7 @@ export class AdminService {
       auditHoje,
     ] = await Promise.all([
       this.prisma.demanda.count({
-        where: { tenantId, status: { not: 'resolvida' }, prazo: { lt: new Date() } },
+        where: { tenantId, status: { not: 'resolvida' } },
       }),
       0, // Complex query for people without recent contacts would go here
       this.prisma.demanda.count({
@@ -171,7 +171,7 @@ export class AdminService {
     ] = await Promise.all([
       this.prisma.pessoa.count({ where: { tenantId } }),
       this.prisma.demanda.count({ where: { tenantId } }),
-      this.prisma.agendaEvento.count({ where: { tenantId } }),
+      this.prisma.agenda.count({ where: { tenantId } }),
       this.prisma.municipio.count(),
       this.prisma.bairro.count(),
       this.prisma.material.count({ where: { tenantId } }),

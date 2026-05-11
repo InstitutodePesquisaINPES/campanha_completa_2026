@@ -109,10 +109,6 @@ export class TerritorioService {
         estadoId: true,
         geocodigoIbge: true,
         populacao: true,
-        areaKm2: true,
-        idh: true,
-        urbanoPct: true,
-        densidadeHabKm2: true,
       },
       where: {
         ...(estadoId && { estadoId }),
