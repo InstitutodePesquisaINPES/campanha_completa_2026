@@ -12,16 +12,14 @@ export class ComandoService {
 
   // ---- INDICADORES (View substituída por queries) ----
   async getIndicadoresCampanha(tenantId: string) {
-    // Como era uma View (v_indicadores_campanha) vamos fazer as contagens aqui usando o prisma
     const [
       totalPessoas,
       demandasAbertas,
       demandasResolvidas,
       demandasUrgentes,
       eventosFuturos,
-      tarefasConcluidas,
-      tarefasTotal,
-      tarefasAtrasadas,
+      campanhaAtiva,
+      totalGastoAgg,
     ] = await Promise.all([
       this.prisma.pessoa.count({ where: { tenantId } }),
       this.prisma.demanda.count({
@@ -38,28 +36,35 @@ export class ComandoService {
       this.prisma.agenda.count({
         where: { tenantId, dataInicio: { gte: new Date() } },
       }),
-      this.prisma.planoAcao.count({ where: { tenantId, status: 'concluido' } }),
-      this.prisma.planoAcao.count({ where: { tenantId } }),
-      this.prisma.planoAcao.count({
-        where: {
-          tenantId,
-          status: { not: 'concluido' },
-          dataFim: { lt: new Date() },
-        },
+      this.prisma.campanha.findFirst({
+        where: { tenantId, ativa: true },
+        orderBy: { createdAt: 'desc' },
+        include: { tarefas: true },
+      }),
+      this.prisma.despesa.aggregate({
+        where: { tenantId },
+        _sum: { valor: true },
       }),
     ]);
 
-    // Calcular dias restantes para as eleicoes de 2026 (Exemplo padrao)
-    const dataEleicao = new Date('2026-10-04');
-    const diffTime = Math.abs(dataEleicao.getTime() - new Date().getTime());
-    const diasRestantes = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    if (!campanhaAtiva) return null;
+
+    const hoje = new Date();
+    const tarefas = campanhaAtiva.tarefas || [];
+    const tarefasConcluidas = tarefas.filter((t) => !!t.dataConclusao).length;
+    const tarefasAtrasadas = tarefas.filter(
+      (t) => !t.dataConclusao && t.dataPrevista && t.dataPrevista < hoje,
+    ).length;
+    const diasRestantes = campanhaAtiva.dataEleicao
+      ? Math.ceil((campanhaAtiva.dataEleicao.getTime() - hoje.getTime()) / 86400000)
+      : null;
 
     return {
-      campanha_id: tenantId,
-      campanha_nome: 'Sua Campanha',
-      cargo: 'Candidato',
-      meta_votos: 10000,
-      data_eleicao: dataEleicao.toISOString(),
+      campanha_id: campanhaAtiva.id,
+      campanha_nome: campanhaAtiva.nome,
+      cargo: campanhaAtiva.cargo,
+      meta_votos: campanhaAtiva.metaVotos,
+      data_eleicao: campanhaAtiva.dataEleicao?.toISOString() ?? null,
       dias_restantes: diasRestantes,
       total_pessoas: totalPessoas,
       demandas_abertas: demandasAbertas,
@@ -67,17 +72,33 @@ export class ComandoService {
       demandas_urgentes: demandasUrgentes,
       eventos_futuros: eventosFuturos,
       tarefas_concluidas: tarefasConcluidas,
-      tarefas_total: tarefasTotal,
+      tarefas_total: tarefas.length,
       tarefas_atrasadas: tarefasAtrasadas,
-      total_gasto: 0,
-      orcamento_total: 1000000,
+      total_gasto: Number(totalGastoAgg._sum.valor ?? 0),
+      orcamento_total: Number(campanhaAtiva.orcamentoTotal ?? 0),
     };
   }
 
   // ---- BURNDOWN ----
   async getBurndown(campanhaId: string, tenantId: string) {
-    // Retorna algo falso/mock ou implementa queries baseadas no PlanoAcao
-    return [];
+    const tarefas = await this.prisma.campanhaTarefa.findMany({
+      where: { campanhaId, tenantId, dataPrevista: { not: null } },
+      orderBy: { dataPrevista: 'asc' },
+      select: { dataPrevista: true, dataConclusao: true },
+    });
+
+    let totalAcumulado = 0;
+    let concluidasAcumulado = 0;
+
+    return tarefas.map((tarefa) => {
+      totalAcumulado += 1;
+      if (tarefa.dataConclusao) concluidasAcumulado += 1;
+      return {
+        data_prevista: tarefa.dataPrevista?.toISOString(),
+        total_acumulado: totalAcumulado,
+        concluidas_acumulado: concluidasAcumulado,
+      };
+    });
   }
 
   // ---- REUNIOES ----

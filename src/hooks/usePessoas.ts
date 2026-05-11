@@ -2,18 +2,57 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/apiClient";
 
 export type PessoaInput = {
-  fullName: string;
+  fullName?: string;
+  full_name?: string;
   tipoPessoa?: string;
+  tipo_pessoa?: string;
   cpf?: string;
   cnpj?: string;
   razaoSocial?: string;
+  razao_social?: string;
   nomeFantasia?: string;
+  nome_fantasia?: string;
   dataNascimento?: string;
+  data_nascimento?: string;
   genero?: string;
   escolaridade?: string;
   nivelRelacionamento?: string;
+  nivel_relacionamento?: string;
   observacoes?: string;
+  [key: string]: unknown;
 };
+
+function normalizePessoa(raw: any) {
+  if (!raw) return raw;
+  return {
+    ...raw,
+    full_name: raw.full_name ?? raw.fullName,
+    tipo_pessoa: raw.tipo_pessoa ?? raw.tipoPessoa,
+    razao_social: raw.razao_social ?? raw.razaoSocial,
+    nome_fantasia: raw.nome_fantasia ?? raw.nomeFantasia,
+    data_nascimento: raw.data_nascimento ?? raw.dataNascimento,
+    nivel_relacionamento: raw.nivel_relacionamento ?? raw.nivelRelacionamento,
+    is_lideranca: raw.is_lideranca ?? raw.isLideranca,
+    lideranca_id: raw.lideranca_id ?? raw.liderancaId,
+  };
+}
+
+function pessoaPayload(values: Partial<PessoaInput>) {
+  return {
+    fullName: values.fullName ?? values.full_name,
+    tipoPessoa: values.tipoPessoa ?? values.tipo_pessoa,
+    cpf: values.cpf,
+    cnpj: values.cnpj,
+    razaoSocial: values.razaoSocial ?? values.razao_social,
+    nomeFantasia: values.nomeFantasia ?? values.nome_fantasia,
+    dataNascimento: values.dataNascimento ?? values.data_nascimento,
+    genero: values.genero,
+    escolaridade: values.escolaridade,
+    nivelRelacionamento:
+      values.nivelRelacionamento ?? values.nivel_relacionamento,
+    observacoes: values.observacoes,
+  };
+}
 
 // ---- PESSOAS ----
 export function usePessoas(search?: string, nivel?: string, tipo?: string) {
@@ -26,7 +65,8 @@ export function usePessoas(search?: string, nivel?: string, tipo?: string) {
       if (tipo && tipo !== "all") params.append("tipo", tipo);
       
       const queryStr = params.toString();
-      return api.get<any[]>(`/pessoas${queryStr ? `?${queryStr}` : ''}`);
+      const data = await api.get<any[]>(`/pessoas${queryStr ? `?${queryStr}` : ''}`);
+      return (data || []).map(normalizePessoa);
     },
   });
 }
@@ -36,7 +76,7 @@ export function usePessoa(id?: string) {
     queryKey: ["pessoa", id],
     queryFn: async () => {
       if (!id) return null;
-      return api.get<any>(`/pessoas/${id}`);
+      return normalizePessoa(await api.get<any>(`/pessoas/${id}`));
     },
     enabled: !!id,
   });
@@ -46,7 +86,7 @@ export function useCreatePessoa() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (values: PessoaInput) => {
-      return api.post<any>("/pessoas", values);
+      return normalizePessoa(await api.post<any>("/pessoas", pessoaPayload(values)));
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["pessoas"] }),
   });
@@ -56,7 +96,7 @@ export function useUpdatePessoa() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...values }: { id: string } & Partial<PessoaInput>) => {
-      return api.patch<any>(`/pessoas/${id}`, values);
+      return normalizePessoa(await api.patch<any>(`/pessoas/${id}`, pessoaPayload(values)));
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["pessoas"] });
@@ -89,11 +129,12 @@ export function useContatos(pessoaId?: string) {
 export function useCreateContato() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (values: { pessoaId: string; tipo: string; valor: string; principal?: boolean }) => {
-      const { pessoaId, ...data } = values;
+    mutationFn: async (values: { pessoaId?: string; pessoa_id?: string; tipo: string; valor: string; principal?: boolean }) => {
+      const pessoaId = values.pessoaId || values.pessoa_id;
+      const { pessoaId: _pessoaId, pessoa_id: _pessoa_id, ...data } = values;
       return api.post<any>(`/pessoas/${pessoaId}/contatos`, data);
     },
-    onSuccess: (_, v) => qc.invalidateQueries({ queryKey: ["pessoas_contatos", v.pessoaId] }),
+    onSuccess: (_, v) => qc.invalidateQueries({ queryKey: ["pessoas_contatos", v.pessoaId || v.pessoa_id] }),
   });
 }
 
@@ -122,11 +163,17 @@ export function useEnderecos(pessoaId?: string) {
 export function useCreateEndereco() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (values: { pessoaId: string; logradouro?: string; numero?: string; complemento?: string; bairroId?: string; municipioId?: string; cep?: string; tipo?: string }) => {
-      const { pessoaId, ...data } = values;
+    mutationFn: async (values: { pessoaId?: string; pessoa_id?: string; logradouro?: string; numero?: string; complemento?: string; bairroId?: string; bairro_id?: string; municipioId?: string; municipio_id?: string; cep?: string; tipo?: string }) => {
+      const pessoaId = values.pessoaId || values.pessoa_id;
+      const { pessoaId: _pessoaId, pessoa_id: _pessoa_id, bairro_id, municipio_id, ...rest } = values;
+      const data = {
+        ...rest,
+        bairroId: values.bairroId || bairro_id,
+        municipioId: values.municipioId || municipio_id,
+      };
       return api.post<any>(`/pessoas/${pessoaId}/enderecos`, data);
     },
-    onSuccess: (_, v) => qc.invalidateQueries({ queryKey: ["pessoas_enderecos", v.pessoaId] }),
+    onSuccess: (_, v) => qc.invalidateQueries({ queryKey: ["pessoas_enderecos", v.pessoaId || v.pessoa_id] }),
   });
 }
 
@@ -155,11 +202,12 @@ export function usePapeis(pessoaId?: string) {
 export function useCreatePapel() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (values: { pessoaId: string; papel: string; ativo?: boolean }) => {
-      const { pessoaId, ...data } = values;
+    mutationFn: async (values: { pessoaId?: string; pessoa_id?: string; papel: string; ativo?: boolean }) => {
+      const pessoaId = values.pessoaId || values.pessoa_id;
+      const { pessoaId: _pessoaId, pessoa_id: _pessoa_id, ...data } = values;
       return api.post<any>(`/pessoas/${pessoaId}/papeis`, data);
     },
-    onSuccess: (_, v) => qc.invalidateQueries({ queryKey: ["pessoas_papeis", v.pessoaId] }),
+    onSuccess: (_, v) => qc.invalidateQueries({ queryKey: ["pessoas_papeis", v.pessoaId || v.pessoa_id] }),
   });
 }
 
@@ -214,27 +262,44 @@ export function useRemovePessoaTag() {
   });
 }
 
-// HISTORICO E CONSENTIMENTOS NAO IMPLEMENTADOS AINDA NA API (Mockados)
 export function useHistorico(pessoaId?: string) {
   return useQuery({
     queryKey: ["pessoas_historico", pessoaId],
-    queryFn: async () => [],
+    queryFn: async () => api.get<any[]>(`/pessoas/${pessoaId}/historico`),
     enabled: !!pessoaId,
   });
 }
 
 export function useCreateHistorico() {
-  return useMutation({ mutationFn: async () => {} });
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (values: any) => {
+      const pessoaId = values.pessoaId || values.pessoa_id;
+      const { pessoaId: _pessoaId, pessoa_id: _pessoa_id, ...data } = values;
+      return api.post<any>(`/pessoas/${pessoaId}/historico`, data);
+    },
+    onSuccess: (_, v: any) =>
+      qc.invalidateQueries({ queryKey: ["pessoas_historico", v.pessoaId || v.pessoa_id] }),
+  });
 }
 
 export function useConsentimentos(pessoaId?: string) {
   return useQuery({
     queryKey: ["pessoas_consentimentos", pessoaId],
-    queryFn: async () => [],
+    queryFn: async () => api.get<any[]>(`/pessoas/${pessoaId}/consentimentos`),
     enabled: !!pessoaId,
   });
 }
 
 export function useCreateConsentimento() {
-  return useMutation({ mutationFn: async () => {} });
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (values: any) => {
+      const pessoaId = values.pessoaId || values.pessoa_id;
+      const { pessoaId: _pessoaId, pessoa_id: _pessoa_id, ...data } = values;
+      return api.post<any>(`/pessoas/${pessoaId}/consentimentos`, data);
+    },
+    onSuccess: (_, v: any) =>
+      qc.invalidateQueries({ queryKey: ["pessoas_consentimentos", v.pessoaId || v.pessoa_id] }),
+  });
 }

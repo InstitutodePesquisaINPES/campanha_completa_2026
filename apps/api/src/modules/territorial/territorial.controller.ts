@@ -11,6 +11,8 @@ import {
 } from '@nestjs/common';
 import { TerritorialService } from './territorial.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { TenantGuard } from '../../common/guards/tenant.guard';
+import { CurrentTenant } from '../../common/decorators/tenant.decorator';
 import {
   CreateMunicipioDto,
   UpdateMunicipioDto,
@@ -21,7 +23,7 @@ import {
   CreateAreaAtuacaoDto,
 } from './dto/territorial.dto';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, TenantGuard)
 @Controller('territorial')
 export class TerritorialController {
   constructor(private readonly territorialService: TerritorialService) {}
@@ -107,15 +109,21 @@ export class TerritorialController {
 
   // ---- AREAS DE ATUACAO ----
   @Get('areas-atuacao')
-  getAreasAtuacao(@Query('municipioId') municipioId?: string) {
-    return this.territorialService.getAreasAtuacao(municipioId);
+  getAreasAtuacao(
+    @CurrentTenant() tenantId: string,
+    @Query('municipioId') municipioId?: string,
+  ) {
+    return this.territorialService.getAreasAtuacao(tenantId, municipioId);
   }
   @Post('areas-atuacao')
-  createAreaAtuacao(@Body() data: CreateAreaAtuacaoDto) {
-    return this.territorialService.createAreaAtuacao(data);
+  createAreaAtuacao(
+    @CurrentTenant() tenantId: string,
+    @Body() data: CreateAreaAtuacaoDto,
+  ) {
+    return this.territorialService.createAreaAtuacao(tenantId, data);
   }
   @Delete('areas-atuacao/:id')
-  deleteAreaAtuacao(@Param('id') id: string) {
-    return this.territorialService.deleteAreaAtuacao(id);
+  deleteAreaAtuacao(@CurrentTenant() tenantId: string, @Param('id') id: string) {
+    return this.territorialService.deleteAreaAtuacao(tenantId, id);
   }
 }

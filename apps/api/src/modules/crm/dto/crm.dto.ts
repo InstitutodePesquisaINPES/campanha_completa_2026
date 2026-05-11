@@ -47,8 +47,16 @@ export class CreateEnderecoDto {
   bairro?: string;
 
   @IsOptional()
+  @IsUUID()
+  bairroId?: string;
+
+  @IsOptional()
   @IsString()
   cidade?: string;
+
+  @IsOptional()
+  @IsUUID()
+  municipioId?: string;
 
   @IsOptional()
   @IsString()
@@ -65,8 +73,13 @@ export class CreatePapelDto {
 }
 
 export class CreatePessoaDto {
+  @IsOptional()
   @IsString()
-  nome: string;
+  fullName?: string;
+
+  @IsOptional()
+  @IsString()
+  nome?: string;
 
   @IsOptional()
   @IsString()
@@ -75,6 +88,22 @@ export class CreatePessoaDto {
   @IsOptional()
   @IsString()
   cpf?: string;
+
+  @IsOptional()
+  @IsString()
+  cnpj?: string;
+
+  @IsOptional()
+  @IsString()
+  tipoPessoa?: string;
+
+  @IsOptional()
+  @IsString()
+  razaoSocial?: string;
+
+  @IsOptional()
+  @IsString()
+  nomeFantasia?: string;
 
   @IsOptional()
   @IsString()
@@ -102,6 +131,10 @@ export class CreatePessoaDto {
 
   @IsOptional()
   @IsString()
+  nivelRelacionamento?: string;
+
+  @IsOptional()
+  @IsString()
   religiao?: string;
 
   @IsOptional()
@@ -112,6 +145,19 @@ export class CreatePessoaDto {
   @IsNumber()
   @Min(0)
   scoreTotal?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  score?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  isLideranca?: boolean;
+
+  @IsOptional()
+  @IsUUID()
+  liderancaId?: string;
 
   @IsOptional()
   @IsString()

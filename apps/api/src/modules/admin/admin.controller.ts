@@ -95,15 +95,6 @@ export class AdminController {
     return this.adminService.getStats30d(tenantId);
   }
 
-  @Post('seed-test-users')
-  seedTestUsers() {
-    return {
-      status: 'mocked',
-      message:
-        'Seed de teste está desativado na nova arquitetura via API para segurança.',
-    };
-  }
-
   @Get('tags')
   getTags(@CurrentTenant() tenantId: string) {
     return this.adminService.getTags(tenantId);

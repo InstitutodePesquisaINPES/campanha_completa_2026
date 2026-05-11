@@ -1,244 +1,465 @@
 require('dotenv').config();
 const fs = require('fs');
+const path = require('path');
 const readline = require('readline');
+const { Readable } = require('stream');
 const { PrismaClient } = require('@prisma/client');
+
 const prisma = new PrismaClient();
+const BATCH_SIZE = Math.max(100, Number.parseInt(process.env.TSE_IMPORT_BATCH_SIZE || '2000', 10));
 
-const BATCH_SIZE = 10000;
+function stripBom(value) {
+  return String(value || '').replace(/^\uFEFF/, '');
+}
 
-// node import-master.js <arquivo_id> <tenant_id> <tipo> <caminho_absoluto>
+function normalizeKey(value) {
+  return stripBom(value)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '');
+}
+
+function clean(value) {
+  if (value === undefined || value === null) return null;
+  const text = String(value).replace(/^"|"$/g, '').trim();
+  if (!text || text === '#NULO#' || text === '#NE#') return null;
+  return text;
+}
+
+function toInt(value, fallback = null) {
+  const text = clean(value);
+  if (text === null) return fallback;
+  const parsed = Number.parseInt(text.replace(/\D/g, '') || text, 10);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function toFloat(value) {
+  const text = clean(value);
+  if (text === null) return null;
+  const parsed = Number.parseFloat(text.replace(',', '.'));
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function splitCsvLine(line) {
+  const cols = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    const next = line[i + 1];
+
+    if (char === '"') {
+      if (inQuotes && next === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+
+    if (char === ';' && !inQuotes) {
+      cols.push(current);
+      current = '';
+      continue;
+    }
+
+    current += char;
+  }
+
+  cols.push(current);
+  return cols;
+}
+
+function makeRow(headers, cols) {
+  const row = {};
+  headers.forEach((header, index) => {
+    row[header] = clean(cols[index]);
+  });
+  return row;
+}
+
+function normalizeFilterValue(value) {
+  return clean(value)?.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim() || null;
+}
+
+function makeFilterSet(values) {
+  if (!Array.isArray(values) || values.length === 0) return null;
+  const normalized = values.map(normalizeFilterValue).filter(Boolean);
+  return normalized.length > 0 ? new Set(normalized) : null;
+}
+
+function matchesMunicipioFilter(record, filterSet) {
+  if (!filterSet) return true;
+  const codigo = normalizeFilterValue(record.codMunicipioTse);
+  const municipio = normalizeFilterValue(record.municipio);
+  return Boolean((codigo && filterSet.has(codigo)) || (municipio && filterSet.has(municipio)));
+}
+
+function matchesUfFilter(record, defaultUf) {
+  if (!defaultUf || defaultUf === 'BR') return true;
+  return normalizeFilterValue(record.uf) === normalizeFilterValue(defaultUf);
+}
+
+function pick(row, ...keys) {
+  const wanted = keys.map(normalizeKey);
+  for (const [key, value] of Object.entries(row)) {
+    if (wanted.includes(normalizeKey(key))) return value;
+  }
+  return null;
+}
+
+function makeConfig(tipo, tenantId, defaultAno, defaultUf) {
+  switch (tipo) {
+    case 'eleitorado_perfil':
+      return {
+        table: 'tseEleitoradoPerfil',
+        parse: (row) => {
+          const quantidadeEleitores =
+            toInt(
+              pick(row, 'Quantidade de eleitores', 'QT_ELEITORES_PERFIL', 'QT_ELEITORES'),
+              0,
+            ) ?? 0;
+          return {
+            tenantId,
+            ano: toInt(pick(row, 'Ano de eleição', 'Ano de eleicao', 'ANO_ELEICAO'), defaultAno),
+            uf: clean(pick(row, 'UF', 'SG_UF')) || defaultUf,
+            municipio: clean(pick(row, 'Município', 'Municipio', 'NM_MUNICIPIO')),
+            regiao: clean(pick(row, 'Região', 'Regiao', 'DS_REGIAO')),
+            corRaca: clean(pick(row, 'Cor / Raça', 'Cor/Raça', 'Cor / Raca', 'DS_COR_RACA')),
+            estadoCivil: clean(pick(row, 'Estado civil', 'DS_ESTADO_CIVIL')),
+            faixaEtaria: clean(pick(row, 'Faixa etária', 'Faixa etaria', 'DS_FAIXA_ETARIA')),
+            genero: clean(pick(row, 'Gênero', 'Genero', 'DS_GENERO')),
+            grauInstrucao: clean(
+              pick(row, 'Grau de instrução', 'Grau de instrucao', 'DS_GRAU_ESCOLARIDADE'),
+            ),
+            quantidadeEleitores,
+          };
+        },
+      };
+
+    case 'eleitorado':
+    case 'perfil_secao':
+      return {
+        table: 'tseEleitoradoSecao',
+        parse: (row) => {
+          const codMunicipioTse = clean(
+            pick(row, 'CD_MUNICIPIO', 'CD_MUNIC_TSE', 'Código município', 'Codigo municipio'),
+          );
+          const zona = toInt(pick(row, 'NR_ZONA', 'Zona'), 0);
+          const secao = toInt(pick(row, 'NR_SECAO', 'Seção', 'Secao'), 0);
+          if (!codMunicipioTse || !zona || !secao) return null;
+
+          return {
+            tenantId,
+            ano: toInt(pick(row, 'Ano de eleição', 'Ano de eleicao', 'ANO_ELEICAO'), defaultAno),
+            uf: clean(pick(row, 'UF', 'SG_UF')) || defaultUf,
+            codMunicipioTse,
+            municipio: clean(pick(row, 'NM_MUNICIPIO', 'Município', 'Municipio')),
+            zona,
+            secao,
+            codLocalVotacao: clean(pick(row, 'CD_LOCAL_VOTACAO', 'NR_LOCAL_VOTACAO')),
+            nomeLocalVotacao: clean(pick(row, 'NM_LOCAL_VOTACAO', 'DS_LOCAL_VOTACAO')),
+            corRaca: clean(pick(row, 'DS_COR_RACA', 'Cor / Raça', 'Cor/Raça')),
+            estadoCivil: clean(pick(row, 'DS_ESTADO_CIVIL', 'Estado civil')),
+            faixaEtaria: clean(pick(row, 'DS_FAIXA_ETARIA', 'Faixa etária', 'Faixa etaria')),
+            genero: clean(pick(row, 'DS_GENERO', 'Gênero', 'Genero')),
+            grauInstrucao: clean(pick(row, 'DS_GRAU_ESCOLARIDADE', 'Grau de instrução')),
+            quantidadeEleitores:
+              toInt(pick(row, 'QT_ELEITORES_PERFIL', 'QT_ELEITORES', 'Quantidade de eleitores'), 0) ??
+              0,
+          };
+        },
+      };
+
+    case 'candidatos':
+      return {
+        table: 'tseCandidato',
+        parse: (row) => {
+          const cargo = clean(pick(row, 'DS_CARGO', 'Cargo', 'CD_CARGO'));
+          const numeroUrna = clean(pick(row, 'NR_CANDIDATO', 'Número candidato', 'Numero candidato'));
+          if (!cargo || !numeroUrna) return null;
+
+          const situacaoEleicao = clean(pick(row, 'DS_SIT_TOT_TURNO', 'Situação eleição', 'Situacao eleicao'));
+          return {
+            tenantId,
+            ano: toInt(pick(row, 'ANO_ELEICAO', 'Ano de eleição', 'Ano de eleicao'), defaultAno),
+            uf: clean(pick(row, 'SG_UF', 'UF')) || defaultUf,
+            turno: toInt(pick(row, 'NR_TURNO', 'Turno'), 1) ?? 1,
+            cargo,
+            numeroUrna,
+            nomeUrna: clean(pick(row, 'NM_URNA_CANDIDATO', 'Nome urna')),
+            nomeCompleto: clean(pick(row, 'NM_CANDIDATO', 'Nome candidato')),
+            cpf: clean(pick(row, 'NR_CPF_CANDIDATO', 'CPF')),
+            partidoSigla: clean(pick(row, 'SG_PARTIDO', 'Partido')),
+            partidoNumero: clean(pick(row, 'NR_PARTIDO')),
+            coligacao: clean(pick(row, 'NM_COLIGACAO')),
+            genero: clean(pick(row, 'DS_GENERO', 'Gênero', 'Genero')),
+            ocupacao: clean(pick(row, 'DS_OCUPACAO', 'Ocupação', 'Ocupacao')),
+            situacaoCandidatura: clean(pick(row, 'DS_SITUACAO_CANDIDATURA')),
+            situacaoEleicao,
+            eleito: /ELEITO/i.test(situacaoEleicao || ''),
+            codMunicipioTse: clean(pick(row, 'SG_UE', 'CD_MUNICIPIO', 'Código município')),
+          };
+        },
+      };
+
+    case 'locais':
+    case 'locais_votacao':
+      return {
+        table: 'tseLocalVotacao',
+        parse: (row) => {
+          const codMunicipioTse = clean(pick(row, 'CD_MUNICIPIO', 'CD_MUNIC_TSE', 'SG_UE'));
+          const codigoLocal = clean(pick(row, 'NR_LOCAL_VOTACAO', 'CD_LOCAL_VOTACAO'));
+          const zona = toInt(pick(row, 'NR_ZONA', 'Zona'), 0);
+          if (!codMunicipioTse || !codigoLocal) return null;
+
+          return {
+            tenantId,
+            ano: toInt(pick(row, 'ANO_ELEICAO', 'Ano de eleição', 'Ano de eleicao'), defaultAno),
+            uf: clean(pick(row, 'SG_UF', 'UF')) || defaultUf,
+            codMunicipioTse,
+            codigoLocal,
+            nomeLocal: clean(pick(row, 'NM_LOCAL_VOTACAO', 'DS_LOCAL_VOTACAO')),
+            endereco: clean(pick(row, 'DS_ENDERECO', 'Endereco')),
+            bairro: clean(pick(row, 'NM_BAIRRO', 'Bairro')),
+            cep: clean(pick(row, 'NR_CEP', 'CEP')),
+            zona: zona ?? 0,
+            latitude: toFloat(pick(row, 'NR_LATITUDE', 'Latitude')),
+            longitude: toFloat(pick(row, 'NR_LONGITUDE', 'Longitude')),
+          };
+        },
+      };
+
+    case 'resultados':
+    case 'votacao_secao':
+      return {
+        table: 'tseResultadoSecao',
+        parse: (row) => {
+          const codMunicipioTse = clean(pick(row, 'CD_MUNICIPIO', 'CD_MUNIC_TSE', 'SG_UE'));
+          const cargo = clean(pick(row, 'DS_CARGO', 'Cargo'));
+          const numeroVotavel = clean(pick(row, 'NR_VOTAVEL', 'Número votável', 'Numero votavel'));
+          const zona = toInt(pick(row, 'NR_ZONA', 'Zona'), 0);
+          const secao = toInt(pick(row, 'NR_SECAO', 'Seção', 'Secao'), 0);
+          if (!codMunicipioTse || !cargo || !numeroVotavel || !zona || !secao) return null;
+
+          return {
+            tenantId,
+            ano: toInt(pick(row, 'ANO_ELEICAO', 'Ano de eleição', 'Ano de eleicao'), defaultAno),
+            uf: clean(pick(row, 'SG_UF', 'UF')) || defaultUf,
+            turno: toInt(pick(row, 'NR_TURNO', 'Turno'), 1) ?? 1,
+            cargo,
+            codMunicipioTse,
+            zona,
+            secao,
+            numeroVotavel,
+            partidoSigla: clean(pick(row, 'SG_PARTIDO', 'Partido')),
+            votos: toInt(pick(row, 'QT_VOTOS', 'Votos'), 0) ?? 0,
+          };
+        },
+      };
+
+    default:
+      return null;
+  }
+}
+
+function resolveUploadPath(storedPath) {
+  const uploadsRoot = path.resolve(process.cwd(), 'uploads');
+  const fullPath = path.isAbsolute(storedPath)
+    ? path.resolve(storedPath)
+    : path.resolve(process.cwd(), String(storedPath || '').replace(/\\/g, '/').replace(/^\.?\//, ''));
+
+  if (fullPath !== uploadsRoot && !fullPath.startsWith(`${uploadsRoot}${path.sep}`)) {
+    throw new Error(`Caminho fora de /uploads: ${storedPath}`);
+  }
+
+  return fullPath;
+}
+
+function readManifest(filePath) {
+  if (!filePath.endsWith('.manifest.json')) {
+    return null;
+  }
+
+  const manifest = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  if (!Array.isArray(manifest.parts) || manifest.parts.length === 0) {
+    throw new Error('Manifesto de importação sem partes válidas');
+  }
+
+  const parts = manifest.parts.map((part) => {
+    const storedPath = typeof part === 'string' ? part : part.path;
+    const fullPath = resolveUploadPath(storedPath);
+    if (!fs.existsSync(fullPath)) {
+      throw new Error(`Parte do upload não encontrada: ${storedPath}`);
+    }
+    return {
+      path: fullPath,
+      size: typeof part === 'object' && Number.isFinite(part.size) ? part.size : fs.statSync(fullPath).size,
+    };
+  });
+
+  return {
+    parts,
+    totalBytes: Number(manifest.size) || parts.reduce((sum, part) => sum + part.size, 0),
+    municipiosFiltro: manifest.municipios_filtro || manifest.municipiosFiltro || null,
+  };
+}
+
+function openImportInput(filePath) {
+  const manifest = readManifest(filePath);
+
+  if (!manifest) {
+    const fileStream = fs.createReadStream(filePath, { encoding: 'latin1' });
+    return {
+      stream: fileStream,
+      totalBytes: fs.statSync(filePath).size,
+      getBytesRead: () => fileStream.bytesRead,
+      municipiosFiltro: null,
+    };
+  }
+
+  let bytesRead = 0;
+  async function* readParts() {
+    for (const part of manifest.parts) {
+      for await (const chunk of fs.createReadStream(part.path, { encoding: 'latin1' })) {
+        bytesRead += Buffer.byteLength(chunk, 'latin1');
+        yield chunk;
+      }
+    }
+  }
+
+  return {
+    stream: Readable.from(readParts(), { objectMode: false }),
+    totalBytes: manifest.totalBytes,
+    getBytesRead: () => bytesRead,
+    municipiosFiltro: manifest.municipiosFiltro,
+  };
+}
+
+async function insertBatch(table, data) {
+  if (data.length === 0) return 0;
+
+  try {
+    const result = await prisma[table].createMany({ data, skipDuplicates: true });
+    return result?.count ?? data.length;
+  } catch (error) {
+    if (data.length <= 1) throw error;
+    const middle = Math.ceil(data.length / 2);
+    const first = await insertBatch(table, data.slice(0, middle));
+    const second = await insertBatch(table, data.slice(middle));
+    return first + second;
+  }
+}
+
+async function safeFail(arquivoId, message) {
+  if (!arquivoId) return;
+  await prisma.tseCsvArquivo
+    .update({
+      where: { id: arquivoId },
+      data: { status: 'erro', errorMsg: message, finishedAt: new Date() },
+    })
+    .catch(() => {});
+}
+
 async function main() {
-  const args = process.argv.slice(2);
-  const arquivoId = args[0];
-  const tenantId = args[1];
-  const tipo = args[2];
-  const filePath = args[3];
+  const [arquivoId, tenantId, tipo, filePath, anoArg, ufArg] = process.argv.slice(2);
+  const defaultAno = toInt(anoArg, 2024) ?? 2024;
+  const defaultUf = clean(ufArg) || 'BR';
 
   if (!arquivoId || !tenantId || !tipo || !filePath) {
-    console.error("Uso: node import-master.js <arquivo_id> <tenant_id> <tipo> <caminho_absoluto>");
+    console.error('Uso: node import-master.js <arquivo_id> <tenant_id> <tipo> <caminho_absoluto> <ano> <uf>');
     process.exit(1);
   }
 
-  // Load config based on `tipo`
-  const getParseFn = (tipoStr) => {
-    switch (tipoStr) {
-      case 'eleitorado_perfil':
-        return {
-          table: 'tseEleitoradoPerfil',
-          parse: (cols) => {
-            if (cols.length < 14) return null;
-            const cleanCol = (str) => str ? str.replace(/^"|"$/g, '').trim() : '';
-            const ano = parseInt(cleanCol(cols[0]), 10);
-            const corRaca = cleanCol(cols[1]);
-            const estadoCivil = cleanCol(cols[2]);
-            const faixaEtaria = cleanCol(cols[3]);
-            const genero = cleanCol(cols[4]);
-            const grauInstrucao = cleanCol(cols[5]);
-            const municipio = cleanCol(cols[8]);
-            const regiao = cleanCol(cols[11]);
-            const uf = cleanCol(cols[12]);
-            const quantidadeEleitores = parseInt(cleanCol(cols[13]), 10);
-            if (isNaN(ano) || isNaN(quantidadeEleitores)) return null;
-            return {
-              tenantId, ano, uf, municipio, regiao, corRaca,
-              estadoCivil, faixaEtaria, genero, grauInstrucao, quantidadeEleitores
-            };
-          }
-        };
-      case 'candidatos':
-        return {
-          table: 'tseCandidato',
-          parse: (cols) => {
-            if (cols.length < 20) return null;
-            const cleanCol = (str) => str ? str.replace(/^"|"$/g, '').trim() : '';
-            const ano = parseInt(cleanCol(cols[0]), 10);
-            const genero = cleanCol(cols[4]);
-            const ocupacao = cleanCol(cols[13]);
-            const uf = cleanCol(cols[8]);
-            const cargo = cleanCol(cols[9]);
-            const codMunicipioTse = cleanCol(cols[10]);
-            const nomeCompleto = cleanCol(cols[11]);
-            const numeroUrna = cleanCol(cols[12]);
-            const partidoSigla = cleanCol(cols[14]);
-            const situacaoEleicao = cleanCol(cols[15]);
-            const turno = parseInt(cleanCol(cols[16]), 10);
-            if (isNaN(ano) || isNaN(turno) || !cargo || !numeroUrna) return null;
-            return {
-              tenantId, ano, uf, turno, cargo, numeroUrna,
-              nomeCompleto, partidoSigla, genero, ocupacao, situacaoEleicao,
-              eleito: situacaoEleicao === 'Eleito', codMunicipioTse
-            };
-          }
-        };
-      case 'locais':
-      case 'locais_votacao':
-        return {
-          table: 'tseLocalVotacao',
-          parse: (cols) => {
-            if (cols.length < 12) return null;
-            const cleanCol = (str) => str ? str.replace(/^"|"$/g, '').trim() : '';
-            const ano = parseInt(cleanCol(cols[0]), 10);
-            const nomeLocal = cleanCol(cols[1]);
-            const codMunicipioTse = cleanCol(cols[2]); 
-            const uf = cleanCol(cols[5]);
-            const zona = parseInt(cleanCol(cols[6]), 10);
-            if (isNaN(ano) || isNaN(zona)) return null;
-            return {
-              tenantId, ano, uf, codMunicipioTse,
-              codigoLocal: nomeLocal.substring(0, 50), nomeLocal, zona
-            };
-          }
-        };
-      case 'eleitorado':
-      case 'perfil_secao':
-        return {
-          table: 'tseEleitoradoSecao',
-          parse: (cols) => {
-            if (cols.length < 28) return null;
-            const cleanCol = (str) => str ? str.replace(/^"|"$/g, '').trim() : '';
-            const ano = parseInt(cleanCol(cols[2]), 10);
-            const uf = cleanCol(cols[3]);
-            const codMunicipioTse = cleanCol(cols[4]);
-            const municipio = cleanCol(cols[5]);
-            const zona = parseInt(cleanCol(cols[6]), 10);
-            const secao = parseInt(cleanCol(cols[7]), 10);
-            const codLocalVotacao = cleanCol(cols[8]);
-            const nomeLocalVotacao = cleanCol(cols[9]);
-            const genero = cleanCol(cols[11]);
-            const estadoCivil = cleanCol(cols[13]);
-            const faixaEtaria = cleanCol(cols[15]);
-            const grauInstrucao = cleanCol(cols[17]);
-            const corRaca = cleanCol(cols[19]);
-            const quantidadeEleitores = parseInt(cleanCol(cols[27]), 10);
-            if (isNaN(ano) || isNaN(zona) || isNaN(secao) || isNaN(quantidadeEleitores)) return null;
-            return {
-              tenantId, ano: 2024, uf, codMunicipioTse, municipio, zona, secao,
-              codLocalVotacao, nomeLocalVotacao, corRaca, estadoCivil, faixaEtaria, 
-              genero, grauInstrucao, quantidadeEleitores
-            };
-          }
-        };
-      // Backwards compatibility for votacao_secao
-      case 'resultados':
-      case 'votacao_secao':
-        return {
-          table: 'tseResultadoSecao',
-          parse: (cols) => {
-            if (cols.length < 25) return null;
-            const cleanCol = (str) => str ? str.replace(/^"|"$/g, '').trim() : '';
-            const ano = parseInt(cleanCol(cols[2]), 10);
-            const turno = parseInt(cleanCol(cols[5]), 10);
-            const uf = cleanCol(cols[10]);
-            const codMunicipioTse = cleanCol(cols[13]);
-            const zona = parseInt(cleanCol(cols[15]), 10);
-            const secao = parseInt(cleanCol(cols[16]), 10);
-            const cargo = cleanCol(cols[18]);
-            const numeroVotavel = cleanCol(cols[19]);
-            const votos = parseInt(cleanCol(cols[21]), 10);
-            if (isNaN(ano) || isNaN(turno) || isNaN(zona) || isNaN(secao) || isNaN(votos)) return null;
-            return { tenantId, ano, uf, turno, cargo, codMunicipioTse, zona, secao, numeroVotavel, votos };
-          }
-        };
-      default:
-        return null;
-    }
-  };
-
-  const config = getParseFn(tipo);
+  const config = makeConfig(tipo, tenantId, defaultAno, defaultUf);
   if (!config) {
-    console.error(`Tipo de importação desconhecido: ${tipo}`);
-    await prisma.tseCsvArquivo.update({ where: { id: arquivoId }, data: { status: 'erro', errorMsg: `Tipo desconhecido: ${tipo}` }});
+    await safeFail(arquivoId, `Tipo de importação desconhecido: ${tipo}`);
     process.exit(1);
   }
 
   if (!fs.existsSync(filePath)) {
-    await prisma.tseCsvArquivo.update({ where: { id: arquivoId }, data: { status: 'erro', errorMsg: `Arquivo não encontrado: ${filePath}` }});
+    await safeFail(arquivoId, `Arquivo não encontrado: ${filePath}`);
     process.exit(1);
   }
 
-  console.log(`\n=== Worker Iniciado: ${tipo} ===`);
-  
-  // Set startedAt if null
-  const arquivoMeta = await prisma.tseCsvArquivo.findUnique({ where: { id: arquivoId }});
-  if (!arquivoMeta.startedAt) {
-    await prisma.tseCsvArquivo.update({ where: { id: arquivoId }, data: { startedAt: new Date() }});
+  const arquivoMeta = await prisma.tseCsvArquivo.findUnique({ where: { id: arquivoId } });
+  if (!arquivoMeta) {
+    console.error(`Registro TseCsvArquivo não encontrado: ${arquivoId}`);
+    process.exit(1);
   }
 
-  const fileStats = fs.statSync(filePath);
-  const totalBytes = fileStats.size;
-
-  const fileStream = fs.createReadStream(filePath, { encoding: 'latin1' });
-  
-  let bytesRead = 0;
-  fileStream.on('data', (chunk) => {
-    bytesRead += chunk.length;
+  await prisma.tseCsvArquivo.update({
+    where: { id: arquivoId },
+    data: {
+      status: 'processando',
+      startedAt: arquivoMeta.startedAt || new Date(),
+      errorMsg: null,
+    },
   });
 
-  const rl = readline.createInterface({ input: fileStream, crlfDelay: Infinity });
-
-  let isFirstLine = true;
+  const input = openImportInput(filePath);
+  const municipioFilter = makeFilterSet(input.municipiosFiltro);
+  const totalBytes = input.totalBytes || 1;
+  const rl = readline.createInterface({ input: input.stream, crlfDelay: Infinity });
+  let headers = null;
   let batch = [];
   let totalProcessado = 0;
   let totalInserido = 0;
-  
+  let totalIgnorado = 0;
+  let totalFiltrado = 0;
+
   for await (const line of rl) {
-    // A cada iteracao, checamos se o arquivo nao foi "pausado" ou excluido
-    // (Poderia ser um check periodico para nao afetar performance)
-    if (totalProcessado % BATCH_SIZE === 0 && totalProcessado > 0) {
-      const check = await prisma.tseCsvArquivo.findUnique({ where: { id: arquivoId }, select: { status: true } });
-      if (!check || check.status === 'pausado' || check.status === 'erro') {
-        console.log(`Worker interrompido. Status atual: ${check?.status}`);
-        process.exit(0); // Exit safely, can resume later
+    if (!headers) {
+      headers = splitCsvLine(line).map(stripBom);
+      continue;
+    }
+
+    if (totalProcessado > 0 && totalProcessado % BATCH_SIZE === 0) {
+      const check = await prisma.tseCsvArquivo.findUnique({
+        where: { id: arquivoId },
+        select: { status: true },
+      });
+      if (!check || ['pausado', 'erro'].includes(check.status)) {
+        process.exit(0);
       }
 
-      // Update progress
-      const pct = Math.min(100, Math.round((bytesRead / totalBytes) * 100));
       await prisma.tseCsvArquivo.update({
         where: { id: arquivoId },
         data: {
-          progressPct: pct,
+          progressPct: Math.min(99, Math.round((input.getBytesRead() / totalBytes) * 100)),
           linhasProcessadas: totalProcessado,
-        }
+        },
       });
     }
 
-    if (isFirstLine) { isFirstLine = false; continue; }
-
-    const cols = line.split(';');
-    const record = config.parse(cols);
-    
-    if (record) {
-      batch.push(record);
-    }
-    
+    const row = makeRow(headers, splitCsvLine(line));
+    const record = config.parse(row);
     totalProcessado++;
 
+    if (!record) {
+      totalIgnorado++;
+      continue;
+    }
+
+    if (!matchesUfFilter(record, defaultUf) || !matchesMunicipioFilter(record, municipioFilter)) {
+      totalFiltrado++;
+      continue;
+    }
+
+    batch.push(record);
     if (batch.length >= BATCH_SIZE) {
-      try {
-        await prisma[config.table].createMany({
-          data: batch,
-          skipDuplicates: true,
-        });
-        totalInserido += batch.length;
-      } catch (e) {
-        console.error(e.message);
-      }
+      totalInserido += await insertBatch(config.table, batch);
       batch = [];
     }
   }
 
-  // Insert remainder
   if (batch.length > 0) {
-    try {
-      await prisma[config.table].createMany({
-        data: batch,
-        skipDuplicates: true,
-      });
-      totalInserido += batch.length;
-    } catch (e) { }
+    totalInserido += await insertBatch(config.table, batch);
   }
 
-  // Done!
   await prisma.tseCsvArquivo.update({
     where: { id: arquivoId },
     data: {
@@ -246,22 +467,22 @@ async function main() {
       progressPct: 100,
       linhasProcessadas: totalProcessado,
       finishedAt: new Date(),
-    }
+      errorMsg:
+        totalInserido === 0
+          ? `Nenhum registro importado. Linhas ignoradas: ${totalIgnorado}. Linhas filtradas: ${totalFiltrado}`
+          : null,
+    },
   });
 
-  console.log(`\nConcluído ${tipo}: ${totalProcessado} processados, ${totalInserido} inseridos/ignorados.`);
+  console.log(
+    `Concluído ${tipo}: ${totalProcessado} lidos, ${totalInserido} inseridos, ${totalIgnorado} ignorados, ${totalFiltrado} filtrados.`,
+  );
 }
 
 main()
   .catch(async (e) => {
-    console.error("Erro fatal:", e);
-    const arquivoId = process.argv[2];
-    if (arquivoId) {
-       await prisma.tseCsvArquivo.update({
-         where: { id: arquivoId },
-         data: { status: 'erro', errorMsg: e.message }
-       }).catch(() => {});
-    }
+    console.error('Erro fatal:', e);
+    await safeFail(process.argv[2], e.message || String(e));
     process.exit(1);
   })
   .finally(async () => {

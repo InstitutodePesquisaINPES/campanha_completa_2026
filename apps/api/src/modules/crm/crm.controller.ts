@@ -36,8 +36,11 @@ export class CrmController {
   ) {}
 
   @Post('segmentacao')
-  gerarSegmentacao(@Body() filtros: GerarSegmentacaoDto, @CurrentTenant() tenantId: string) {
-    return this.segmentacaoService.gerarAudiencia(filtros);
+  gerarSegmentacao(
+    @Body() filtros: GerarSegmentacaoDto,
+    @CurrentTenant() tenantId: string,
+  ) {
+    return this.segmentacaoService.gerarAudiencia(filtros, tenantId);
   }
 
   @Get('count')
@@ -96,60 +99,120 @@ export class CrmController {
 
   // ---- CONTATOS ----
   @Get(':id/contatos')
-  getContatos(@Param('id') id: string) {
-    return this.crmService.getContatos(id);
+  getContatos(@Param('id') id: string, @CurrentTenant() tenantId: string) {
+    return this.crmService.getContatos(id, tenantId);
   }
 
   @Post(':id/contatos')
-  createContato(@Param('id') id: string, @Body() data: CreateContatoDto) {
-    return this.crmService.createContato({ ...data, pessoaId: id });
+  createContato(
+    @Param('id') id: string,
+    @Body() data: CreateContatoDto,
+    @CurrentTenant() tenantId: string,
+  ) {
+    return this.crmService.createContato(id, data, tenantId);
   }
 
   @Delete('contatos/:contatoId')
-  deleteContato(@Param('contatoId') contatoId: string) {
-    return this.crmService.deleteContato(contatoId);
+  deleteContato(
+    @Param('contatoId') contatoId: string,
+    @CurrentTenant() tenantId: string,
+  ) {
+    return this.crmService.deleteContato(contatoId, tenantId);
   }
 
   // ---- ENDEREÇOS ----
   @Get(':id/enderecos')
-  getEnderecos(@Param('id') id: string) {
-    return this.crmService.getEnderecos(id);
+  getEnderecos(@Param('id') id: string, @CurrentTenant() tenantId: string) {
+    return this.crmService.getEnderecos(id, tenantId);
   }
 
   @Post(':id/enderecos')
-  createEndereco(@Param('id') id: string, @Body() data: CreateEnderecoDto) {
-    return this.crmService.createEndereco({ ...data, pessoaId: id });
+  createEndereco(
+    @Param('id') id: string,
+    @Body() data: CreateEnderecoDto,
+    @CurrentTenant() tenantId: string,
+  ) {
+    return this.crmService.createEndereco(id, data, tenantId);
   }
 
   @Delete('enderecos/:enderecoId')
-  deleteEndereco(@Param('enderecoId') enderecoId: string) {
-    return this.crmService.deleteEndereco(enderecoId);
+  deleteEndereco(
+    @Param('enderecoId') enderecoId: string,
+    @CurrentTenant() tenantId: string,
+  ) {
+    return this.crmService.deleteEndereco(enderecoId, tenantId);
   }
 
   // ---- PAPEIS ----
   @Get(':id/papeis')
-  getPapeis(@Param('id') id: string) {
-    return this.crmService.getPapeis(id);
+  getPapeis(@Param('id') id: string, @CurrentTenant() tenantId: string) {
+    return this.crmService.getPapeis(id, tenantId);
   }
 
   @Post(':id/papeis')
-  createPapel(@Param('id') id: string, @Body() data: CreatePapelDto) {
-    return this.crmService.createPapel({ ...data, pessoaId: id });
+  createPapel(
+    @Param('id') id: string,
+    @Body() data: CreatePapelDto,
+    @CurrentTenant() tenantId: string,
+  ) {
+    return this.crmService.createPapel(id, data, tenantId);
   }
 
   @Delete('papeis/:papelId')
-  deletePapel(@Param('papelId') papelId: string) {
-    return this.crmService.deletePapel(papelId);
+  deletePapel(
+    @Param('papelId') papelId: string,
+    @CurrentTenant() tenantId: string,
+  ) {
+    return this.crmService.deletePapel(papelId, tenantId);
+  }
+
+  // ---- HISTÓRICO E CONSENTIMENTOS ----
+  @Get(':id/historico')
+  getHistorico(@Param('id') id: string, @CurrentTenant() tenantId: string) {
+    return this.crmService.getHistorico(id, tenantId);
+  }
+
+  @Post(':id/historico')
+  createHistorico(
+    @Param('id') id: string,
+    @Body() data: any,
+    @CurrentUser() userId: string,
+    @CurrentTenant() tenantId: string,
+  ) {
+    return this.crmService.createHistorico(id, data, userId, tenantId);
+  }
+
+  @Get(':id/consentimentos')
+  getConsentimentos(@Param('id') id: string, @CurrentTenant() tenantId: string) {
+    return this.crmService.getConsentimentos(id, tenantId);
+  }
+
+  @Post(':id/consentimentos')
+  createConsentimento(
+    @Param('id') id: string,
+    @Body() data: any,
+    @CurrentUser() userId: string,
+    @CurrentTenant() tenantId: string,
+  ) {
+    return this.crmService.createConsentimento(id, data, userId, tenantId);
   }
 
   // ---- PESSOAS_TAGS ----
   @Post(':id/tags/:tagId')
-  addPessoaTag(@Param('id') id: string, @Param('tagId') tagId: string) {
-    return this.crmService.addPessoaTag(id, tagId);
+  addPessoaTag(
+    @Param('id') id: string,
+    @Param('tagId') tagId: string,
+    @CurrentTenant() tenantId: string,
+  ) {
+    return this.crmService.addPessoaTag(id, tagId, tenantId);
   }
 
   @Delete(':id/tags/:tagId')
-  removePessoaTag(@Param('id') id: string, @Param('tagId') tagId: string) {
-    return this.crmService.removePessoaTag(id, tagId);
+  removePessoaTag(
+    @Param('id') id: string,
+    @Param('tagId') tagId: string,
+    @CurrentTenant() tenantId: string,
+  ) {
+    return this.crmService.removePessoaTag(id, tagId, tenantId);
   }
 }

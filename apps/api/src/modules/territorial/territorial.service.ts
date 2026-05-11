@@ -113,14 +113,78 @@ export class TerritorialService {
     });
   }
 
-  // Areas de Atuacao mocked until model is added
-  async getAreasAtuacao(municipioId?: string) {
-    return [];
+  async getAreasAtuacao(tenantId: string, municipioId?: string) {
+    const areas = await this.prisma.mapaSetor.findMany({
+      where: {
+        tenantId,
+        tipo: 'area_atuacao',
+        ...(municipioId ? { metadata: { path: ['municipioId'], equals: municipioId } } : {}),
+      },
+      orderBy: { nome: 'asc' },
+    });
+
+    const municipios = await this.prisma.municipio.findMany({
+      where: {
+        id: {
+          in: areas
+            .map((area) => (area.metadata as any)?.municipioId)
+            .filter(Boolean),
+        },
+      },
+      select: { id: true, nome: true },
+    });
+    const municipiosById = new Map(municipios.map((m) => [m.id, m]));
+
+    return areas.map((area) => {
+      const metadata = (area.metadata || {}) as Record<string, any>;
+      const areaMunicipioId = metadata.municipioId;
+      return {
+        id: area.id,
+        nome: area.nome,
+        tipo: metadata.tipoArea,
+        municipio_id: areaMunicipioId,
+        observacoes: metadata.observacoes,
+        municipios: areaMunicipioId ? municipiosById.get(areaMunicipioId) : null,
+      };
+    });
   }
-  async createAreaAtuacao(data: any) {
-    return {};
+  async createAreaAtuacao(tenantId: string, data: any) {
+    const municipioId = data.municipio_id || data.municipioId;
+    if (!municipioId) throw new NotFoundException('Município não informado');
+
+    const municipio = await this.prisma.municipio.findUnique({
+      where: { id: municipioId },
+      select: { id: true, nome: true },
+    });
+    if (!municipio) throw new NotFoundException('Município não encontrado');
+
+    const area = await this.prisma.mapaSetor.create({
+      data: {
+        tenantId,
+        nome: data.nome,
+        tipo: 'area_atuacao',
+        metadata: {
+          municipioId,
+          tipoArea: data.tipo,
+          observacoes: data.observacoes,
+        },
+      },
+    });
+
+    return {
+      id: area.id,
+      nome: area.nome,
+      tipo: data.tipo,
+      municipio_id: municipioId,
+      observacoes: data.observacoes,
+      municipios: municipio,
+    };
   }
-  async deleteAreaAtuacao(id: string) {
-    return {};
+  async deleteAreaAtuacao(tenantId: string, id: string) {
+    const area = await this.prisma.mapaSetor.findFirst({
+      where: { id, tenantId, tipo: 'area_atuacao' },
+    });
+    if (!area) throw new NotFoundException('Área de atuação não encontrada');
+    return this.prisma.mapaSetor.delete({ where: { id } });
   }
 }

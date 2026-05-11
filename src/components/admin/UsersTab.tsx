@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, UserPlus, Trash2, Users } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import type { AppRole } from "@/hooks/useUserRoles";
 import { ConvidarUsuarioDialog } from "./ConvidarUsuarioDialog";
 
@@ -66,20 +66,6 @@ export function UsersTab() {
     },
   });
 
-  const seedUsers = useMutation({
-    mutationFn: async () => {
-      return await api.post('/admin/seed-test-users', {});
-    },
-    onSuccess: (data: any) => {
-      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
-      const created = data.results?.filter((r: any) => r.status === "created").length || 0;
-      toast({ title: `Seed concluído! ${created} usuários criados.` });
-    },
-    onError: (e: any) => {
-      toast({ variant: "destructive", title: "Erro no seed", description: e.message });
-    },
-  });
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -94,15 +80,6 @@ export function UsersTab() {
         <CardTitle>Usuários do Sistema ({users.length})</CardTitle>
         <div className="flex items-center gap-2">
           <ConvidarUsuarioDialog />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => seedUsers.mutate()}
-            disabled={seedUsers.isPending}
-          >
-            {seedUsers.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Users className="h-4 w-4 mr-1" />}
-            Seed Teste
-          </Button>
         </div>
       </CardHeader>
       <CardContent>

@@ -8,11 +8,29 @@ export class CreateAiProviderDto {
   @IsString()
   tipo: string;
 
+  @IsOptional()
   @IsString()
-  apiUrl: string;
+  apiUrl?: string;
 
+  @IsOptional()
   @IsString()
-  apiKey: string;
+  baseUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  base_url?: string;
+
+  @IsOptional()
+  @IsString()
+  apiKey?: string;
+
+  @IsOptional()
+  @IsString()
+  secret_name?: string;
+
+  @IsOptional()
+  @IsString()
+  status?: string;
 
   @IsOptional()
   @IsBoolean()
@@ -22,14 +40,28 @@ export class CreateAiProviderDto {
 export class UpdateAiProviderDto extends CreateAiProviderDto {}
 
 export class CreateAiModelDto {
+  @IsOptional()
   @IsString()
-  provedorId: string;
+  provedorId?: string;
+
+  @IsOptional()
+  @IsString()
+  provedor_id?: string;
 
   @IsString()
   nome: string;
 
+  @IsOptional()
   @IsString()
-  identificador: string;
+  identificador?: string;
+
+  @IsOptional()
+  @IsString()
+  modeloId?: string;
+
+  @IsOptional()
+  @IsString()
+  modelo_id?: string;
 
   @IsOptional()
   @IsBoolean()
@@ -49,6 +81,14 @@ export class CreateAiCopilotDto {
   @IsOptional()
   @IsString()
   promptSistema?: string;
+
+  @IsOptional()
+  @IsString()
+  systemPrompt?: string;
+
+  @IsOptional()
+  @IsString()
+  system_prompt?: string;
 
   @IsOptional()
   @IsNumber()
@@ -72,6 +112,18 @@ export class CreateAiCopilotDto {
   modeloId?: string;
 
   @IsOptional()
+  @IsString()
+  modelo_id?: string;
+
+  @IsOptional()
+  @IsString()
+  provedorId?: string;
+
+  @IsOptional()
+  @IsString()
+  provedor_id?: string;
+
+  @IsOptional()
   @IsBoolean()
   ativo?: boolean;
 }
@@ -87,8 +139,13 @@ export class ChatMessageDto {
 }
 
 export class AiChatPayloadDto {
+  @IsOptional()
   @IsString()
-  copilot_id: string;
+  copilot_id?: string;
+
+  @IsOptional()
+  @IsString()
+  modelo_id?: string;
 
   @IsArray()
   @ValidateNested({ each: true })

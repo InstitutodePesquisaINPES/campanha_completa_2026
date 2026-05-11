@@ -10,6 +10,8 @@ import {
   UploadedFile,
   UseInterceptors,
   Body,
+  Res,
+  StreamableFile,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { TseService } from './tse.service';
@@ -20,7 +22,13 @@ import {
   CurrentUser,
 } from '../../common/decorators/tenant.decorator';
 import { diskStorage } from 'multer';
+import * as fs from 'fs';
 import { extname } from 'path';
+
+const uploadDir = './uploads/tse';
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 @Controller('tse')
 @UseGuards(AuthGuard('jwt'), TenantGuard)
@@ -203,6 +211,20 @@ export class TseController {
     return this.tseService.getArquivos(tenantId);
   }
 
+  @Get('arquivos/:id/download')
+  async downloadArquivo(
+    @CurrentTenant() tenantId: string,
+    @Param('id') id: string,
+    @Res({ passthrough: true }) res: any,
+  ) {
+    const download = await this.tseService.getArquivoDownload(tenantId, id);
+    res.set({
+      'Content-Type': 'text/csv; charset=latin1',
+      'Content-Disposition': `attachment; filename="${download.filename}"`,
+    });
+    return new StreamableFile(download.stream);
+  }
+
   @Post('arquivos')
   async saveArquivoMeta(
     @CurrentTenant() tenantId: string,
@@ -235,7 +257,7 @@ export class TseController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: './uploads/tse',
+        destination: uploadDir,
         filename: (req, file, cb) => {
           const uniqueSuffix =
             Date.now() + '-' + Math.round(Math.random() * 1e9);

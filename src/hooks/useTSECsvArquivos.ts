@@ -10,7 +10,6 @@ export type TseCsvStatus =
 
 export type TseCsvTipo =
   | "eleitorado_perfil"
-  | "votacao_candidato_perfil"
   | "eleitorado"
   | "locais"
   | "candidatos"
@@ -42,10 +41,37 @@ export interface TseCsvArquivo {
   updated_at: string;
 }
 
+function normalizeArquivo(raw: any): TseCsvArquivo {
+  return {
+    id: raw.id,
+    nome_original: raw.nome_original ?? raw.nomeOriginal ?? "unknown.csv",
+    tipo: raw.tipo,
+    ano: raw.ano,
+    uf: raw.uf,
+    storage_path: raw.storage_path ?? raw.storagePath ?? "",
+    tabela_destino: raw.tabela_destino ?? raw.tabelaDestino ?? "",
+    tamanho_bytes: raw.tamanho_bytes ?? raw.tamanhoBytes ?? null,
+    total_linhas: raw.total_linhas ?? raw.totalLinhas ?? null,
+    linhas_processadas: raw.linhas_processadas ?? raw.linhasProcessadas ?? 0,
+    byte_cursor: raw.byte_cursor ?? raw.byteCursor ?? 0,
+    status: raw.status,
+    progress_pct: raw.progress_pct ?? raw.progressPct ?? 0,
+    municipios_filtro: raw.municipios_filtro ?? raw.municipiosFiltro ?? null,
+    chunk_size: raw.chunk_size ?? raw.chunkSize ?? 0,
+    error_msg: raw.error_msg ?? raw.errorMsg ?? null,
+    attempts: raw.attempts ?? 0,
+    ultima_atividade_em: raw.ultima_atividade_em ?? raw.ultimaAtividadeEm ?? null,
+    started_at: raw.started_at ?? raw.startedAt ?? null,
+    finished_at: raw.finished_at ?? raw.finishedAt ?? null,
+    created_by: raw.created_by ?? raw.createdBy ?? null,
+    created_at: raw.created_at ?? raw.createdAt ?? new Date().toISOString(),
+    updated_at: raw.updated_at ?? raw.updatedAt ?? new Date().toISOString(),
+  };
+}
+
 export const TABELA_POR_TIPO: Record<TseCsvTipo, string> = {
   eleitorado_perfil: "tse_eleitorado_perfil",
-  votacao_candidato_perfil: "tse_votacao_candidato_perfil",
-  eleitorado: "tse_eleitorado",
+  eleitorado: "tse_eleitorado_secao",
   locais: "tse_locais_votacao",
   candidatos: "tse_candidatos",
   resultados: "tse_resultados_secao",
@@ -55,8 +81,8 @@ export function useTSECsvArquivos() {
   return useQuery({
     queryKey: ["tse-csv-arquivos"],
     queryFn: async () => {
-      const data = await api.get<TseCsvArquivo[]>("/tse/arquivos");
-      return data || [];
+      const data = await api.get<any[]>("/tse/arquivos");
+      return (data || []).map(normalizeArquivo);
     },
     refetchInterval: 3000,
   });
@@ -127,8 +153,15 @@ export function useExcluirTSECsvArquivo() {
 export function useDownloadTSECsv() {
   return useMutation({
     mutationFn: async (arquivo: TseCsvArquivo) => {
-      // Fallback para download local
-      window.open(`/uploads/${arquivo.storage_path}`, "_blank");
+      const { blob, filename } = await api.download(`/tse/arquivos/${arquivo.id}/download`);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename || arquivo.nome_original || "tse-import.csv";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
     },
   });
 }
@@ -163,6 +196,8 @@ export async function arquivarCsvParaProcessamento(opts: {
     // Pass as file
     formData.append("file", blob, `part-${String(i).padStart(5, "0")}.csv`);
     formData.append("baseDir", baseDir);
+    formData.append("partIndex", String(i));
+    formData.append("totalParts", String(totalParts));
 
     let attempt = 0;
     while (true) {
@@ -205,5 +240,5 @@ export async function arquivarCsvParaProcessamento(opts: {
   // Fast-start
   api.post("/tse/jobs/run", { trigger: "fast-start" }).catch(() => {});
 
-  return arquivoCriado;
+  return normalizeArquivo(arquivoCriado);
 }

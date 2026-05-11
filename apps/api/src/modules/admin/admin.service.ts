@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { CreateTagDto } from './dto/admin.dto';
 import { AppRole } from '@prisma/client';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class AdminService {
@@ -69,13 +70,17 @@ export class AdminService {
   }
 
   async createUser(tenantId: string, data: any) {
-    // Basic user creation via admin interface
+    if (!data.email || !data.password || !data.full_name) {
+      throw new BadRequestException('Informe nome, e-mail e senha temporária');
+    }
+
+    const passwordHash = await bcrypt.hash(data.password, 12);
     const user = await this.prisma.user.create({
       data: {
         email: data.email,
         fullName: data.full_name,
         phone: data.phone,
-        passwordHash: data.password, // In a real app this would be hashed
+        passwordHash,
         tenantId,
       },
     });
@@ -196,7 +201,35 @@ export class AdminService {
   }
 
   async getStats30d(tenantId: string) {
-    // Mock the 30d stats since the view might not exist or be easy to query directly via Prisma yet
-    return [];
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    start.setDate(start.getDate() - 29);
+
+    const days = Array.from({ length: 30 }, (_, index) => {
+      const day = new Date(start);
+      day.setDate(start.getDate() + index);
+      return day;
+    });
+
+    return Promise.all(
+      days.map(async (dia) => {
+        const fim = new Date(dia);
+        fim.setDate(dia.getDate() + 1);
+
+        const [pessoas, demandas, eventos] = await Promise.all([
+          this.prisma.pessoa.count({
+            where: { tenantId, createdAt: { gte: dia, lt: fim } },
+          }),
+          this.prisma.demanda.count({
+            where: { tenantId, createdAt: { gte: dia, lt: fim } },
+          }),
+          this.prisma.agenda.count({
+            where: { tenantId, createdAt: { gte: dia, lt: fim } },
+          }),
+        ]);
+
+        return { dia: dia.toISOString(), pessoas, demandas, eventos };
+      }),
+    );
   }
 }

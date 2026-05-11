@@ -126,9 +126,14 @@ export class DashboardService {
         ? Math.min(100, (totalGasto / orcamentoTotal) * 100)
         : 0;
 
-    // Fake zero for modules we don't have prisma models for yet (e.g. comunicacao)
-    const pecasPendentes = 0;
-    const mencoesAbertas = 0;
+    const [pecasPendentes, mencoesAbertas] = await Promise.all([
+      this.prisma.comunicacaoPeca.count({
+        where: { tenantId, status: { in: ['rascunho', 'pendente', 'revisao'] } },
+      }),
+      this.prisma.comunicacaoMencao.count({
+        where: { tenantId, status: { notIn: ['respondido', 'arquivado'] } },
+      }),
+    ]);
 
     return {
       municipios,

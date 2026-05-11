@@ -18,7 +18,7 @@ export class ComunicacaoProcessor extends WorkerHost {
   async process(job: Job<any, any, string>): Promise<any> {
     this.logger.debug(`Processando Job ${job.id} do tipo ${job.name}`);
 
-    const { logId, campanhaId, pessoaId, tipo, mensagem } = job.data;
+    const { logId, campanhaId, pessoaId, tipo, mensagem, tenantId } = job.data;
 
     let targetLogId = logId;
 
@@ -31,6 +31,7 @@ export class ComunicacaoProcessor extends WorkerHost {
           tipo,
           mensagem,
           status: 'processing',
+          tenantId,
         },
       });
       targetLogId = log.id;
@@ -38,7 +39,12 @@ export class ComunicacaoProcessor extends WorkerHost {
 
     // Buscando telefone (vamos assumir que a PessoaContato principal seja o Celular)
     const contato = await this.prisma.pessoaContato.findFirst({
-      where: { pessoaId, principal: true, tipo: 'telefone' },
+      where: {
+        pessoaId,
+        tenantId,
+        tipo: { in: tipo === 'whatsapp' ? ['whatsapp', 'celular', 'telefone'] : [tipo] },
+      },
+      orderBy: [{ principal: 'desc' }, { createdAt: 'desc' }],
     });
 
     if (!contato) {

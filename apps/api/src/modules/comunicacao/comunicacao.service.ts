@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { InjectQueue } from '@nestjs/bullmq';
-import { Queue } from 'bullmq';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { WhatsappProvider } from './providers/whatsapp.provider';
 import {
   CreatePautaDto,
   UpdatePautaDto,
@@ -16,9 +15,61 @@ export class ComunicacaoService {
   private readonly logger = new Logger(ComunicacaoService.name);
 
   constructor(
-    @InjectQueue('comunicacao-queue') private comunicacaoQueue: Queue,
     private readonly prisma: PrismaService,
+    private readonly whatsappProvider: WhatsappProvider,
   ) {}
+
+  private async enviarMensagemParaPessoa(
+    pessoaId: string,
+    tipo: string,
+    mensagem: string,
+    tenantId: string,
+    campanhaId?: string,
+  ) {
+    const log = await this.prisma.comunicacaoLog.create({
+      data: {
+        pessoaId,
+        campanhaId,
+        tipo,
+        mensagem,
+        status: 'processing',
+        tenantId,
+      },
+    });
+
+    const contato = await this.prisma.pessoaContato.findFirst({
+      where: {
+        pessoaId,
+        tenantId,
+        tipo: { in: tipo === 'whatsapp' ? ['whatsapp', 'celular', 'telefone'] : [tipo] },
+      },
+      orderBy: [{ principal: 'desc' }, { createdAt: 'desc' }],
+    });
+
+    if (!contato) {
+      return this.prisma.comunicacaoLog.update({
+        where: { id: log.id },
+        data: {
+          status: 'failed',
+          errorMsg: 'Nenhum contato compatível cadastrado.',
+        },
+      });
+    }
+
+    const resultado =
+      tipo === 'whatsapp'
+        ? await this.whatsappProvider.enviarMensagem(contato.valor, mensagem)
+        : { success: false, error: 'Provider não implementado' };
+
+    return this.prisma.comunicacaoLog.update({
+      where: { id: log.id },
+      data: {
+        status: resultado.success ? 'sent' : 'failed',
+        providerId: resultado.providerId,
+        errorMsg: resultado.error,
+      },
+    });
+  }
 
   async enviarEmMassa(campanhaId: string, tenantId: string) {
     const campanha = await this.prisma.comunicacaoCampanha.findFirst({
@@ -34,31 +85,47 @@ export class ComunicacaoService {
       data: { status: 'processing' },
     });
 
-    // Simulando segmentação simples (na vida real cruzaria com os "filtros" JSON)
+    const filtros = (campanha.filtros || {}) as Record<string, any>;
     const pessoas = await this.prisma.pessoa.findMany({
-      where: { tenantId /* filtros dinâmicos viriam aqui */ },
+      where: {
+        tenantId,
+        ...(filtros.nivelRelacionamento
+          ? { nivelRelacionamento: filtros.nivelRelacionamento }
+          : {}),
+        ...(Array.isArray(filtros.bairroIds) && filtros.bairroIds.length
+          ? { enderecos: { some: { bairroId: { in: filtros.bairroIds } } } }
+          : {}),
+        ...(typeof filtros.scoreMin === 'number'
+          ? { score: { gte: filtros.scoreMin } }
+          : {}),
+      },
       select: { id: true },
     });
 
+    let sent = 0;
+    let failed = 0;
+    for (const pessoa of pessoas) {
+      const log = await this.enviarMensagemParaPessoa(
+        pessoa.id,
+        campanha.tipo,
+        campanha.mensagem,
+        tenantId,
+        campanhaId,
+      );
+      if (log.status === 'sent') sent += 1;
+      else failed += 1;
+    }
+
+    await this.prisma.comunicacaoCampanha.update({
+      where: { id: campanhaId },
+      data: { status: failed > 0 ? 'completed_with_errors' : 'completed' },
+    });
+
     this.logger.log(
-      `Adicionando ${pessoas.length} mensagens na fila para campanha ${campanhaId}`,
+      `Campanha ${campanhaId}: ${sent} enviados, ${failed} falhas`,
     );
 
-    // Adiciona na fila do BullMQ
-    const jobs = pessoas.map((p) => ({
-      name: 'enviarMensagem',
-      data: {
-        campanhaId,
-        pessoaId: p.id,
-        tipo: campanha.tipo,
-        mensagem: campanha.mensagem,
-        tenantId,
-      },
-    }));
-
-    await this.comunicacaoQueue.addBulk(jobs);
-
-    return { success: true, total: pessoas.length };
+    return { success: failed === 0, total: pessoas.length, sent, failed };
   }
 
   async disparoIndividual(
@@ -73,27 +140,7 @@ export class ComunicacaoService {
     });
     if (!pessoa) throw new Error('Pessoa não encontrada neste tenant.');
 
-    // Registra o Log pendente no banco
-    const log = await this.prisma.comunicacaoLog.create({
-      data: {
-        pessoaId,
-        tipo,
-        mensagem,
-        status: 'pending',
-        tenantId,
-      },
-    });
-
-    // Envia pra fila processar em background
-    await this.comunicacaoQueue.add('enviarMensagem', {
-      logId: log.id,
-      pessoaId,
-      tipo,
-      mensagem,
-      tenantId,
-    });
-
-    return log;
+    return this.enviarMensagemParaPessoa(pessoaId, tipo, mensagem, tenantId);
   }
 
   // --- Pautas ---

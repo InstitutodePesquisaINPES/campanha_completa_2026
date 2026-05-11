@@ -42,8 +42,6 @@ export function useComandoRealtime(campanhaId?: string) {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(new Date());
 
   useEffect(() => {
-    // Simulando realtime via long-polling / intervals do React Query (refetchInterval na query)
-    // Apenas marcamos como live
     const interval = setInterval(() => {
       setLastUpdate(new Date());
     }, 30000);

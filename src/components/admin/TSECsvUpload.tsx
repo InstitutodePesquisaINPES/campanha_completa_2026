@@ -18,14 +18,14 @@ import { arquivarCsvParaProcessamento, type TseCsvTipo } from "@/hooks/useTSECsv
 
 const UFS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 const ANOS = [2024, 2022, 2020, 2018, 2016];
+const MAX_INLINE_FILE_SIZE = 50 * 1024 * 1024;
 
 type TipoDado =
   | "eleitorado"
   | "locais"
   | "candidatos"
   | "resultados"
-  | "eleitorado_perfil"
-  | "votacao_candidato_perfil";
+  | "eleitorado_perfil";
 
 // Detecção automática do tipo de dado pelo cabeçalho do CSV + nome do arquivo
 function detectTipo(headers: string[], filename = ""): TipoDado | null {
@@ -35,7 +35,6 @@ function detectTipo(headers: string[], filename = ""): TipoDado | null {
   const hasAny = (...ks: string[]) => ks.some((k) => H.has(norm(k)));
   const file = norm(filename);
 
-  if (file.includes("votacaocandidato") || (has("Nome candidato", "Votos nominais") && hasAny("Cor/raça", "Faixa etária", "Gênero", "Grau de instrução"))) return "votacao_candidato_perfil";
   if (file.includes("perfileleitorado") || file.includes("eleitoradoeleicao") || (hasAny("Quantidade de eleitores", "QT_ELEITORES_PERFIL") && hasAny("Cor / Raça", "DS_COR_RACA", "Faixa etária", "DS_FAIXA_ETARIA", "Gênero", "DS_GENERO", "Grau de instrução", "DS_GRAU_ESCOLARIDADE"))) return "eleitorado_perfil";
   if (file.includes("eleitoradolocalvotacao")) return "locais";
   if (file.includes("consultacand")) return "candidatos";
@@ -49,8 +48,7 @@ function detectTipo(headers: string[], filename = ""): TipoDado | null {
 
 const TIPOS: { value: TipoDado; label: string; tabela: string; hint: string }[] = [
   { value: "eleitorado_perfil", label: "Eleitorado consolidado (perfil completo)", tabela: "tse_eleitorado_perfil", hint: "eleitorado_eleicao.csv (cor/raça, faixa etária, gênero, escolaridade, etc.)" },
-  { value: "votacao_candidato_perfil", label: "Votação por candidato × perfil eleitor", tabela: "tse_votacao_candidato_perfil", hint: "votacao_candidato.csv (votos por candidato cruzados com perfil)" },
-  { value: "eleitorado", label: "Eleitorado por seção (legado)", tabela: "tse_eleitorado", hint: "perfil_eleitorado_AAAA.csv" },
+  { value: "eleitorado", label: "Eleitorado por seção", tabela: "tse_eleitorado_secao", hint: "perfil_eleitorado_AAAA.csv" },
   { value: "locais", label: "Locais de votação", tabela: "tse_locais_votacao", hint: "eleitorado_local_votacao_AAAA.csv" },
   { value: "candidatos", label: "Candidatos (registro)", tabela: "tse_candidatos", hint: "consulta_cand_AAAA_UF.csv" },
   { value: "resultados", label: "Resultados por seção", tabela: "tse_resultados_secao", hint: "votacao_secao_AAAA_UF.csv" },
@@ -109,43 +107,22 @@ function mapRow(tipo: TipoDado, ano: number, uf: string, row: any): Record<strin
         data_carga: str(pick(row, "Data de carga")),
       };
     }
-    case "votacao_candidato_perfil": {
-      const anoCsv = num(pick(row, "Ano de eleição", "Ano de eleicao")) ?? ano;
-      return {
-        ano: anoCsv,
-        uf: ufRow,
-        regiao: str(pick(row, "Região", "Regiao")),
-        municipio: str(pick(row, "Município", "Municipio")),
-        cod_municipio_tse: str(pick(row, "Código município", "Codigo municipio")),
-        cargo: str(pick(row, "Cargo")) || "",
-        nome_candidato: str(pick(row, "Nome candidato")),
-        numero_candidato: str(pick(row, "Número candidato", "Numero candidato")),
-        ocupacao: str(pick(row, "Ocupação", "Ocupacao")),
-        partido: str(pick(row, "Partido")),
-        situacao_totalizacao: str(pick(row, "Situação totalização", "Situacao totalizacao")),
-        turno: num(pick(row, "Turno")) ?? 1,
-        zona: num(pick(row, "Zona")),
-        cor_raca: str(pick(row, "Cor/raça", "Cor / Raça", "Cor/raca")),
-        estado_civil: str(pick(row, "Estado civil")),
-        faixa_etaria: str(pick(row, "Faixa etária", "Faixa etaria")),
-        genero: str(pick(row, "Gênero", "Genero")),
-        grau_instrucao: str(pick(row, "Grau de instrução", "Grau de instrucao")),
-        votos_validos: num(pick(row, "Votos válidos", "Votos validos")) ?? 0,
-        votos_nominais: num(pick(row, "Votos nominais")) ?? 0,
-        data_carga: str(pick(row, "Data de carga")),
-      };
-    }
     case "eleitorado":
       return {
-        ano, uf: ufRow,
-        cod_municipio_tse: str(row.CD_MUNICIPIO) || str(row.CD_MUNIC_TSE),
-        zona: num(row.NR_ZONA),
-        secao: num(row.NR_SECAO),
-        total_eleitores: num(row.QT_ELEITORES_PERFIL ?? row.QT_ELEITORES) ?? 0,
-        genero: str(row.DS_GENERO) ? { [str(row.DS_GENERO)!]: num(row.QT_ELEITORES_PERFIL) ?? 1 } : null,
-        faixa_etaria: str(row.DS_FAIXA_ETARIA) ? { [str(row.DS_FAIXA_ETARIA)!]: num(row.QT_ELEITORES_PERFIL) ?? 1 } : null,
-        escolaridade: str(row.DS_GRAU_ESCOLARIDADE) ? { [str(row.DS_GRAU_ESCOLARIDADE)!]: num(row.QT_ELEITORES_PERFIL) ?? 1 } : null,
-        estado_civil: str(row.DS_ESTADO_CIVIL) ? { [str(row.DS_ESTADO_CIVIL)!]: num(row.QT_ELEITORES_PERFIL) ?? 1 } : null,
+        ano: num(pick(row, "ANO_ELEICAO", "Ano de eleição", "Ano de eleicao")) ?? ano,
+        uf: ufRow,
+        cod_municipio_tse: str(pick(row, "CD_MUNICIPIO", "CD_MUNIC_TSE", "Código município", "Codigo municipio")) || "",
+        municipio: str(pick(row, "NM_MUNICIPIO", "Município", "Municipio")),
+        zona: num(pick(row, "NR_ZONA", "Zona")) ?? 0,
+        secao: num(pick(row, "NR_SECAO", "Seção", "Secao")) ?? 0,
+        cod_local_votacao: str(pick(row, "CD_LOCAL_VOTACAO", "NR_LOCAL_VOTACAO")),
+        nome_local_votacao: str(pick(row, "NM_LOCAL_VOTACAO", "DS_LOCAL_VOTACAO")),
+        cor_raca: str(pick(row, "DS_COR_RACA", "Cor / Raça", "Cor/Raça")),
+        estado_civil: str(pick(row, "DS_ESTADO_CIVIL", "Estado civil")),
+        faixa_etaria: str(pick(row, "DS_FAIXA_ETARIA", "Faixa etária", "Faixa etaria")),
+        genero: str(pick(row, "DS_GENERO", "Gênero", "Genero")),
+        grau_instrucao: str(pick(row, "DS_GRAU_ESCOLARIDADE", "Grau de instrução")),
+        quantidade_eleitores: num(pick(row, "QT_ELEITORES_PERFIL", "QT_ELEITORES", "Quantidade de eleitores")) ?? 0,
       };
     case "locais":
       return {
@@ -211,6 +188,7 @@ export function TSECsvUpload() {
   const [autoDetect, setAutoDetect] = useState(true);
   const tipoEfetivo: TipoDado = autoDetect && tipoDetectado ? tipoDetectado : tipo;
   const tabela = TIPOS.find((t) => t.value === tipoEfetivo)!.tabela;
+  const arquivoGrande = !!file && file.size > MAX_INLINE_FILE_SIZE;
 
   // Modo de processamento
   const [modo, setModo] = useState<"background" | "inline">("background");
@@ -221,7 +199,7 @@ export function TSECsvUpload() {
   const [municipiosDisponiveis, setMunicipiosDisponiveis] = useState<{ codigo: string; nome: string }[]>([]);
   const [municipiosSelecionados, setMunicipiosSelecionados] = useState<Set<string>>(new Set());
   const [filtroBuscaMun, setFiltroBuscaMun] = useState("");
-  const podeFiltrarMunicipio = ["resultados", "locais", "votacao_candidato_perfil", "eleitorado_perfil", "eleitorado", "candidatos"].includes(tipoEfetivo);
+  const podeFiltrarMunicipio = ["resultados", "locais", "eleitorado_perfil", "eleitorado", "candidatos"].includes(tipoEfetivo);
 
   const reset = () => {
     setProgress(0); setEnviados(0); setTotalLidos(0); setDone(false); setErro(null);
@@ -235,6 +213,10 @@ export function TSECsvUpload() {
     setFiltroBuscaMun("");
     reset();
     if (!f) return;
+    if (f.size > MAX_INLINE_FILE_SIZE) {
+      setModo("background");
+      toast.info("Arquivo grande detectado. Use o processamento em background.");
+    }
     Papa.parse(f, {
       header: true,
       delimiter: ";",
@@ -345,6 +327,13 @@ export function TSECsvUpload() {
     reset();
     setRunning(true);
 
+    if (file.size > MAX_INLINE_FILE_SIZE) {
+      setRunning(false);
+      setModo("background");
+      toast.error("Arquivos acima de 50 MB devem ser processados em background.");
+      return;
+    }
+
     let buffer: any[] = [];
     let firstChunk = true;
     let totalEnv = 0;
@@ -426,7 +415,7 @@ export function TSECsvUpload() {
           <a className="underline" href="https://dadosabertos.tse.jus.br/" target="_blank" rel="noreferrer">
             dadosabertos.tse.jus.br
           </a>
-          , extraia e envie o CSV. O tipo é <strong>detectado automaticamente</strong> pelo cabeçalho. Processamos em chunks de {CHUNK} registros.
+          , extraia e envie o CSV. O tipo é <strong>detectado automaticamente</strong> pelo cabeçalho. Arquivos grandes são enfileirados e processados no servidor.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -586,18 +575,18 @@ export function TSECsvUpload() {
                   <Badge variant="secondary" className="text-[10px] h-4">recomendado</Badge>
                 </div>
                 <p className="text-[11px] text-muted-foreground">
-                  Sobe o CSV para o servidor e processa em background com retomada automática. Pode fechar a aba — ideal para arquivos grandes (&gt; 50 MB).
+                  Sobe o CSV em partes e processa no servidor sem carregar a base inteira na memória. Pode fechar a aba — ideal para arquivos grandes (&gt; 50 MB).
                 </p>
               </div>
             </label>
-            <label className="flex items-start gap-3 rounded border bg-card p-3 cursor-pointer hover:border-primary/60 transition">
-              <RadioGroupItem value="inline" id="modo-inline" className="mt-0.5" />
+            <label className={`flex items-start gap-3 rounded border bg-card p-3 transition ${arquivoGrande ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:border-primary/60"}`}>
+              <RadioGroupItem value="inline" id="modo-inline" className="mt-0.5" disabled={arquivoGrande} />
               <div className="space-y-0.5">
                 <div className="flex items-center gap-1.5 text-sm font-medium">
                   <Zap className="h-3.5 w-3.5" /> Processar agora no navegador
                 </div>
                 <p className="text-[11px] text-muted-foreground">
-                  Mais rápido para arquivos pequenos. <strong>Não feche a aba</strong> durante o envio.
+                  Mais rápido para arquivos pequenos. {arquivoGrande ? "Indisponível acima de 50 MB." : <><strong>Não feche a aba</strong> durante o envio.</>}
                 </p>
               </div>
             </label>
@@ -632,7 +621,7 @@ export function TSECsvUpload() {
 
         <div className="flex gap-2">
           {modo === "inline" ? (
-            <Button onClick={handleUpload} disabled={!file || running}>
+            <Button onClick={handleUpload} disabled={!file || running || arquivoGrande}>
               {running ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
               {running ? "Processando..." : "Processar e enviar"}
             </Button>

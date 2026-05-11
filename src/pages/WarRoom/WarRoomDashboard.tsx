@@ -60,9 +60,8 @@ export default function WarRoomDashboard() {
         >
           {campanhas.map((campanha: any) => {
             // Cálculos para o Gráfico de Orçamento
-            const orcamentoTotal = campanha.orcamentoGlobal || 1;
-            // Simulando um gasto de 30% se não houver dados reais (para UI Preview)
-            const gastoReal = 0; 
+            const orcamentoTotal = Number(campanha.orcamentoGlobal || 0);
+            const gastoReal = Number(campanha.gastoReal || campanha.gasto_real || 0);
             const disponivel = orcamentoTotal - gastoReal;
             
             const chartData = [

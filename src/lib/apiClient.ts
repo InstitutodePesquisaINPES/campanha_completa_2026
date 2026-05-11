@@ -112,6 +112,42 @@ class ApiClient {
       return res.json() as Promise<T>;
     });
   }
+
+  async download(path: string, options?: RequestInit): Promise<{ blob: Blob; filename: string | null }> {
+    const headers = new Headers(options?.headers);
+    const token = this.getToken();
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    const res = await fetch(`${API_URL}${path}`, {
+      ...options,
+      method: 'GET',
+      headers,
+      credentials: 'omit',
+    });
+
+    if (res.status === 401) {
+      this.clearToken();
+      const currentPath = window.location.pathname;
+      if (currentPath !== '/login' && currentPath !== '/cadastro') {
+        window.location.href = '/login';
+      }
+      throw new Error('Session expired');
+    }
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(errorText || 'API Error');
+    }
+
+    const disposition = res.headers.get('content-disposition') || '';
+    const match = disposition.match(/filename="?([^"]+)"?/i);
+    return {
+      blob: await res.blob(),
+      filename: match?.[1] ? decodeURIComponent(match[1]) : null,
+    };
+  }
 }
 
 export const api = new ApiClient();

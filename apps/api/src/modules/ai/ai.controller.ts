@@ -37,6 +37,11 @@ export class AiController {
     return this.aiService.createProvider(req.tenantId, body);
   }
 
+  @Post('provedores/test')
+  async testProvider(@Request() req: any, @Body('provedor_id') id: string) {
+    return this.aiService.testProvider(req.tenantId, id);
+  }
+
   @Put('provedores/:id')
   async updateProvider(
     @Request() req: any,
@@ -102,5 +107,10 @@ export class AiController {
   @Post('chat')
   async chat(@Request() req: any, @Body() body: AiChatPayloadDto) {
     return this.aiService.chat(req.tenantId, req.user.userId, body);
+  }
+
+  @Get('log')
+  async getUsageLog(@Request() req: any) {
+    return this.aiService.getUsageLog(req.tenantId);
   }
 }

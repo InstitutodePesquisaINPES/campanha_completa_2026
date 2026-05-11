@@ -17,8 +17,8 @@ export class SegmentacaoService {
    *   "temDemandasAbertas": true
    * }
    */
-  async gerarAudiencia(filtros: any) {
-    const where: Prisma.PessoaWhereInput = {};
+  async gerarAudiencia(filtros: any, tenantId: string) {
+    const where: Prisma.PessoaWhereInput = { tenantId };
 
     if (filtros.scoreMin) {
       where.score = { gte: filtros.scoreMin };

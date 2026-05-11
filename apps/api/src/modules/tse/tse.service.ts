@@ -9,6 +9,22 @@ import { Prisma } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
 import { spawn } from 'child_process';
+import { Readable } from 'stream';
+
+type CsvArquivoMetaBody = {
+  nome_original?: string;
+  tipo?: string;
+  ano?: number;
+  uf?: string;
+  storage_path?: string;
+  tabela_destino?: string;
+  tamanho_bytes?: number | string;
+  parts_paths?: string[];
+  parts_sizes?: Array<number | string>;
+  parts_total?: number | string;
+  municipios_filtro?: string[] | null;
+  chunk_size?: number | string;
+};
 
 @Injectable()
 export class TseService {
@@ -32,14 +48,20 @@ export class TseService {
     });
   }
 
-  async saveArquivoMeta(tenantId: string, userId: string | null, body: any) {
+  async saveArquivoMeta(
+    tenantId: string,
+    userId: string | null,
+    body: CsvArquivoMetaBody,
+  ) {
+    const storagePath = await this.resolveStoragePathForImport(body);
+
     return this.prisma.tseCsvArquivo.create({
       data: {
         nomeOriginal: body.nome_original || 'unknown.csv',
         tipo: body.tipo || 'eleitorado',
         ano: body.ano || 2024,
         uf: body.uf || 'BR',
-        storagePath: body.storage_path || '',
+        storagePath,
         tabelaDestino: body.tabela_destino || '',
         tamanhoBytes: body.tamanho_bytes ? BigInt(body.tamanho_bytes) : null,
         status: 'aguardando',
@@ -47,6 +69,179 @@ export class TseService {
         tenantId,
       },
     });
+  }
+
+  private normalizeStoredPath(storedPath: string) {
+    return storedPath.replace(/\\/g, '/').replace(/^\.?\//, '');
+  }
+
+  private safePathSegment(value: string | undefined, fallback: string) {
+    const safe = String(value || '')
+      .replace(/[^a-zA-Z0-9._-]/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .slice(0, 160);
+    return safe || fallback;
+  }
+
+  private resolveFullPath(storedPath: string) {
+    const normalized = this.normalizeStoredPath(storedPath);
+    const fullPath = path.resolve(process.cwd(), normalized);
+    const uploadsRoot = path.resolve(process.cwd(), 'uploads');
+
+    if (
+      fullPath !== uploadsRoot &&
+      !fullPath.startsWith(`${uploadsRoot}${path.sep}`)
+    ) {
+      throw new BadRequestException('Caminho de arquivo fora de /uploads');
+    }
+
+    return fullPath;
+  }
+
+  private async resolveStoragePathForImport(body: CsvArquivoMetaBody) {
+    const parts = Array.isArray(body.parts_paths)
+      ? body.parts_paths.filter(Boolean).map((p) => this.normalizeStoredPath(p))
+      : [];
+
+    const hasMunicipioFilter =
+      Array.isArray(body.municipios_filtro) && body.municipios_filtro.length > 0;
+
+    if (parts.length === 0 || (parts.length === 1 && !hasMunicipioFilter)) {
+      return this.normalizeStoredPath(body.storage_path || parts[0] || '');
+    }
+
+    const safeOriginal = (body.nome_original || 'import.csv').replace(
+      /[^a-zA-Z0-9._-]/g,
+      '_',
+    );
+    const manifestName = `${Date.now()}-${Math.round(
+      Math.random() * 1e9,
+    )}-${safeOriginal}.manifest.json`;
+    const manifestStoredPath = this.normalizeStoredPath(
+      path.join('uploads', 'tse', manifestName),
+    );
+    const manifestFullPath = this.resolveFullPath(manifestStoredPath);
+
+    await fs.promises.mkdir(path.dirname(manifestFullPath), {
+      recursive: true,
+    });
+
+    const partsSizes = Array.isArray(body.parts_sizes) ? body.parts_sizes : [];
+    const manifest = {
+      version: 1,
+      original_name: body.nome_original || 'unknown.csv',
+      tipo: body.tipo || 'eleitorado',
+      ano: body.ano || 2024,
+      uf: body.uf || 'BR',
+      size: body.tamanho_bytes ? Number(body.tamanho_bytes) : null,
+      chunk_size: body.chunk_size ? Number(body.chunk_size) : null,
+      parts_total: body.parts_total ? Number(body.parts_total) : parts.length,
+      municipios_filtro: Array.isArray(body.municipios_filtro)
+        ? body.municipios_filtro
+        : null,
+      parts: parts.map((part, index) => {
+        const fullPath = this.resolveFullPath(part);
+        if (!fs.existsSync(fullPath)) {
+          throw new BadRequestException(`Parte do upload não encontrada: ${part}`);
+        }
+
+        const declaredSize = Number(partsSizes[index]);
+        return {
+          index,
+          path: part,
+          size: Number.isFinite(declaredSize)
+            ? declaredSize
+            : fs.statSync(fullPath).size,
+        };
+      }),
+      created_at: new Date().toISOString(),
+    };
+
+    await fs.promises.writeFile(
+      manifestFullPath,
+      JSON.stringify(manifest, null, 2),
+      'utf8',
+    );
+
+    return manifestStoredPath;
+  }
+
+  private async deleteStoredImportFiles(storagePath: string) {
+    const fullPath = this.resolveFullPath(storagePath);
+    if (!fs.existsSync(fullPath)) return;
+
+    if (!storagePath.endsWith('.manifest.json')) {
+      await fs.promises.unlink(fullPath);
+      return;
+    }
+
+    try {
+      const manifest = JSON.parse(await fs.promises.readFile(fullPath, 'utf8'));
+      const parts = Array.isArray(manifest.parts) ? manifest.parts : [];
+      for (const part of parts) {
+        const partPath = typeof part === 'string' ? part : part?.path;
+        if (!partPath) continue;
+        const partFullPath = this.resolveFullPath(partPath);
+        if (fs.existsSync(partFullPath)) {
+          await fs.promises.unlink(partFullPath);
+        }
+      }
+    } finally {
+      await fs.promises.unlink(fullPath);
+    }
+  }
+
+  private makeDownloadFilename(name: string) {
+    const base = path.basename(name || 'tse-import.csv').replace(/[\r\n"]/g, '_');
+    return base.toLowerCase().endsWith('.csv') ? base : `${base}.csv`;
+  }
+
+  private async *streamStoredParts(parts: any[]) {
+    for (const part of parts) {
+      const storedPath = typeof part === 'string' ? part : part?.path;
+      if (!storedPath) continue;
+      const fullPath = this.resolveFullPath(storedPath);
+      if (!fs.existsSync(fullPath)) {
+        throw new NotFoundException(`Parte do arquivo não encontrada: ${storedPath}`);
+      }
+
+      for await (const chunk of fs.createReadStream(fullPath)) {
+        yield chunk;
+      }
+    }
+  }
+
+  async getArquivoDownload(tenantId: string, id: string) {
+    const arquivo = await this.prisma.tseCsvArquivo.findFirst({
+      where: { id, tenantId },
+    });
+    if (!arquivo) throw new NotFoundException('Arquivo não encontrado');
+    if (!arquivo.storagePath) {
+      throw new NotFoundException('Arquivo sem caminho de armazenamento');
+    }
+
+    const fullPath = this.resolveFullPath(arquivo.storagePath);
+    if (!fs.existsSync(fullPath)) {
+      throw new NotFoundException('Arquivo físico não encontrado no servidor');
+    }
+
+    if (!arquivo.storagePath.endsWith('.manifest.json')) {
+      return {
+        filename: this.makeDownloadFilename(arquivo.nomeOriginal),
+        stream: fs.createReadStream(fullPath),
+      };
+    }
+
+    const manifest = JSON.parse(await fs.promises.readFile(fullPath, 'utf8'));
+    const parts = Array.isArray(manifest.parts) ? manifest.parts : [];
+    if (parts.length === 0) {
+      throw new NotFoundException('Manifesto de importação sem partes');
+    }
+
+    return {
+      filename: this.makeDownloadFilename(manifest.original_name || arquivo.nomeOriginal),
+      stream: Readable.from(this.streamStoredParts(parts)),
+    };
   }
 
   async updateArquivo(tenantId: string, id: string, patch: any) {
@@ -86,15 +281,11 @@ export class TseService {
     });
     if (!arquivo) throw new NotFoundException('Arquivo não encontrado');
 
-    // Delete physical file if exists
     if (arquivo.storagePath) {
-      const fullPath = path.join(process.cwd(), arquivo.storagePath);
-      if (fs.existsSync(fullPath)) {
-        try {
-          fs.unlinkSync(fullPath);
-        } catch (e) {
-          this.logger.warn(`Failed to delete file ${fullPath}: ${e}`);
-        }
+      try {
+        await this.deleteStoredImportFiles(arquivo.storagePath);
+      } catch (e) {
+        this.logger.warn(`Failed to delete stored import ${arquivo.storagePath}: ${e}`);
       }
     }
 
@@ -108,9 +299,30 @@ export class TseService {
     if (!file) {
       throw new BadRequestException('File is missing');
     }
+
+    let storedPath = this.normalizeStoredPath(file.path);
+
+    if (body?.baseDir) {
+      const baseDir = this.safePathSegment(body.baseDir, 'upload');
+      const partIndex = Number.parseInt(String(body.partIndex ?? '0'), 10);
+      const safeIndex = Number.isFinite(partIndex) ? partIndex : 0;
+      const extension = path.extname(file.originalname || '') || '.csv';
+      const targetName = `${String(safeIndex).padStart(5, '0')}-${Date.now()}-${Math.round(
+        Math.random() * 1e9,
+      )}${extension}`;
+      const targetStoredPath = this.normalizeStoredPath(
+        path.join('uploads', 'tse', baseDir, targetName),
+      );
+      const targetFullPath = this.resolveFullPath(targetStoredPath);
+
+      await fs.promises.mkdir(path.dirname(targetFullPath), { recursive: true });
+      await fs.promises.rename(file.path, targetFullPath);
+      storedPath = targetStoredPath;
+    }
+
     return {
       success: true,
-      path: file.path,
+      path: storedPath,
       size: file.size,
     };
   }
@@ -195,12 +407,44 @@ export class TseService {
     });
 
     // 4. Resolve absolute path
-    const absolutePath = path.join(process.cwd(), target.storagePath);
+    const absolutePath = this.resolveFullPath(target.storagePath);
     const scriptPath = path.join(process.cwd(), 'import-master.js');
 
+    if (!fs.existsSync(absolutePath)) {
+      await this.prisma.tseCsvArquivo.update({
+        where: { id: target.id },
+        data: {
+          status: 'erro',
+          errorMsg: `Arquivo não encontrado no servidor: ${target.storagePath}`,
+          finishedAt: new Date(),
+        },
+      });
+      return {
+        success: false,
+        picked: 0,
+        msg: `Arquivo não encontrado no servidor: ${target.storagePath}`,
+      };
+    }
+
+    if (!fs.existsSync(scriptPath)) {
+      await this.prisma.tseCsvArquivo.update({
+        where: { id: target.id },
+        data: {
+          status: 'erro',
+          errorMsg: `Worker import-master.js não encontrado em ${scriptPath}`,
+          finishedAt: new Date(),
+        },
+      });
+      return {
+        success: false,
+        picked: 0,
+        msg: `Worker import-master.js não encontrado em ${scriptPath}`,
+      };
+    }
+
     // 5. Spawn background worker
-    // node import-master.js <arquivo_id> <tenant_id> <tipo> <caminho_absoluto>
-    const child = spawn('node', [scriptPath, target.id, target.tenantId, target.tipo, absolutePath], {
+    // node import-master.js <arquivo_id> <tenant_id> <tipo> <caminho_absoluto> <ano> <uf>
+    const child = spawn('node', [scriptPath, target.id, target.tenantId, target.tipo, absolutePath, String(target.ano), target.uf], {
       detached: true,
       stdio: 'ignore' // We ignore stdio to let it run completely detached in background
     });
@@ -544,13 +788,9 @@ export class TseService {
         case 'tse_locais_votacao':
           inserted = await this.upsertLocais(tenantId, registros);
           break;
-        case 'tse_votacao_candidato_perfil':
-          // Falls back to eleitorado_perfil for now
-          inserted = await this.upsertEleitoradoPerfil(tenantId, registros);
-          break;
         case 'tse_eleitorado':
-          // Legacy format — map to perfil
-          inserted = await this.upsertEleitoradoPerfil(tenantId, registros);
+        case 'tse_eleitorado_secao':
+          inserted = await this.upsertEleitoradoSecao(tenantId, registros);
           break;
         default:
           throw new BadRequestException(`Tabela desconhecida: ${tabela}`);
@@ -602,6 +842,67 @@ export class TseService {
               uf: r.uf ?? 'BR',
               municipio: r.municipio ?? null,
               regiao: r.regiao ?? null,
+              corRaca: r.cor_raca ?? null,
+              estadoCivil: r.estado_civil ?? null,
+              faixaEtaria: r.faixa_etaria ?? null,
+              genero: r.genero ?? null,
+              grauInstrucao: r.grau_instrucao ?? null,
+              quantidadeEleitores: r.quantidade_eleitores ?? 0,
+            },
+          }),
+        ),
+      );
+
+      count += batch.length;
+    }
+
+    return count;
+  }
+
+  private async upsertEleitoradoSecao(
+    tenantId: string,
+    registros: any[],
+  ): Promise<number> {
+    let count = 0;
+    const batchSize = 50;
+
+    for (let i = 0; i < registros.length; i += batchSize) {
+      const batch = registros.slice(i, i + batchSize);
+
+      await this.prisma.$transaction(
+        batch.map((r) =>
+          this.prisma.tseEleitoradoSecao.upsert({
+            where: {
+              uq_eleitorado_secao: {
+                tenantId,
+                ano: r.ano ?? 2024,
+                uf: r.uf ?? 'BR',
+                codMunicipioTse: r.cod_municipio_tse ?? '',
+                zona: r.zona ?? 0,
+                secao: r.secao ?? 0,
+                corRaca: r.cor_raca ?? null,
+                faixaEtaria: r.faixa_etaria ?? null,
+                genero: r.genero ?? null,
+                grauInstrucao: r.grau_instrucao ?? null,
+              },
+            },
+            update: {
+              municipio: r.municipio ?? undefined,
+              codLocalVotacao: r.cod_local_votacao ?? undefined,
+              nomeLocalVotacao: r.nome_local_votacao ?? undefined,
+              estadoCivil: r.estado_civil ?? undefined,
+              quantidadeEleitores: r.quantidade_eleitores ?? 0,
+            },
+            create: {
+              tenantId,
+              ano: r.ano ?? 2024,
+              uf: r.uf ?? 'BR',
+              codMunicipioTse: r.cod_municipio_tse ?? '',
+              municipio: r.municipio ?? null,
+              zona: r.zona ?? 0,
+              secao: r.secao ?? 0,
+              codLocalVotacao: r.cod_local_votacao ?? null,
+              nomeLocalVotacao: r.nome_local_votacao ?? null,
               corRaca: r.cor_raca ?? null,
               estadoCivil: r.estado_civil ?? null,
               faixaEtaria: r.faixa_etaria ?? null,

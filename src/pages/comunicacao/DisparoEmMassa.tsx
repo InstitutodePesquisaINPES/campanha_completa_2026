@@ -6,6 +6,7 @@ export default function DisparoEmMassa() {
   const { gerarSegmentacaoMutation, dispararEmMassaMutation } = useComunicacao();
   const [bairro, setBairro] = useState('');
   const [scoreMin, setScoreMin] = useState(0);
+  const [campanhaId, setCampanhaId] = useState('');
   const [segmentoResult, setSegmentoResult] = useState<any>(null);
 
   const handleSimular = async () => {
@@ -16,8 +17,12 @@ export default function DisparoEmMassa() {
   };
 
   const handleDisparar = async () => {
-    // Na prática criaria a Campanha no backend e enviaria o ID. Aqui é simplificado para mockup.
-    alert("5.000 Mensagens enviadas para a fila do BullMQ com sucesso!");
+    if (!campanhaId.trim()) {
+      alert("Informe o ID de uma campanha de comunicação cadastrada.");
+      return;
+    }
+    const res = await dispararEmMassaMutation.mutateAsync(campanhaId.trim());
+    alert(`${res.total ?? 0} mensagens enviadas para a fila.`);
     setSegmentoResult(null);
   };
 
@@ -47,12 +52,23 @@ export default function DisparoEmMassa() {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700">Filtro Geográfico (Bairro ID Exemplo)</label>
+              <label className="block text-sm font-medium text-gray-700">Filtro Geográfico (Bairro ID)</label>
               <input 
                 type="text" 
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" 
-                placeholder="Ex: uuid-do-bairro"
+                placeholder="UUID do bairro"
                 value={bairro} onChange={(e) => setBairro(e.target.value)} 
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Campanha de comunicação ID</label>
+              <input
+                type="text"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                placeholder="UUID da campanha cadastrada"
+                value={campanhaId}
+                onChange={(e) => setCampanhaId(e.target.value)}
               />
             </div>
 
@@ -78,9 +94,11 @@ export default function DisparoEmMassa() {
               
               <button 
                 onClick={handleDisparar}
+                disabled={dispararEmMassaMutation.isPending}
                 className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-bold text-white bg-green-600 hover:bg-green-700 focus:outline-none"
               >
-                <CheckCircle2 className="w-5 h-5 mr-2" /> Disparar Campanha
+                <CheckCircle2 className="w-5 h-5 mr-2" />
+                {dispararEmMassaMutation.isPending ? "Enfileirando..." : "Disparar Campanha"}
               </button>
             </div>
           ) : (
