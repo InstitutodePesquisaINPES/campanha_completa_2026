@@ -35,6 +35,9 @@ import {
   Pencil, Download, Search, Ruler, Bookmark, FileJson, Plus,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useCampanhaAtiva } from "@/hooks/useCampanhas";
+import { useLocaisVotacao, useEleitoralSecaoPerfil } from "@/hooks/useEleitoralTSE";
+import { PerfilLocalDialog } from "./PerfilLocalDialog";
 
 const classificacaoColors: Record<string, string> = {
   reduto: "#10B981", expansao: "#3B82F6", disputa: "#F59E0B", risco: "#EF4444", baixa_presenca: "#6B7280",
@@ -65,9 +68,14 @@ interface LayersState {
   densidade: boolean;
   zonaUrbana: boolean;
   setores: boolean;
+  locaisVotacao: boolean;
 }
 
 export function MapaInterativo() {
+  const { data: campanhaAtiva } = useCampanhaAtiva();
+  const uf = campanhaAtiva?.uf || "BA";
+  const ano = campanhaAtiva?.data_eleicao ? new Date(campanhaAtiva.data_eleicao).getFullYear() : 2024;
+
   const { data: municipios } = useMunicipios();
   const { data: bairros } = useBairros();
   const { data: agenda } = useAgendaItems();
@@ -75,6 +83,8 @@ export function MapaInterativo() {
   const { data: demandas } = useDemandas();
   const { data: cenarios } = useMapaCenarios();
   const { data: setores } = useMapaSetores();
+  const { data: locaisVotacao } = useLocaisVotacao(uf, ano, undefined); // Fetch all schools for the state, we will filter locally.
+
   const updateBairro = useUpdateBairro();
   const saveCenario = useSaveCenario();
   const deleteCenario = useDeleteCenario();
@@ -84,7 +94,7 @@ export function MapaInterativo() {
 
   const [layers, setLayers] = useState<LayersState>({
     municipios: true, bairros: true, agenda: true, pessoasCluster: true,
-    demandasHeat: true, densidade: false, zonaUrbana: false, setores: true,
+    demandasHeat: true, densidade: false, zonaUrbana: false, setores: true, locaisVotacao: true,
   });
   const [opacity, setOpacity] = useState(0.7);
   const [filtroMunicipio, setFiltroMunicipio] = useState<string>("all");
@@ -98,6 +108,7 @@ export function MapaInterativo() {
   const [cenarioNome, setCenarioNome] = useState("");
   const [cenarioOpen, setCenarioOpen] = useState(false);
   const [measureMode, setMeasureMode] = useState(false);
+  const [localSelecionado, setLocalSelecionado] = useState<any>(null);
   const measureLineRef = useRef<L.Polyline | null>(null);
   const measurePointsRef = useRef<L.LatLng[]>([]);
 
@@ -345,7 +356,42 @@ export function MapaInterativo() {
       lg.addTo(map);
       layerObjs.current.push(lg);
     }
-  }, [municipios, bairrosFiltrados, agenda, pessoas, demandas, layers, opacity, setores, deleteSetor]);
+
+    if (layers.locaisVotacao && locaisVotacao) {
+      const lg = L.layerGroup();
+      (locaisVotacao as any[]).filter((l) => l.latitude && l.longitude).forEach((l) => {
+        const m = L.circleMarker([l.latitude, l.longitude], {
+          radius: 7, fillColor: "#10B981", color: "#047857", fillOpacity: 0.8, weight: 2
+        });
+        
+        const popupHtml = `
+          <div style="min-width:220px; font-family: sans-serif;">
+            <strong style="display:flex; align-items:center; gap:6px;">
+              <span style="font-size:16px;">🏫</span> ${l.nome_local}
+            </strong>
+            <div style="margin-top:4px; font-size:12px; color:#4B5563;">
+              Zona: <strong>${l.zona}</strong><br/>
+              ${l.endereco}<br/>
+              <span style="font-size:10px; color:#9CA3AF">${l.bairro || ""}</span>
+            </div>
+            <button id="btn-local-${l.id}" style="margin-top:10px;width:100%;padding:6px;background:#10B981;color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;transition:0.2s;">
+              Ver Raio-X Demográfico
+            </button>
+          </div>
+        `;
+        m.bindPopup(popupHtml);
+        m.on("popupopen", () => {
+          setTimeout(() => {
+            const btn = document.getElementById(`btn-local-${l.id}`);
+            if (btn) btn.onclick = () => { setLocalSelecionado(l); m.closePopup(); };
+          }, 50);
+        });
+        m.addTo(lg);
+      });
+      lg.addTo(map);
+      layerObjs.current.push(lg);
+    }
+  }, [municipios, bairrosFiltrados, agenda, pessoas, demandas, layers, opacity, setores, locaisVotacao, deleteSetor]);
 
   const exportPng = async () => {
     try {
@@ -504,6 +550,7 @@ export function MapaInterativo() {
                            k === "densidade" ? "Densidade eleitoral" :
                            k === "zonaUrbana" ? "Cor por zona U/R" :
                            k === "setores" ? "Setores desenhados" :
+                           k === "locaisVotacao" ? "Locais de Votação (TSE)" :
                            k.charAt(0).toUpperCase() + k.slice(1)}
                         </label>
                       ))}
@@ -664,6 +711,12 @@ export function MapaInterativo() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Dialog: Raio-X Demográfico do Local de Votação */}
+        <PerfilLocalDialog 
+          local={localSelecionado} 
+          onClose={() => setLocalSelecionado(null)} 
+        />
       </div>
     </TooltipProvider>
   );

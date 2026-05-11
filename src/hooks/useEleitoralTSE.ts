@@ -150,6 +150,19 @@ export function useTSEOrigemVotosLocal(filters: { ano: number; uf: string; cod_m
   });
 }
 
+export function useEleitoralSecaoPerfil(uf: string, ano: number, codMunicipioTse?: string, zona?: number, secao?: number) {
+  return useQuery({
+    queryKey: ["tse-eleitorado-secao", uf, ano, codMunicipioTse, zona, secao],
+    enabled: !!(uf && ano && codMunicipioTse && zona && secao),
+    queryFn: async () => {
+      const data = await api.get<any>(
+        `/tse/eleitorado/secao/perfil?uf=${uf}&ano=${ano}&cod_municipio_tse=${codMunicipioTse}&zona=${zona}&secao=${secao}`
+      );
+      return data || null;
+    },
+  });
+}
+
 export const CARGOS_TSE = [
   "Vereador", "Prefeito", "Vice-Prefeito",
   "Deputado Estadual", "Deputado Federal", "Senador",
