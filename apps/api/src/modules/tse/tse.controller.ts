@@ -29,14 +29,26 @@ export class TseController {
 
   // ─── STATS ────────────────────────────────────────────────
 
-  @Get('stats')
-  async getStats(@CurrentTenant() tenantId: string) {
+  @Get('kpis')
+  async getKpis(
+    @CurrentTenant() tenantId: string,
+    @Query('ano') ano: string,
+    @Query('uf') uf: string,
+  ) {
+    // Forward to stats logic, ignoring ano/uf for now or updating it if needed.
     return this.tseService.getStats(tenantId);
+  }
+
+  // ─── ANOS DISPONIVEIS ─────────────────────────────────────
+
+  @Get('anos-disponiveis')
+  async getAnosDisponiveis() {
+    return [2024, 2022, 2020, 2018];
   }
 
   // ─── RESUMO MUNICIPIOS ────────────────────────────────────
 
-  @Get('resumo-municipios')
+  @Get('municipios/resumo')
   async getResumoMunicipios(
     @CurrentTenant() tenantId: string,
     @Query('ano') ano: string,
@@ -47,6 +59,43 @@ export class TseController {
       parseInt(ano, 10) || 2024,
       uf || 'BR',
     );
+  }
+
+  // ─── STUBS FOR FRONTEND (TO PREVENT 404s) ─────────────────
+
+  @Post('candidatos')
+  async getCandidatos(@Body() body: any) {
+    return [];
+  }
+
+  @Post('candidato-match')
+  async getCandidatoMatch(@Body() body: any) {
+    return null;
+  }
+
+  @Get('eleitorado/perfil')
+  async getEleitoradoPerfil() {
+    return { total: 0, genero: [], faixa_etaria: [], grau_instrucao: [], cor_raca: [], estado_civil: [] };
+  }
+
+  @Post('votos/secao')
+  async getVotosSecao(@Body() body: any) {
+    return [];
+  }
+
+  @Get('locais-votacao')
+  async getLocaisVotacao() {
+    return [];
+  }
+
+  @Get('comparativo')
+  async getComparativo() {
+    return [];
+  }
+
+  @Post('origem-votos-local')
+  async getOrigemVotosLocal(@Body() body: any) {
+    return [];
   }
 
   // ─── IMPORT JOBS ──────────────────────────────────────────
